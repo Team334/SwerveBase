@@ -7,6 +7,8 @@ package frc.robot;
 import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -37,7 +39,8 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
-  
+    CANSparkMax c = new CANSparkMax(0, MotorType.kBrushless);
+
     Monologue.setupMonologue(this, "Robot", false, false);
 
     DataLogManager.start();
