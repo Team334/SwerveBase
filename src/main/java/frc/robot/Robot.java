@@ -7,16 +7,14 @@ package frc.robot;
 import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
 import monologue.Logged;
 import monologue.Monologue;
-import monologue.Annotations.Log;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -39,7 +37,6 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
-    CANSparkMax c = new CANSparkMax(0, MotorType.kBrushless);
 
     Monologue.setupMonologue(this, "Robot", false, false);
 
@@ -66,11 +63,6 @@ public class Robot extends TimedRobot implements Logged {
     CommandScheduler.getInstance().run();
 
     Monologue.updateAll();
-  }
-
-  @Log.NT
-  public String bruh() {
-    return "bruh";
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
