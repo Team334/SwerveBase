@@ -8,8 +8,11 @@ import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -27,6 +30,14 @@ public class Robot extends TimedRobot implements Logged {
 
   private RobotContainer m_robotContainer;
 
+  private Joystick _testStick = new Joystick(0);
+
+  private final TrapezoidProfile _profile = new TrapezoidProfile(
+    new TrapezoidProfile.Constraints(400, 4000)
+  );
+
+  private TrapezoidProfile.State _setpoint = new TrapezoidProfile.State();
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -37,14 +48,13 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
+    Monologue.setupMonologue(this, "Robot", false, true);
 
-    Monologue.setupMonologue(this, "Robot", false, false);
-
-    DataLogManager.start();
-    URCL.start();
+    // DataLogManager.start();
+    // URCL.start();
     
-    // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
-    SignalLogger.start();
+    // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
+    // SignalLogger.start();
   }
 
   /**
@@ -61,6 +71,14 @@ public class Robot extends TimedRobot implements Logged {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+
+    double des_vel = _testStick.getY() * 100;
+
+    _setpoint = _profile.calculate(kDefaultPeriod, _setpoint, new TrapezoidProfile.State(des_vel, 0));
+
+    log("Desired Velocity", des_vel);
+    log("Velocity", _setpoint.position);
+    log("Acceleration", _setpoint.velocity);
 
     Monologue.updateAll();
   }
