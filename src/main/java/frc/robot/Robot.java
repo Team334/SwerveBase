@@ -8,14 +8,19 @@ import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
 
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
+import frc.robot.util.Alert;
+import frc.robot.util.Alerter;
+import frc.robot.util.Alert.AlertType;
 import monologue.Logged;
 import monologue.Monologue;
 
@@ -32,11 +37,12 @@ public class Robot extends TimedRobot implements Logged {
 
   private Joystick _testStick = new Joystick(0);
 
-  private final TrapezoidProfile _profile = new TrapezoidProfile(
-    new TrapezoidProfile.Constraints(400, 4000)
-  );
+  private double _desiredVelocity = 0;
+  private double _prevDesiredVelocity = 0; 
 
-  private TrapezoidProfile.State _setpoint = new TrapezoidProfile.State();
+  private SlewRateLimiter _accelLimiter = new SlewRateLimiter(4);
+
+  private SimpleMotorFeedforward _motorFF = new SimpleMotorFeedforward(0.25, 0.12, .01);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -50,11 +56,15 @@ public class Robot extends TimedRobot implements Logged {
 
     Monologue.setupMonologue(this, "Robot", false, true);
 
-    // DataLogManager.start();
+    DataLogManager.start();
     // URCL.start();
+
+    DriverStation.startDataLog(DataLogManager.getLog());
     
     // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
     // SignalLogger.start();
+
+    addPeriodic(Alerter::alert, 1);
   }
 
   /**
@@ -72,13 +82,13 @@ public class Robot extends TimedRobot implements Logged {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
-    double des_vel = _testStick.getY() * 100;
+    _desiredVelocity = _testStick.getY() * 10;
+    _desiredVelocity = _accelLimiter.calculate(_desiredVelocity);
 
-    _setpoint = _profile.calculate(kDefaultPeriod, _setpoint, new TrapezoidProfile.State(des_vel, 0));
-
-    log("Desired Velocity", des_vel);
-    log("Velocity", _setpoint.position);
-    log("Acceleration", _setpoint.velocity);
+    log("Desired Velocity", _desiredVelocity);
+    log("Desired Acceleration", (_desiredVelocity - _prevDesiredVelocity) / kDefaultPeriod);
+    log("Output Volts", _motorFF.calculate(_desiredVelocity, (_desiredVelocity - _prevDesiredVelocity) / kDefaultPeriod));
+    _prevDesiredVelocity = _desiredVelocity;
 
     Monologue.updateAll();
   }
