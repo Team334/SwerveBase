@@ -18,9 +18,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.util.Alert;
-import frc.robot.util.Alerter;
-import frc.robot.util.Alert.AlertType;
+import frc.lib.Alert;
+import frc.lib.FaultLogger;
+import frc.lib.Alert.AlertType;
 import monologue.Logged;
 import monologue.Monologue;
 
@@ -64,7 +64,7 @@ public class Robot extends TimedRobot implements Logged {
     // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
     // SignalLogger.start();
 
-    addPeriodic(Alerter::alert, 1);
+    addPeriodic(FaultLogger::checkAllFaults, 1);
   }
 
   /**
