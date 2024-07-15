@@ -16,4 +16,12 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
   }
+
+  public static class SwerveModule {
+    public static final double DRIVE_KS = 0;
+    public static final double DRIVE_KV = 0;
+    public static final double DRIVE_KA = 0;
+
+    public static final double DRIVE_KP = 0;
+  }
 }

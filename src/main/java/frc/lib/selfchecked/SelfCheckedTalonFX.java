@@ -11,18 +11,18 @@ public class SelfCheckedTalonFX extends SelfChecked {
   // TODO: add more faults to check
 
   // alerts
-  private Alert _hardwareFaultAlert;
-  private Alert _forwardSoftLimitFaultAlert;
-  private Alert _reverseSoftLimitFaultAlert;
-  private Alert _statorCurrentLimitFaultAlert;
-  private Alert _supplyCurrentLimitFaultAlert;
+  private final Alert _hardwareFaultAlert;
+  private final Alert _forwardSoftLimitFaultAlert;
+  private final Alert _reverseSoftLimitFaultAlert;
+  private final Alert _statorCurrentLimitFaultAlert;
+  private final Alert _supplyCurrentLimitFaultAlert;
 
   // faults
-  private StatusSignal<Boolean> _hardwareFault;
-  private StatusSignal<Boolean> _forwardSoftLimitFault;
-  private StatusSignal<Boolean> _reverseSoftLimitFault;
-  private StatusSignal<Boolean> _statorCurrentLimitFault;
-  private StatusSignal<Boolean> _supplyCurrentLimitFault;
+  private final StatusSignal<Boolean> _hardwareFault;
+  private final StatusSignal<Boolean> _forwardSoftLimitFault;
+  private final StatusSignal<Boolean> _reverseSoftLimitFault;
+  private final StatusSignal<Boolean> _statorCurrentLimitFault;
+  private final StatusSignal<Boolean> _supplyCurrentLimitFault;
 
   public SelfCheckedTalonFX(String name, TalonFX talon) {
     _hardwareFault = talon.getFault_Hardware();
