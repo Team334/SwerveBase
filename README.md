@@ -5,7 +5,7 @@ A base project for future robots that has code for swerve drive, PhotonVision pr
 For logging, the swerve base uses Monologue to log robot-specficic data. SignalLogger and URCL are used to log device-specific (motors/encoders) data.
 
 ## Faults
-All faults are logged by SignalLogger/UCRL. During operation, faults are displayed as alerts in Elastic.
+All faults are logged by SignalLogger/UCRL. During operation, faults may trigger subsystem alerts which will be displayed in elastic.
 
 ## Sources
 - [Team 1155 Swerve Base](https://github.com/SciBorgs/Hydrogen/)
