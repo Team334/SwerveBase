@@ -28,6 +28,8 @@ public final class Constants {
 
     public static final double DRIVE_KP = 0;
 
+    public static final double DRIVE_GEARING = 6.75;
+
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
     // this is only needed for sim
@@ -35,5 +37,7 @@ public final class Constants {
     public static final double TURN_KA = 0;
 
     public static final double TURN_KP = 0;
+
+    public static final double TURN_GEARING = 150/7;
   }
 }

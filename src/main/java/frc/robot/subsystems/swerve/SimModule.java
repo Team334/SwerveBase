@@ -13,13 +13,13 @@ public class SimModule implements ModuleIO {
   private final DCMotorSim _driveMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(SwerveModule.DRIVE_KV, SwerveModule.DRIVE_KA),
     DCMotor.getFalcon500(1),
-    1 // 1:1 in sim
+    SwerveModule.DRIVE_GEARING
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(SwerveModule.TURN_KV, SwerveModule.TURN_KA),
     DCMotor.getFalcon500(1),
-    1 // 1:1 in sim
+    SwerveModule.TURN_GEARING
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(SwerveModule.DRIVE_KS, SwerveModule.DRIVE_KV, SwerveModule.DRIVE_KA);
@@ -50,11 +50,11 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getDriveVelocity() {
-    return (_driveMotor.getAngularVelocityRPM() / 60) * SwerveModule.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return (_driveMotor.getAngularVelocityRPM() / 60 / SwerveModule.DRIVE_GEARING) * SwerveModule.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
   public Rotation2d getTurnPosition() {
-    return Rotation2d.fromRadians(_turnMotor.getAngularPositionRad());
+    return Rotation2d.fromRadians(_turnMotor.getAngularPositionRotations() / SwerveModule.TURN_GEARING);
   }
 }
