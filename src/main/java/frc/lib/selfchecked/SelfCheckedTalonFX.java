@@ -34,7 +34,7 @@ public class SelfCheckedTalonFX extends SelfChecked {
     _hardwareFaultAlert = new Alert(name + ": Hardware fault active.", AlertType.ERROR);
     _forwardSoftLimitFaultAlert = new Alert(name + ": Forward soft limit reached.", AlertType.INFO);
     _reverseSoftLimitFaultAlert = new Alert(name + ": Reverse soft limit reached.", AlertType.INFO);
-    _statorCurrentLimitFaultAlert = new Alert(name + ": Stator current limit reached.", AlertType.WARNING);
+    _statorCurrentLimitFaultAlert = new Alert(name + ": Stator current limit reached.", AlertType.WARNING); // TODO: test if these are even necessary
     _supplyCurrentLimitFaultAlert = new Alert(name + ": Supply current limit reached.", AlertType.WARNING);
   }
 

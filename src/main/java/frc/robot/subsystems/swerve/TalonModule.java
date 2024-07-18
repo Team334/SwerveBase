@@ -14,6 +14,7 @@ public class TalonModule implements ModuleIO {
   private final TalonFX _turnMotor;
   private final CANcoder _turnEncoder;
 
+  private final StatusSignal<Double> _drivePositionGetter;
   private final StatusSignal<Double> _driveVelocityGetter;
   private final StatusSignal<Double> _encoderPositionGetter;
 
@@ -25,6 +26,7 @@ public class TalonModule implements ModuleIO {
     _turnMotor = new TalonFX(turnMotorId);
     _turnEncoder = new CANcoder(encoderId);
 
+    _drivePositionGetter = _driveMotor.getPosition();
     _driveVelocityGetter = _driveMotor.getVelocity();
     _encoderPositionGetter = _turnEncoder.getAbsolutePosition();
 
@@ -41,9 +43,14 @@ public class TalonModule implements ModuleIO {
   }
 
   @Override
-  public void setTurnAngle(double angle) {
+  public void setAngle(double angle) {
     _turnPositionSetter.withPosition(angle);
     _turnMotor.setControl(_turnPositionSetter);
+  }
+
+  @Override
+  public double getDrivePosition() {
+    return _drivePositionGetter.refresh().getValue();
   }
 
   @Override
@@ -52,7 +59,7 @@ public class TalonModule implements ModuleIO {
   }
 
   @Override
-  public Rotation2d getTurnPosition() {
+  public Rotation2d getAngle() {
     return Rotation2d.fromRotations(_encoderPositionGetter.refresh().getValueAsDouble());
   }
 }

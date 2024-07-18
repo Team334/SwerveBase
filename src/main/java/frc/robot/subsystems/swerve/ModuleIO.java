@@ -3,6 +3,12 @@ package frc.robot.subsystems.swerve;
 import edu.wpi.first.math.geometry.Rotation2d;
 
 public interface ModuleIO {
+  /** Returns the position of the drive wheel in meters. */
+  public double getDrivePosition();
+
+  /** Returns the velocity of the drive wheel in m/s. */
+  public double getDriveVelocity();
+
   /**
    * Sets the targets of the drive motor.
    * @param velocity The target velocity in m/s.
@@ -10,12 +16,9 @@ public interface ModuleIO {
    */
   public void setDriveTargets(double velocity, double acceleration);
 
-  /** Sets the angle of the module in degrees. */
-  public void setTurnAngle(double angle);
-
-  /** Returns the velocity of the drive wheel in m/s. */
-  public double getDriveVelocity();
-
   /** Returns the angle of the module in degrees. */
-  public Rotation2d getTurnPosition();
+  public Rotation2d getAngle();
+
+  /** Sets the angle of the module in degrees. */
+  public void setAngle(double angle);
 }

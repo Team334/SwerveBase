@@ -27,7 +27,6 @@ public class SimModule implements ModuleIO {
 
   private final PIDController _turnPID = new PIDController(SwerveModule.TURN_KP, 0, 0);
 
-  // TODO: add pid controllers and proper units
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
   }
@@ -41,11 +40,16 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public void setTurnAngle(double angle) {
-    double outVolts = _turnPID.calculate(getTurnPosition().getDegrees(), angle);
+  public void setAngle(double angle) {
+    double outVolts = _turnPID.calculate(getAngle().getDegrees(), angle);
 
     _turnMotor.setInputVoltage(outVolts);
     _turnMotor.update(Robot.kDefaultPeriod);
+  }
+
+  @Override
+  public double getDrivePosition() {
+    return (_driveMotor.getAngularPositionRotations() / SwerveModule.DRIVE_GEARING) * SwerveModule.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
@@ -54,7 +58,7 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public Rotation2d getTurnPosition() {
+  public Rotation2d getAngle() {
     return Rotation2d.fromRadians(_turnMotor.getAngularPositionRotations() / SwerveModule.TURN_GEARING);
   }
 }
