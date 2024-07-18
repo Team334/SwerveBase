@@ -3,26 +3,30 @@ package frc.robot.subsystems.swerve;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import frc.lib.FaultLogger;
 
 public class TalonModule implements ModuleIO {
   private final TalonFX _driveMotor;
   private final TalonFX _turnMotor;
+  private final CANcoder _turnEncoder;
 
   private final StatusSignal<Double> _driveVelocityGetter;
-  private final StatusSignal<Double> _turnPositionGetter;
+  private final StatusSignal<Double> _encoderPositionGetter;
 
   private final VelocityVoltage _driveVelocitySetter = new VelocityVoltage(0);
   private final PositionVoltage _turnPositionSetter = new PositionVoltage(0);
 
-  public TalonModule(String name, int driveMotorId, int turnMotorId) {
+  public TalonModule(String name, int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
     _turnMotor = new TalonFX(turnMotorId);
+    _turnEncoder = new CANcoder(encoderId);
 
     _driveVelocityGetter = _driveMotor.getVelocity();
-    _turnPositionGetter = _turnMotor.getPosition();
+    _encoderPositionGetter = _turnEncoder.getAbsolutePosition();
 
     // TODO: Add all motor configs here
 
@@ -48,7 +52,7 @@ public class TalonModule implements ModuleIO {
   }
 
   @Override
-  public double getTurnPosition() {
-    return _turnPositionGetter.refresh().getValue();
+  public Rotation2d getTurnPosition() {
+    return Rotation2d.fromRotations(_encoderPositionGetter.refresh().getValueAsDouble());
   }
 }
