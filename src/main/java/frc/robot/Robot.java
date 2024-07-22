@@ -60,7 +60,7 @@ public class Robot extends TimedRobot implements Logged {
     // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
     // SignalLogger.start();
 
-    addPeriodic(FaultLogger::checkAllFaults, 1);
+    // addPeriodic(FaultLogger::checkAllFaults, 1);
   }
 
   /**

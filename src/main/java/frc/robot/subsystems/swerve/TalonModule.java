@@ -31,9 +31,6 @@ public class TalonModule implements ModuleIO {
     _encoderPositionGetter = _turnEncoder.getAbsolutePosition();
 
     // TODO: Add all motor configs here
-
-    FaultLogger.register(name + " Drive Motor", _driveMotor);
-    FaultLogger.register(name + " Turn Motor", _turnMotor);
   }
 
   @Override
