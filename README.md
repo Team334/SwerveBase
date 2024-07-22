@@ -5,7 +5,7 @@ A base project for future robots that has code for swerve drive, PhotonVision pr
 For logging, the swerve base uses Monologue to log robot-specficic data. SignalLogger and URCL are used to log device-specific (motors/encoders) data.
 
 ## Alert System
-Elastic alerts widgets are used for multiple purposes in this project. A FaultLogger class displays device faults on one alerts widget as telemetry when testing. During prematch, there will be a prematch self-check command for each subsystem which will run test commands of the subsystem and alert the statuses of those commands. Checks for device faults are included in the self-check command, and the active faults of the device are retrieved from the FaultLogger. 
+Elastic alerts widgets are used for multiple purposes in this project. A FaultLogger class displays device faults (and failed device configuration) on one alerts widget as telemetry when testing. During prematch, there will be a prematch self-check command for each subsystem which will run test commands of the subsystem and alert the statuses of those commands. Checks for device faults are included in the self-check command, and the active faults of the device are retrieved from the FaultLogger. 
 
 ## Sources
 - [Team 1155 Swerve Base](https://github.com/SciBorgs/Hydrogen/)
