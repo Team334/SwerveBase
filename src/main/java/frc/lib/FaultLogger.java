@@ -2,8 +2,7 @@ package frc.lib;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.function.Supplier;
+import java.util.Optional;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -14,23 +13,34 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 
 /**
- * Devices are added to this FaultLogger to have their faults alerted on elastic. (Based of teams 1155/353 FaultLogger)
+ * Devices are added to this FaultLogger to have their faults alerted on elastic. (Based off teams 1155/353 FaultLogger)
  */
 public final class FaultLogger {
-  private static final HashMap<Integer, ArrayList<Supplier<Fault>>> _faultReporters = new HashMap<Integer, ArrayList<Supplier<Fault>>>();
+  private static final HashMap<Integer, ArrayList<FaultReporter>> _faultReporters = new HashMap<Integer, ArrayList<FaultReporter>>();
 
+  // TODO: switch to set to watch for duplicates in totalFaults
   private static final ArrayList<Fault> _activeFaults = new ArrayList<Fault>();
+  private static final ArrayList<Fault> _totalFaults = new ArrayList<Fault>();
 
-  private static final FaultsTable _faultsTable = new FaultsTable();
+  private static final FaultsTable _activeFaultsTable = new FaultsTable("Active Faults");
+  private static final FaultsTable _totalFaultsTable = new FaultsTable("Total Faults");
 
-  // The NetworkTable that contains this logger's active faults. (can't use Alert class since these aren't persistent)
+  private static int _ID_COUNTER = 0;
+
+  /** A lambda that returns an Optional with a Fault. */
+  @FunctionalInterface
+  public static interface FaultReporter {
+    public Optional<Fault> report();
+  }
+
+  // A NetworkTable that contains faults. (can't use the Alert class since these aren't persistent)
   private static class FaultsTable {
     private final StringArrayPublisher errors;
     private final StringArrayPublisher warnings;
     private final StringArrayPublisher infos;
 
-    public FaultsTable() {
-      NetworkTable table = NetworkTableInstance.getDefault().getTable("Faults");
+    public FaultsTable(String name) {
+      NetworkTable table = NetworkTableInstance.getDefault().getTable(name);
       table.getStringTopic(".type").publish().set("Alerts"); // set to alerts widget type
       errors = table.getStringArrayTopic("errors").publish();
       warnings = table.getStringArrayTopic("warnings").publish();
@@ -44,33 +54,12 @@ public final class FaultLogger {
       infos.set(filteredStrings(faults, FaultType.INFO));
     }
 
-    // filters a list of faults into strings to display on the widget and shows those strings in driver station as well
+    // filters a list of faults into strings to display on the widget
     private String [] filteredStrings(ArrayList<Fault> faults, FaultType typeFilter) {
-      List<String> filteredFaults = faults.stream()
+      return faults.stream()
       .filter(f -> f.type == typeFilter)
       .map(Fault::toString)
-      .toList();
-
-      filteredFaults.forEach((f) -> {
-        switch (typeFilter) {
-          case ERROR:
-            DriverStation.reportError(f, false);
-            break;
-        
-          case WARNING:
-            DriverStation.reportWarning(f, false);
-            break;
-
-          case INFO:
-            System.out.println(f);
-            break;
-          
-          default:
-            break;
-        }
-      });
-
-      return filteredFaults.toArray(String[]::new);
+      .toArray(String[]::new);
     }
   }
   
@@ -87,34 +76,80 @@ public final class FaultLogger {
     public String toString() {
       return deviceName + ": " + description;
     }
+
+    public void toAlert() {
+
+    }
   }
 
   /** Updates the FaultLogger by checking for and displaying faults. */
   public static void update() {
-    // refresh active faults
     _activeFaults.clear();
-    _faultReporters.values().forEach(reporters -> reporters.forEach(r -> {
-      if (r.get() != null) _activeFaults.add(r.get());
-    }));
+
+    // call each reporter and report faults they returned
+    ArrayList<FaultReporter> allReporters = new ArrayList<>();
+    _faultReporters.values().forEach(allReporters::addAll);
+    allReporters.forEach(r -> r.report().ifPresent(FaultLogger::report));
 
     // update the faults network table/driver station with all the current active faults
-    _faultsTable.set(_activeFaults);
+    _activeFaultsTable.set(_activeFaults);
   }
 
-  // adds a new fault reporter to a device
-  private static void addReporter(int deviceId, Supplier<Fault> reporter) {
+  /** Reports a new Fault to the FaultLogger. */
+  public static void report(Fault fault) {
+    _activeFaults.add(fault);
 
+    switch (fault.type) {
+      case ERROR:
+        DriverStation.reportError(fault.toString(), false);
+        break;
+    
+      case WARNING:
+        DriverStation.reportWarning(fault.toString(), false);
+        break;
+
+      case INFO:
+        System.out.println(fault.toString());
+        break;
+      
+      default:
+        break;
+    }
   }
 
-  /** Returns the fault reporters belonging to a device. */
-  public static ArrayList<Supplier<Fault>> getReporters(int deviceId) {
-    if (!_faultReporters.containsKey(deviceId)) return null;
-
-    return _faultReporters.get(deviceId);
+  // adds a new fault reporter for a device
+  private static void addReporter(int deviceId, FaultReporter reporter) {
+    _faultReporters.putIfAbsent(deviceId, new ArrayList<FaultReporter>());
+    _faultReporters.get(deviceId).add(reporter);
   }
 
-  /** Registers a new TalonFX to the FaultLogger. */
-  public static void register(TalonFX talonFX) {
+  // returns a device's fault reporters
+  private static ArrayList<FaultReporter> getReporters(int deviceId) {
+    return _faultReporters.getOrDefault(deviceId, new ArrayList<FaultReporter>());
+  }
 
+  /** Returns the active faults for a device based on its fault reporters. */
+  public static ArrayList<Fault> getFaults(int deviceId) {
+    ArrayList<Fault> faults = new ArrayList<Fault>();
+
+    getReporters(deviceId).forEach(r -> r.report().ifPresent(faults::add));
+
+    return faults;
+  }
+
+  /** 
+   * Registers a new TalonFX to the FaultLogger.
+   * @returns The id generated for this device.
+   */
+  public static int register(TalonFX talonFX) {
+    int id = _ID_COUNTER ++;
+
+    addReporter(id, () -> {
+      if (talonFX.getFault_BootDuringEnable().getValue()) {
+        return Optional.of(new Fault("idk yet", "Boot during enable.", FaultType.ERROR));
+      } return Optional.empty();
+    });
+
+    return id;
   }
 }
