@@ -10,6 +10,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.lib.Alert.AlertType;
 
 
 /**
@@ -77,8 +78,21 @@ public final class FaultLogger {
       return deviceName + ": " + description;
     }
 
-    public void toAlert() {
+    /** Returns the Alert type of this fault for the Alerts widget. */
+    public AlertType alertType() {
+      switch (type) {
+        case ERROR:
+          return AlertType.ERROR;
 
+        case WARNING:
+          return AlertType.WARNING;
+
+        case INFO:
+          return AlertType.INFO;
+        
+        default:
+          return null;
+      }
     }
   }
 
