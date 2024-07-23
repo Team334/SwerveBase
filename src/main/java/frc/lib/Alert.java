@@ -1,9 +1,7 @@
 // Copyright (c) 2023 FRC 6328
 // http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
+
+// (but slightly modified)
 
 package frc.lib;
 
@@ -27,6 +25,7 @@ public class Alert {
   private boolean active = false;
   private double activeStartTime = 0.0;
   private String text;
+  private final String group;
 
   /**
    * Creates a new Alert in the default group - "Alerts". If this is the first to be instantiated,
@@ -55,6 +54,8 @@ public class Alert {
 
     this.text = text;
     this.type = type;
+    this.group = group;
+
     groups.get(group).alerts.add(this);
   }
 
@@ -96,6 +97,12 @@ public class Alert {
       }
     }
     this.text = text;
+  }
+
+
+  /** Removes this Alert from the group it's in. */
+  public void remove() {
+    groups.get(group).alerts.remove(this);
   }
 
   private static class SendableAlerts implements Sendable {

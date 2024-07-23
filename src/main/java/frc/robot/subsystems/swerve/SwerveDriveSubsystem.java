@@ -4,9 +4,10 @@
 
 package frc.robot.subsystems.swerve;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.subsystem.AdvancedSubsystem;
+import monologue.Logged;
 
-public class SwerveDriveSubsystem extends SubsystemBase {
+public class SwerveDriveSubsystem extends AdvancedSubsystem implements Logged {
   /** Creates a new SwerveDriveSubsystem. */
   public SwerveDriveSubsystem() {}
 

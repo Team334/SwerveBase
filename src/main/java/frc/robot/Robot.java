@@ -8,15 +8,13 @@ import org.littletonrobotics.urcl.URCL;
 
 import com.ctre.phoenix6.SignalLogger;
 
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+
 import frc.lib.FaultLogger;
+
 import monologue.Logged;
 import monologue.Monologue;
 
@@ -31,15 +29,6 @@ public class Robot extends TimedRobot implements Logged {
 
   private RobotContainer m_robotContainer;
 
-  private Joystick _testStick = new Joystick(0);
-
-  private double _desiredVelocity = 0;
-  private double _prevDesiredVelocity = 0; 
-
-  private SlewRateLimiter _accelLimiter = new SlewRateLimiter(4);
-
-  private SimpleMotorFeedforward _motorFF = new SimpleMotorFeedforward(0.25, 0.12, .01);
-
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -50,17 +39,17 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
-    Monologue.setupMonologue(this, "Robot", false, true);
+    // Monologue.setupMonologue(this, "Robot", false, true);
 
-    DataLogManager.start();
+    // DataLogManager.start();
     // URCL.start();
 
-    DriverStation.startDataLog(DataLogManager.getLog());
+    // DriverStation.startDataLog(DataLogManager.getLog());
     
     // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
     // SignalLogger.start();
 
-    // addPeriodic(FaultLogger::checkAllFaults, 1);
+    addPeriodic(FaultLogger::update, 1);
   }
 
   /**
@@ -78,15 +67,7 @@ public class Robot extends TimedRobot implements Logged {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
-    _desiredVelocity = _testStick.getY() * 10;
-    _desiredVelocity = _accelLimiter.calculate(_desiredVelocity);
-
-    log("Desired Velocity", _desiredVelocity);
-    log("Desired Acceleration", (_desiredVelocity - _prevDesiredVelocity) / kDefaultPeriod);
-    log("Output Volts", _motorFF.calculate(_desiredVelocity, (_desiredVelocity - _prevDesiredVelocity) / kDefaultPeriod));
-    _prevDesiredVelocity = _desiredVelocity;
-
-    Monologue.updateAll();
+    // Monologue.updateAll();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

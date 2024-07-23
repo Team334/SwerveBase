@@ -1,8 +1,9 @@
-package frc.lib;
+package frc.lib.subsystem;
 
 import java.util.function.BiConsumer;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.Alert.AlertType;
 
 public interface SelfChecked {
@@ -11,5 +12,7 @@ public interface SelfChecked {
    * 
    * @param alert A consumer that alerts a given alert message with the specified alert type.
    */
-  public Command selfCheck(BiConsumer<String, AlertType> alert);
+  public default Command selfCheck(BiConsumer<String, AlertType> alert) {
+    return Commands.none();
+  };
 }

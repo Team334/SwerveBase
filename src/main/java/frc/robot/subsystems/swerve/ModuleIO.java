@@ -1,8 +1,9 @@
 package frc.robot.subsystems.swerve;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.lib.subsystem.SelfChecked;
 
-public interface ModuleIO {
+public interface ModuleIO extends SelfChecked {
   /** Returns the position of the drive wheel in meters. */
   public double getDrivePosition();
 

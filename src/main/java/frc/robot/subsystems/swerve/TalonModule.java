@@ -1,5 +1,7 @@
 package frc.robot.subsystems.swerve;
 
+import java.util.function.BiConsumer;
+
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -7,7 +9,10 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.FaultLogger;
+import frc.lib.Alert.AlertType;
 
 public class TalonModule implements ModuleIO {
   private final TalonFX _driveMotor;
@@ -21,7 +26,14 @@ public class TalonModule implements ModuleIO {
   private final VelocityVoltage _driveVelocitySetter = new VelocityVoltage(0);
   private final PositionVoltage _turnPositionSetter = new PositionVoltage(0);
 
+  private final int _driveMotorId;
+  private final int _turnMotorId;
+
+  private final String _name;
+
   public TalonModule(String name, int driveMotorId, int turnMotorId, int encoderId) {
+    _name = name;
+
     _driveMotor = new TalonFX(driveMotorId);
     _turnMotor = new TalonFX(turnMotorId);
     _turnEncoder = new CANcoder(encoderId);
@@ -31,6 +43,8 @@ public class TalonModule implements ModuleIO {
     _encoderPositionGetter = _turnEncoder.getAbsolutePosition();
 
     // TODO: Add all motor configs here
+    _driveMotorId = FaultLogger.register(_name + "/Drive Motor", _driveMotor);
+    _turnMotorId = FaultLogger.register(_name + "/Turn Motor", _turnMotor);
   }
 
   @Override
@@ -58,5 +72,24 @@ public class TalonModule implements ModuleIO {
   @Override
   public Rotation2d getAngle() {
     return Rotation2d.fromRotations(_encoderPositionGetter.refresh().getValueAsDouble());
+  }
+
+  @Override
+  public Command selfCheck(BiConsumer<String, AlertType> alert) {
+    return Commands.runOnce(() -> {
+      var driveMotorFaults = FaultLogger.getFaults(_driveMotorId);
+      driveMotorFaults.forEach(f -> alert.accept(f.toString(), f.alertType()));
+
+      if (driveMotorFaults.size() == 0) {
+        alert.accept(_name + ": Drive Motor Good", AlertType.INFO);
+      }
+
+      var turnMotorFaults = FaultLogger.getFaults(_driveMotorId);
+      turnMotorFaults.forEach(f -> alert.accept(f.toString(), f.alertType()));
+
+      if (turnMotorFaults.size() == 0) {
+        alert.accept(_name + ": Turn Motor Good", AlertType.INFO);
+      }
+    });
   }
 }
