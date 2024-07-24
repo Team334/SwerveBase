@@ -26,8 +26,11 @@ public class RobotContainer {
     // Configure the trigger bindings
     configureBindings();
 
+    // add self check command
     SmartDashboard.putData("Robot Self Check", Commands.sequence(
-      _swerve.fullSelfCheck()
+      new PrintCommand("Self Check Started"),
+      _swerve.fullSelfCheck(),
+      new PrintCommand("Self Check Finished")
     ));
   }
 

@@ -15,18 +15,24 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements SelfChe
   /** Clears this subsystem's alerts. */
   protected void clearAlerts() {
     _alerts.forEach(a -> a.remove());
+    _alerts.clear();
   }
 
   /** Alerts a new message under this subsystem. */
   protected void alert(String message, AlertType alertType) {
-    new Alert(getName() + " Alerts", message, alertType).set(true);
+    Alert alert = new Alert(getName() + " Alerts", message, alertType);
+    alert.set(true);
+
+    _alerts.add(alert);
   }
 
   /** Returns a full Command that self checks this Subsystem for pre-match. */
   public Command fullSelfCheck() {
     Command selfCheck = Commands.sequence(
       Commands.runOnce(this::clearAlerts),
-      selfCheck(this::alert)
+      Commands.runOnce(() -> alert(getName() + " Self Check Started", AlertType.INFO)),
+      selfCheck(this::alert),
+      Commands.runOnce(() -> alert(getName() + " Self Check Finished", AlertType.INFO))
     );
 
     selfCheck.addRequirements(this);
