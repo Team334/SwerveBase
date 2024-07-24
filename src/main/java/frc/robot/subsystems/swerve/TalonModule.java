@@ -75,20 +75,20 @@ public class TalonModule implements ModuleIO {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alert) {
+  public Command selfCheck(BiConsumer<String, AlertType> alerter) {
     return Commands.runOnce(() -> {
       var driveMotorFaults = FaultLogger.getFaults(_driveMotorId);
-      driveMotorFaults.forEach(f -> alert.accept(f.toString(), f.alertType()));
+      driveMotorFaults.forEach(f -> alerter.accept(f.toString(), f.alertType()));
 
       if (driveMotorFaults.size() == 0) {
-        alert.accept(_name + ": Drive Motor Good", AlertType.INFO);
+        alerter.accept(_name + ": Drive Motor Good", AlertType.INFO);
       }
 
-      var turnMotorFaults = FaultLogger.getFaults(_driveMotorId);
-      turnMotorFaults.forEach(f -> alert.accept(f.toString(), f.alertType()));
+      var turnMotorFaults = FaultLogger.getFaults(_turnMotorId);
+      turnMotorFaults.forEach(f -> alerter.accept(f.toString(), f.alertType()));
 
       if (turnMotorFaults.size() == 0) {
-        alert.accept(_name + ": Turn Motor Good", AlertType.INFO);
+        alerter.accept(_name + ": Turn Motor Good", AlertType.INFO);
       }
     });
   }

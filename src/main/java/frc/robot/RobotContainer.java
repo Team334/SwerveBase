@@ -4,11 +4,13 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.swerve.SwerveDriveSubsystem;
+import frc.robot.subsystems.swerve.Swerve;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -17,12 +19,16 @@ import frc.robot.subsystems.swerve.SwerveDriveSubsystem;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  private final SwerveDriveSubsystem _swerveDrive = new SwerveDriveSubsystem();
+  private final Swerve _swerve = new Swerve();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+
+    SmartDashboard.putData("Robot Self Check", Commands.sequence(
+      _swerve.fullSelfCheck()
+    ));
   }
 
   /**

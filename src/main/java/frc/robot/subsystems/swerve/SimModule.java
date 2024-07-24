@@ -11,21 +11,21 @@ import frc.robot.Robot;
 
 public class SimModule implements ModuleIO {
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(SwerveModule.DRIVE_KV, SwerveModule.DRIVE_KA),
+    LinearSystemId.createDCMotorSystem(SwerveModuleConstants.DRIVE_KV, SwerveModuleConstants.DRIVE_KA),
     DCMotor.getFalcon500(1),
-    SwerveModule.DRIVE_GEARING
+    SwerveModuleConstants.DRIVE_GEARING
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(SwerveModule.TURN_KV, SwerveModule.TURN_KA),
+    LinearSystemId.createDCMotorSystem(SwerveModuleConstants.TURN_KV, SwerveModuleConstants.TURN_KA),
     DCMotor.getFalcon500(1),
-    SwerveModule.TURN_GEARING
+    SwerveModuleConstants.TURN_GEARING
   );
 
-  private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(SwerveModule.DRIVE_KS, SwerveModule.DRIVE_KV, SwerveModule.DRIVE_KA);
-  private final PIDController _drivePID = new PIDController(SwerveModule.DRIVE_KP, 0, 0);
+  private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(SwerveModuleConstants.DRIVE_KS, SwerveModuleConstants.DRIVE_KV, SwerveModuleConstants.DRIVE_KA);
+  private final PIDController _drivePID = new PIDController(SwerveModuleConstants.DRIVE_KP, 0, 0);
 
-  private final PIDController _turnPID = new PIDController(SwerveModule.TURN_KP, 0, 0);
+  private final PIDController _turnPID = new PIDController(SwerveModuleConstants.TURN_KP, 0, 0);
 
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
@@ -49,16 +49,16 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getDrivePosition() {
-    return (_driveMotor.getAngularPositionRotations() / SwerveModule.DRIVE_GEARING) * SwerveModule.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return (_driveMotor.getAngularPositionRotations() / SwerveModuleConstants.DRIVE_GEARING) * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
   public double getDriveVelocity() {
-    return (_driveMotor.getAngularVelocityRPM() / 60 / SwerveModule.DRIVE_GEARING) * SwerveModule.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return (_driveMotor.getAngularVelocityRPM() / 60 / SwerveModuleConstants.DRIVE_GEARING) * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
   public Rotation2d getAngle() {
-    return Rotation2d.fromRadians(_turnMotor.getAngularPositionRotations() / SwerveModule.TURN_GEARING);
+    return Rotation2d.fromRadians(_turnMotor.getAngularPositionRotations() / SwerveModuleConstants.TURN_GEARING);
   }
 }

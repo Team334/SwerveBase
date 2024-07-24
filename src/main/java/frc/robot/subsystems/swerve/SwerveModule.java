@@ -10,7 +10,7 @@ import frc.robot.Robot;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
-public class Module implements SelfChecked, Logged {
+public class SwerveModule implements SelfChecked, Logged {
   private final ModuleIO _io;
 
   private double _oldVelocity = 0; 
@@ -18,7 +18,7 @@ public class Module implements SelfChecked, Logged {
   @Log.NT
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
-  public Module(ModuleIO io) {
+  public SwerveModule(ModuleIO io) {
     _io = io;
   }
 
@@ -47,7 +47,7 @@ public class Module implements SelfChecked, Logged {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alert) {
-    return _io.selfCheck(alert);
+  public Command selfCheck(BiConsumer<String, AlertType> alerter) {
+    return _io.selfCheck(alerter);
   }
 }

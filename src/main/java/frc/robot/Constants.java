@@ -21,7 +21,7 @@ public final class Constants {
     public static final int DRIVER_CONTROLLER = 0;
   }
 
-  public static class SwerveModule {
+  public static class SwerveModuleConstants {
     public static final double DRIVE_KS = 0;
     public static final double DRIVE_KV = 0;
     public static final double DRIVE_KA = 0;

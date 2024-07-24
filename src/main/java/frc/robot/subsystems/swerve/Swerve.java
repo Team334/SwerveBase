@@ -7,9 +7,9 @@ package frc.robot.subsystems.swerve;
 import frc.lib.subsystem.AdvancedSubsystem;
 import monologue.Logged;
 
-public class SwerveDriveSubsystem extends AdvancedSubsystem implements Logged {
-  /** Creates a new SwerveDriveSubsystem. */
-  public SwerveDriveSubsystem() {}
+public class Swerve extends AdvancedSubsystem implements Logged {
+  /** Creates a new Swerve. */
+  public Swerve() {}
 
   @Override
   public void periodic() {

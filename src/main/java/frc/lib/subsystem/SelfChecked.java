@@ -10,9 +10,9 @@ public interface SelfChecked {
   /**
    * Returns a Command that self checks this system.
    * 
-   * @param alert A consumer that alerts a given alert message with the specified alert type.
+   * @param alerter A consumer that alerts a given alert message with the specified alert type.
    */
-  public default Command selfCheck(BiConsumer<String, AlertType> alert) {
+  public default Command selfCheck(BiConsumer<String, AlertType> alerter) {
     return Commands.none();
   };
 }
