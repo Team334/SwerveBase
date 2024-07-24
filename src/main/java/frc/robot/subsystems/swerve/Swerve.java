@@ -4,15 +4,29 @@
 
 package frc.robot.subsystems.swerve;
 
+import java.util.function.BiConsumer;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import monologue.Logged;
 
 public class Swerve extends AdvancedSubsystem implements Logged {
+  private final SwerveModule _m = new SwerveModule(new TalonModule("front left", 1, 1, 1)); 
+
   /** Creates a new Swerve. */
   public Swerve() {}
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+  }
+
+  @Override
+  public Command selfCheck(BiConsumer<String, AlertType> alerter) {
+    return Commands.sequence(
+      _m.selfCheck(alerter)
+    );
   }
 }

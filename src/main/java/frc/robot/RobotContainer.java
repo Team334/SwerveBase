@@ -28,9 +28,9 @@ public class RobotContainer {
 
     // add self check command
     SmartDashboard.putData("Robot Self Check", Commands.sequence(
-      new PrintCommand("Self Check Started"),
+      new PrintCommand("Robot Self Check Started"),
       _swerve.fullSelfCheck(),
-      new PrintCommand("Self Check Finished")
+      new PrintCommand("Robot Self Check Finished")
     ));
   }
 

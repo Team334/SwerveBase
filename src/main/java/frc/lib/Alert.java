@@ -1,7 +1,7 @@
 // Copyright (c) 2023 FRC 6328
 // http://github.com/Mechanical-Advantage
 
-// (but slightly modified)
+// (from team 6328 but slightly modified)
 
 package frc.lib;
 
@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 public class Alert {
   private static Map<String, SendableAlerts> groups = new HashMap<String, SendableAlerts>();
 
-  private final AlertType type;
+  public final AlertType type;
   private boolean active = false;
   private double activeStartTime = 0.0;
   private String text;

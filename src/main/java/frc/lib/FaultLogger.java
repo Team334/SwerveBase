@@ -1,179 +1,196 @@
 package frc.lib;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringArrayPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
-import frc.lib.Alert.AlertType;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
+import com.ctre.phoenix6.hardware.TalonFX;
+
+// (from team 1155 but slightly modified)
 
 /**
- * Devices are added to this FaultLogger to have their faults alerted on elastic. (Based off teams 1155/353 FaultLogger)
+ * FaultLogger allows for faults and errors to be logged and displayed.
+ *
+ * <pre>
+ * FaultLogger.register(spark); // registers a spark, periodically checking for hardware faults
+ * spark.set(0.5);
+ * FaultLogger.check(spark); // checks that the previous set call did not encounter an error.
+ * </pre>
  */
 public final class FaultLogger {
-  private static final HashMap<Integer, ArrayList<FaultReporter>> _faultReporters = new HashMap<Integer, ArrayList<FaultReporter>>();
-
-  private static final Set<Fault> _activeFaults = new HashSet<Fault>();
-  private static final Set<Fault> _totalFaults = new HashSet<Fault>();
-
-  private static final FaultsTable _activeFaultsTable = new FaultsTable("Active Faults");
-  private static final FaultsTable _totalFaultsTable = new FaultsTable("Total Faults");
-
-  private static int _ID_COUNTER = 0;
-
-  /** A lambda that returns an Optional with a Fault. */
-  @FunctionalInterface
-  public static interface FaultReporter {
-    public Optional<Fault> report();
+  /** An individual fault, containing necessary information. */
+  public static record Fault(String name, String description, FaultType type) {
+    @Override
+    public String toString() {
+      return name + ": " + description;
+    }
   }
 
-  // A NetworkTable that contains faults. (can't use the Alert class since these aren't persistent)
+  @FunctionalInterface
+  public static interface FaultReporter {
+    void report();
+  }
+
+  /**
+   * The type of fault, used for detecting whether the fallible is in a failure
+   * state and displaying
+   * to NetworkTables.
+   */
+  public static enum FaultType {
+    INFO,
+    WARNING,
+    ERROR,
+  }
+
+  // represents a table containing faults on network tables (can't use alert class since these aren't persistent)
   private static class FaultsTable {
     private final StringArrayPublisher errors;
     private final StringArrayPublisher warnings;
     private final StringArrayPublisher infos;
 
-    public FaultsTable(String name) {
-      NetworkTable table = NetworkTableInstance.getDefault().getTable(name);
-      table.getStringTopic(".type").publish().set("Alerts"); // set to alerts widget type
+    public FaultsTable(NetworkTable base, String name) {
+      NetworkTable table = base.getSubTable(name);
+      table.getStringTopic(".type").publish().set("Alerts"); // set to alerts widget
       errors = table.getStringArrayTopic("errors").publish();
       warnings = table.getStringArrayTopic("warnings").publish();
       infos = table.getStringArrayTopic("infos").publish();
     }
 
-    /** Sets the faults to show on this table and DriverStation. */
     public void set(Set<Fault> faults) {
       errors.set(filteredStrings(faults, FaultType.ERROR));
       warnings.set(filteredStrings(faults, FaultType.WARNING));
       infos.set(filteredStrings(faults, FaultType.INFO));
     }
-
-    // filters a list of faults into strings to display on the widget
-    private String [] filteredStrings(Set<Fault> faults, FaultType typeFilter) {
-      return faults.stream()
-      .filter(f -> f.type == typeFilter)
-      .map(Fault::toString)
-      .toArray(String[]::new);
-    }
-  }
-  
-  /** Represents the classification of the fault. */
-  public static enum FaultType {
-    ERROR,
-    WARNING,
-    INFO
   }
 
-  /** Represents a fault from a device. */
-  public static record Fault(String deviceName, String description, FaultType type) {
-    @Override
-    public String toString() {
-      return deviceName + ": " + description;
-    }
+  // DATA
+  private static final List<FaultReporter> faultReporters = new ArrayList<>();
+  private static final Set<Fault> newFaults = new HashSet<>();
+  private static final Set<Fault> activeFaults = new HashSet<>();
+  private static final Set<Fault> totalFaults = new HashSet<>();
 
-    /** Returns the Alert type of this fault for the Alerts widget. */
-    public AlertType alertType() {
-      switch (type) {
-        case ERROR:
-          return AlertType.ERROR;
+  // NETWORK TABLES
+  private static final NetworkTable base = NetworkTableInstance.getDefault().getTable("Faults");
+  private static final FaultsTable activeAlerts = new FaultsTable(base, "Active Faults");
+  private static final FaultsTable totalAlerts = new FaultsTable(base, "Total Faults");
 
-        case WARNING:
-          return AlertType.WARNING;
-
-        case INFO:
-          return AlertType.INFO;
-        
-        default:
-          return null;
-      }
-    }
-  }
-
-  /** Updates the FaultLogger by checking for and displaying faults. */
+  /** Polls registered fallibles. This method should be called periodically. */
   public static void update() {
-    _activeFaults.clear();
+    activeFaults.clear();
 
-    // call each reporter and report faults they returned
-    ArrayList<FaultReporter> allReporters = new ArrayList<>();
-    _faultReporters.values().forEach(allReporters::addAll);
-    allReporters.forEach(r -> r.report().ifPresent(FaultLogger::report));
-    
-    _totalFaults.addAll(_activeFaults); // adds all active faults to total faults (if there are new ones)
+    faultReporters.forEach(f -> f.report());
+    activeFaults.addAll(newFaults);
+    newFaults.clear();
 
-    // update the faults network table/driver station with all the faults
-    _activeFaultsTable.set(_activeFaults);
-    _totalFaultsTable.set(_totalFaults);
+    totalFaults.addAll(activeFaults);
+
+    activeAlerts.set(activeFaults);
+    totalAlerts.set(totalFaults);
   }
 
-  /** Reports a new Fault to the FaultLogger. */
+  /** Clears total faults. */
+  public static void clear() {
+    totalFaults.clear();
+    activeFaults.clear();
+    newFaults.clear();
+  }
+
+  /** Clears fault suppliers. */
+  public static void unregisterAll() {
+    faultReporters.clear();
+  }
+
+  /**
+   * Returns the set of all current faults.
+   *
+   * @return The set of all current faults.
+   */
+  public static Set<Fault> activeFaults() {
+    return activeFaults;
+  }
+
+  /**
+   * Returns the set of all total faults.
+   *
+   * @return The set of all total faults.
+   */
+  public static Set<Fault> totalFaults() {
+    return totalFaults;
+  }
+
+  /**
+   * Reports a fault.
+   *
+   * @param fault The fault to report.
+   */
   public static void report(Fault fault) {
-    _activeFaults.add(fault);
+    newFaults.add(fault);
 
     switch (fault.type) {
-      case ERROR:
-        DriverStation.reportError(fault.toString(), false);
-        break;
-    
-      case WARNING:
-        DriverStation.reportWarning(fault.toString(), false);
-        break;
-
-      case INFO:
-        System.out.println(fault.toString());
-        break;
-      
-      default:
-        break;
+      case ERROR -> DriverStation.reportError(fault.toString(), false);
+      case WARNING -> DriverStation.reportWarning(fault.toString(), false);
+      case INFO -> System.out.println(fault.toString());
     }
   }
 
-  /** Reports a new Fault to the FaultLogger. */
-  public static void report(String deviceName, String description, FaultType faultType) {
-    report(new Fault(deviceName, description, faultType));
-  }
-
-  // adds a new fault reporter for a device
-  private static void addReporter(int deviceId, FaultReporter reporter) {
-    _faultReporters.putIfAbsent(deviceId, new ArrayList<FaultReporter>());
-    _faultReporters.get(deviceId).add(reporter);
-  }
-
-  // returns a device's fault reporters
-  private static ArrayList<FaultReporter> getReporters(int deviceId) {
-    return _faultReporters.getOrDefault(deviceId, new ArrayList<FaultReporter>());
-  }
-
-  /** Returns the active faults for a device based on its fault reporters. */
-  public static ArrayList<Fault> getFaults(int deviceId) {
-    ArrayList<Fault> faults = new ArrayList<Fault>();
-
-    getReporters(deviceId).forEach(r -> r.report().ifPresent(faults::add));
-
-    return faults;
-  }
-
-  /** 
-   * Registers a new TalonFX to the FaultLogger.
-   * 
-   * @returns The id generated for this device.
+  /**
+   * Reports a fault.
+   *
+   * @param name The name of the fault.
+   * @param description The description of the fault.
+   * @param type The type of the fault.
    */
-  public static int register(String deviceName, TalonFX talonFX) {
-    int id = _ID_COUNTER ++;
+  public static void report(String name, String description, FaultType type) {
+    report(new Fault(name, description, type));
+  }
 
-    addReporter(id, () -> {
-      if (talonFX.getFault_BootDuringEnable().getValue()) {
-        return Optional.of(new Fault(deviceName, "Boot during enable.", FaultType.ERROR));
-      } return Optional.empty();
+  /**
+   * Registers a new fault supplier.
+   *
+   * @param supplier A supplier of an optional fault.
+   */
+  public static void register(Supplier<Optional<Fault>> supplier) {
+    faultReporters.add(() -> supplier.get().ifPresent(FaultLogger::report));
+  }
+
+  /**
+   * Registers a new fault supplier.
+   *
+   * @param condition Whether a failure is occuring.
+   * @param description The failure's description.
+   * @param type The type of failure.
+   */
+  public static void register(BooleanSupplier condition, String name, String description, FaultType type) {
+    faultReporters.add(() -> {
+      if (condition.getAsBoolean()) {
+        report(name, description, type);
+      }
     });
+  }
 
-    return id;
+  /**
+   * Registers a new TalonFX.
+   * 
+   * @param talonFX The TalonFX.
+   */
+  public static void register(TalonFX talonFX) {
+    // TODO: add all necessary faults to check here
+  }
+
+  // Returns an array of descriptions of all faults that match the specified type.
+  private static String[] filteredStrings(Set<Fault> faults, FaultType type) {
+    return faults.stream()
+        .filter(a -> a.type() == type)
+        .map(Fault::toString)
+        .toArray(String[]::new);
   }
 }
