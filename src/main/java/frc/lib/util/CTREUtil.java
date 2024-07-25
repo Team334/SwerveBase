@@ -10,11 +10,11 @@ public class CTREUtil {
    * @param talonFX The TalonFX to configure.
    * @param config The config to apply on the TalonFX.
    * 
-   * @return Whether the configuration was successful or not.
+   * @return True if the configuration fails.
    */
   public static boolean configure(TalonFX talonFX, TalonFXConfiguration config) {
     // TODO: add code here
-    return true;
+    return false;
   }
 
   /** 

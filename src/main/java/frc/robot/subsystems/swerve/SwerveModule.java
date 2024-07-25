@@ -1,6 +1,7 @@
 package frc.robot.subsystems.swerve;
 
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -47,7 +48,7 @@ public class SwerveModule implements SelfChecked, Logged {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alerter) {
-    return _io.selfCheck(alerter);
+  public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
+    return _io.selfCheck(alerter, hasError);
   }
 }

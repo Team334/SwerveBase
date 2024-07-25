@@ -2,7 +2,6 @@ package frc.lib.subsystem;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -37,9 +36,9 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements SelfChe
   public Command fullSelfCheck() {
     Command selfCheck = Commands.sequence(
       Commands.runOnce(this::clearAlerts),
-      selfCheck(this::alert).until(this::hasErrors),
+      selfCheck(this::alert, this::hasErrors).until(this::hasErrors),
       Commands.runOnce(() -> {
-        if (_hasErrors) {
+        if (_hasErrors) { 
           alert("Self check failed, check errors!", AlertType.ERROR);
         } else {
           alert("Self check finished.", AlertType.INFO);

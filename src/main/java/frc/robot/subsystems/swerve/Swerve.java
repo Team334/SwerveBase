@@ -4,16 +4,18 @@
 
 package frc.robot.subsystems.swerve;
 
+import static frc.robot.util.Misc.sequentialUntil;
+
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import monologue.Logged;
 
 public class Swerve extends AdvancedSubsystem implements Logged {
-  private final SwerveModule _m = new SwerveModule(new RealModule("front left", 1, 1, 1)); 
+  private final SwerveModule _m = new SwerveModule(new RealModule("Front Left Module", 1, 1, 1)); 
 
   /** Creates a new Swerve. */
   public Swerve() {}
@@ -24,9 +26,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alerter) {
-    return Commands.sequence(
-      _m.selfCheck(alerter)
+  public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
+    return sequentialUntil(
+      hasError,
+      _m.selfCheck(alerter, hasError)
+      // TODO: all other checks
     );
   }
 }
