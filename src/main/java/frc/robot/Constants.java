@@ -29,6 +29,23 @@ public final class Constants {
   }
 
   public static class SwerveModuleConstants {
+    public static final int FRONT_LEFT_DRIVE_ID = 0;
+    public static final int FRONT_LEFT_TURN_ID = 0;
+    public static final int FRONT_LEFT_ENCODER_ID = 0; 
+
+    public static final int FRONT_RIGHT_DRIVE_ID = 0;
+    public static final int FRONT_RIGHT_TURN_ID = 0;
+    public static final int FRONT_RIGHT_ENCODER_ID = 0; 
+
+    public static final int BACK_RIGHT_DRIVE_ID = 0;
+    public static final int BACK_RIGHT_TURN_ID = 0;
+    public static final int BACK_RIGHT_ENCODER_ID = 0; 
+
+    public static final int BACK_LEFT_DRIVE_ID = 0;
+    public static final int BACK_LEFT_TURN_ID = 0;
+    public static final int BACK_LEFT_ENCODER_ID = 0; 
+
+
     public static final double DRIVE_KS = 1;
     public static final double DRIVE_KV = 1;
     public static final double DRIVE_KA = 1;

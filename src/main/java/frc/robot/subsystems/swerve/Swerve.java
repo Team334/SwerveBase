@@ -5,6 +5,7 @@
 package frc.robot.subsystems.swerve;
 
 import static frc.robot.util.Misc.sequentialUntil;
+import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -32,10 +33,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public static Swerve create() {
     if (RobotBase.isReal()) {
       return new Swerve(
-        new RealModule(0, 0, 0),
-        new RealModule(0, 0, 0),
-        new RealModule( 0, 0, 0),
-        new RealModule(0, 0, 0)
+        new RealModule(FRONT_LEFT_DRIVE_ID, FRONT_LEFT_TURN_ID, FRONT_LEFT_ENCODER_ID),
+        new RealModule(FRONT_RIGHT_DRIVE_ID, FRONT_RIGHT_TURN_ID, FRONT_RIGHT_ENCODER_ID),
+        new RealModule(BACK_RIGHT_DRIVE_ID, BACK_RIGHT_TURN_ID, BACK_RIGHT_ENCODER_ID),
+        new RealModule(BACK_LEFT_DRIVE_ID, BACK_LEFT_TURN_ID, BACK_LEFT_ENCODER_ID)
       );
     } else {
       return new Swerve(
