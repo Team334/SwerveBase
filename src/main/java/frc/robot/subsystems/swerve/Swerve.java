@@ -13,7 +13,7 @@ import frc.lib.subsystem.AdvancedSubsystem;
 import monologue.Logged;
 
 public class Swerve extends AdvancedSubsystem implements Logged {
-  private final SwerveModule _m = new SwerveModule(new TalonModule("front left", 1, 1, 1)); 
+  private final SwerveModule _m = new SwerveModule(new RealModule("front left", 1, 1, 1)); 
 
   /** Creates a new Swerve. */
   public Swerve() {}

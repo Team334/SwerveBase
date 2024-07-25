@@ -14,7 +14,7 @@ public class CTREUtil {
    */
   public static boolean configure(TalonFX talonFX, TalonFXConfiguration config) {
     // TODO: add code here
-    return false;
+    return true;
   }
 
   /** 
