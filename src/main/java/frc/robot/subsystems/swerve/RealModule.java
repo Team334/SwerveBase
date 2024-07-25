@@ -27,14 +27,12 @@ public class RealModule implements ModuleIO {
   private final StatusSignal<Double> _driveVelocityGetter;
   private final StatusSignal<Double> _encoderPositionGetter;
 
-  private final String _name;
+  private String _name;
 
   private boolean _driveMotorConfigError;
   private boolean _turnMotorConfigError;
 
-  public RealModule(String name, int driveMotorId, int turnMotorId, int encoderId) {
-    _name = name;
-
+  public RealModule(int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
     _turnMotor = new TalonFX(turnMotorId);
     _turnEncoder = new CANcoder(encoderId);
@@ -49,6 +47,11 @@ public class RealModule implements ModuleIO {
 
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);
+  }
+
+  /** Gives this io the name of its parent SwerveModule to use when displaying info. */
+  public void setName(String name) {
+    _name = name;
   }
 
   @Override

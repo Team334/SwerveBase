@@ -39,9 +39,9 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements SelfChe
       selfCheck(this::alert, this::hasErrors).until(this::hasErrors),
       Commands.runOnce(() -> {
         if (_hasErrors) { 
-          alert("Self check failed, check errors!", AlertType.ERROR);
+          alert(getName() + ": Self check failed, check errors!", AlertType.ERROR);
         } else {
-          alert("Self check finished.", AlertType.INFO);
+          alert(getName() + ": Self check finished.", AlertType.INFO);
         }
       })
     );

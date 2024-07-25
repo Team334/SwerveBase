@@ -39,7 +39,7 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
-    // Monologue.setupMonologue(this, "Robot", false, true);
+    Monologue.setupMonologue(this, "Robot", false, true);
 
     // DataLogManager.start();
     // URCL.start();
@@ -67,7 +67,7 @@ public class Robot extends TimedRobot implements Logged {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
-    // Monologue.updateAll();
+    Monologue.updateAll();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

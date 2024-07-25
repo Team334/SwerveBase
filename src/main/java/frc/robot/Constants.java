@@ -6,6 +6,8 @@ package frc.robot;
 
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Velocity;
+
 import static edu.wpi.first.units.Units.*;
 
 /**
@@ -21,22 +23,27 @@ public final class Constants {
     public static final int DRIVER_CONTROLLER = 0;
   }
 
-  public static class SwerveModuleConstants {
-    public static final double DRIVE_KS = 0;
-    public static final double DRIVE_KV = 0;
-    public static final double DRIVE_KA = 0;
+  public static class SwerveConstants {
+    public static final Measure<Velocity<Distance>> MAX_SPEED = MetersPerSecond.of(0); // (rate of change of distance)
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_ACCELERATION = MetersPerSecondPerSecond.of(0); // (rate of change of rate of change of distance)
+  }
 
-    public static final double DRIVE_KP = 0;
+  public static class SwerveModuleConstants {
+    public static final double DRIVE_KS = 1;
+    public static final double DRIVE_KV = 1;
+    public static final double DRIVE_KA = 1;
+
+    public static final double DRIVE_KP = 1;
 
     public static final double DRIVE_GEARING = 6.75;
 
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
     // this is only needed for sim
-    public static final double TURN_KV = 0;
-    public static final double TURN_KA = 0;
+    public static final double TURN_KV = 1;
+    public static final double TURN_KA = 1;
 
-    public static final double TURN_KP = 0;
+    public static final double TURN_KP = 1;
 
     public static final double TURN_GEARING = 150/7;
   }

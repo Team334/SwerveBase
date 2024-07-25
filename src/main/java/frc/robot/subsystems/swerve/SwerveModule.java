@@ -14,16 +14,27 @@ import monologue.Annotations.Log;
 public class SwerveModule implements SelfChecked, Logged {
   private final ModuleIO _io;
 
+  private final String _name;
+
   private double _oldVelocity = 0; 
 
-  @Log.NT
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
-  public SwerveModule(ModuleIO io) {
+  public SwerveModule(String name, ModuleIO io) {
     _io = io;
+    _name = name;
+    
+    if (_io instanceof RealModule) ((RealModule) _io).setName(_name);
+  }
+
+  /** Returns the last desired set state for this module. */
+  @Log.NT
+  public SwerveModuleState getDesiredState() {
+    return _desiredState;
   }
 
   /** Get the measured state of this module. */
+  @Log.NT
   public SwerveModuleState getState() {
     return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
   }
