@@ -4,13 +4,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.units.Velocity;
 
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -26,8 +29,14 @@ public final class Constants {
   }
 
   public static class SwerveConstants {
-    public static final Measure<Velocity<Distance>> MAX_SPEED = MetersPerSecond.of(0); // (rate of change of distance)
-    public static final Measure<Velocity<Velocity<Distance>>> MAX_ACCELERATION = MetersPerSecondPerSecond.of(0); // (rate of change of rate of change of distance)
+    // (rate of change of distance)
+    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(0);
+    // (rate of change of rate of change of distance)
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(0);
+    
+    public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(0);
+    public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.of(0).per(Second);
+
 
     public static final Translation2d[] WHEEL_LOCATIONS = {}; 
   }

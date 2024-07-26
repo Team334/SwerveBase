@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -18,8 +20,12 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
+import frc.robot.Robot;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
+import frc.robot.subsystems.swerve.gyro.GyroIO;
+import frc.robot.subsystems.swerve.gyro.NavXGyro;
+import frc.robot.subsystems.swerve.gyro.SimGyro;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -31,6 +37,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   private final List<SwerveModule> _modules;
 
+  private final GyroIO _gyro;
+  private Rotation2d _simYaw = new Rotation2d();
+
   private SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.WHEEL_LOCATIONS);
 
   /** The control of the drive motors in the swerve's modules. */
@@ -39,6 +48,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Whether to allow the modules in the drive to turn in place. */
   public boolean allowTurnInPlace = false;
 
+  /** Whether the swerve is driven field oriented or not. */
+  public boolean isFieldOriented = false;
+
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
     if (RobotBase.isReal()) {
@@ -46,14 +58,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         new RealModule(FRONT_LEFT_DRIVE_ID, FRONT_LEFT_TURN_ID, FRONT_LEFT_ENCODER_ID),
         new RealModule(FRONT_RIGHT_DRIVE_ID, FRONT_RIGHT_TURN_ID, FRONT_RIGHT_ENCODER_ID),
         new RealModule(BACK_RIGHT_DRIVE_ID, BACK_RIGHT_TURN_ID, BACK_RIGHT_ENCODER_ID),
-        new RealModule(BACK_LEFT_DRIVE_ID, BACK_LEFT_TURN_ID, BACK_LEFT_ENCODER_ID)
+        new RealModule(BACK_LEFT_DRIVE_ID, BACK_LEFT_TURN_ID, BACK_LEFT_ENCODER_ID),
+        new NavXGyro()
       );
     } else {
       return new Swerve(
         new SimModule(),
         new SimModule(),
         new SimModule(), 
-        new SimModule()
+        new SimModule(),
+        new SimGyro()
       );
     }
   }
@@ -63,12 +77,15 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     ModuleIO frontLeft,
     ModuleIO frontRight,
     ModuleIO backRight,
-    ModuleIO backLeft
+    ModuleIO backLeft,
+    GyroIO gyro
   ) {
     _frontLeft = new SwerveModule("Front Left Module", frontLeft);
     _frontRight = new SwerveModule("Front Right Module", frontRight);
     _backRight = new SwerveModule("Back Right Module", backRight);
     _backLeft = new SwerveModule("Back Left Module", backLeft);
+
+    _gyro = gyro;
 
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
   }
@@ -76,11 +93,27 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** 
    * Drives the swerve drive.
    * 
-   * @param chassisSpeeds The chassis speeds to drive the swerve at.
-   * @param isFieldOriented Whether the speeds are robot relative or field oriented.
+   * @param velX The x velocity in meters per second. 
+   * @param velY The y velocity in meters per second.
+   * @param velOmega The rotational velocity in radians per second.
    */
-  public void drive(ChassisSpeeds chassisSpeeds, boolean isFieldOriented) {
-    
+  public void drive(double velX, double velY, double velOmega) {
+    ChassisSpeeds chassisSpeeds;
+
+    if (isFieldOriented) {
+      chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+        velX,
+        velY,
+        velOmega,
+        getHeading()
+      );
+    } else {
+      chassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
+    }
+
+    chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod); // wtf does this mean
+
+    setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
 
   /** Returns the robot-relative ChassisSpeeds of the drive. */
@@ -103,7 +136,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** Set all the module states (must be in correct order). */
   public void setModuleStates(SwerveModuleState[] states) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_SPEED.magnitude());
+    SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude());
 
     for (int i = 0; i < _modules.size(); i++) {
       _modules.get(i).setModuleState(states[i], controlMode, allowTurnInPlace);
@@ -115,6 +148,33 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // This method will be called once per scheduler run
     for (SwerveModule module : _modules) {
       module.periodic();
+    }
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
+  }
+
+  /** Returns the pose of the drive from the pose estimator. */
+  @Log.NT(key = "Pose")
+  public Pose2d getPose() {
+    return new Pose2d();
+  }
+
+  /** Returns the heading of the drive. */
+  @Log.NT(key = "Heading")
+  public Rotation2d getHeading() {
+    return getPose().getRotation();
+  }
+
+  /** Returns the raw heading of the gyro. */
+  @Log.NT(key = "Raw Heading")
+  public Rotation2d getRawHeading() {
+    if (RobotBase.isReal()) {
+      return _gyro.getYaw();
+    } else {
+      return _simYaw;
     }
   }
 
