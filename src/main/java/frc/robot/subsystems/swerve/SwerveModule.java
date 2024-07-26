@@ -44,9 +44,14 @@ public class SwerveModule implements SelfChecked {
     return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
   }
 
-  /** Set the target state for this module. */
-  public void setModuleState(SwerveModuleState state, ControlMode controlMode) {
+  /** Set the desired target state for this module. */
+  public void setModuleState(SwerveModuleState state, ControlMode controlMode, boolean allowTurnInPlace) {
     _desiredState = SwerveModuleState.optimize(state, _io.getAngle());
+
+    if (_desiredState.speedMetersPerSecond == 0 && !allowTurnInPlace) {
+      _desiredState.speedMetersPerSecond = 0;
+    }
+    
     _controlMode = controlMode;
   }
 

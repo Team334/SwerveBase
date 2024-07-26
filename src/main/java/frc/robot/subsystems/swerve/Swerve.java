@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -36,6 +35,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** The control of the drive motors in the swerve's modules. */
   public ControlMode controlMode = ControlMode.OPEN_LOOP;
+
+  /** Whether to allow the modules in the drive to turn in place. */
+  public boolean allowTurnInPlace = false;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -71,6 +73,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
   }
 
+  /** 
+   * Drives the swerve drive.
+   * 
+   * @param chassisSpeeds The chassis speeds to drive the swerve at.
+   * @param isFieldOriented Whether the speeds are robot relative or field oriented.
+   */
+  public void drive(ChassisSpeeds chassisSpeeds, boolean isFieldOriented) {
+    
+  }
+
   /** Returns the robot-relative ChassisSpeeds of the drive. */
   @Log.NT(key = "Chassis Speeds")
   public ChassisSpeeds getChassisSpeeds() {
@@ -94,7 +106,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_SPEED.magnitude());
 
     for (int i = 0; i < _modules.size(); i++) {
-      _modules.get(i).setModuleState(states[i], controlMode);
+      _modules.get(i).setModuleState(states[i], controlMode, allowTurnInPlace);
     }
   }
 
