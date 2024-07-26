@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -18,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -28,6 +31,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final SwerveModule _backLeft;
 
   private final List<SwerveModule> _modules;
+
+  private SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.WHEEL_LOCATIONS);
+
+  /** The control of the drive motors in the swerve's modules. */
+  public ControlMode controlMode = ControlMode.OPEN_LOOP;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -63,16 +71,22 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
   }
 
+  /** Returns the robot-relative ChassisSpeeds of the drive. */
+  @Log.NT(key = "Chassis Speeds")
+  public ChassisSpeeds getChassisSpeeds() {
+    return _kinematics.toChassisSpeeds(getModuleStates());
+  }
+
   /** Get all the desired states of all the modules (in correct order). */
-  @Log.NT
+  @Log.NT(key = "Desired Module States")
   public SwerveModuleState[] getDesiredModuleStates() {
     return _modules.stream().map(SwerveModule::getDesiredState).toArray(SwerveModuleState[]::new);
   }
   
   /** Get all the module states (in correct order). */
-  @Log.NT
+  @Log.NT(key = "Module States")
   public SwerveModuleState[] getModuleStates() {
-    return _modules.stream().map(SwerveModule::getState).toArray(SwerveModuleState[]::new);
+    return _modules.stream().map(SwerveModule::getModuleState).toArray(SwerveModuleState[]::new);
   }
 
   /** Set all the module states (must be in correct order). */
@@ -80,13 +94,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_SPEED.magnitude());
 
     for (int i = 0; i < _modules.size(); i++) {
-      _modules.get(i).setState(states[i]);
+      _modules.get(i).setModuleState(states[i], controlMode);
     }
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    for (SwerveModule module : _modules) {
+      module.periodic();
+    }
   }
 
   @Override

@@ -13,13 +13,13 @@ public interface ModuleIO extends SelfChecked {
   /**
    * Sets the targets of the drive motor.
    * @param velocity The target velocity in m/s.
-   * @param acceleration The target acceleration in m/s^2.
+   * @param isOpenLoop Whether the target velocity is to be meet through open loop control or not.
    */
-  public void setDriveTargets(double velocity, double acceleration);
+  public void setVelocity(double velocity, boolean isOpenLoop);
 
-  /** Returns the angle of the module in degrees. */
+  /** Returns the angle of the module. */
   public Rotation2d getAngle();
 
-  /** Sets the angle of the module in degrees. */
-  public void setAngle(double angle);
+  /** Sets the angle of the module. */
+  public void setAngle(Rotation2d angle);
 }

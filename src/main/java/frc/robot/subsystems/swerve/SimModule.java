@@ -27,21 +27,32 @@ public class SimModule implements ModuleIO {
 
   private final PIDController _turnPID = new PIDController(SwerveModuleConstants.TURN_KP, 0, 0);
 
+  private double _oldVelocity = 0;
+
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
   }
 
   @Override
-  public void setDriveTargets(double velocity, double acceleration) {
-    double outVolts = _driveFF.calculate(velocity, acceleration) + _drivePID.calculate(getDriveVelocity(), velocity);
+  public void setVelocity(double velocity, boolean isOpenLoop) {
+    double outVolts;
+
+    if (isOpenLoop) {
+      outVolts = _driveFF.calculate(velocity);
+    } else {
+      outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
+      outVolts += _drivePID.calculate(getDriveVelocity(), velocity);
+    }
     
     _driveMotor.setInputVoltage(outVolts);
     _driveMotor.update(Robot.kDefaultPeriod);
+
+    _oldVelocity = velocity;
   }
 
   @Override
-  public void setAngle(double angle) {
-    double outVolts = _turnPID.calculate(getAngle().getDegrees(), angle);
+  public void setAngle(Rotation2d angle) {
+    double outVolts = _turnPID.calculate(getAngle().getDegrees(), angle.getDegrees());
 
     _turnMotor.setInputVoltage(outVolts);
     _turnMotor.update(Robot.kDefaultPeriod);

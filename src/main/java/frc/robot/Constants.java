@@ -10,6 +10,8 @@ import edu.wpi.first.units.Velocity;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.geometry.Translation2d;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -26,6 +28,8 @@ public final class Constants {
   public static class SwerveConstants {
     public static final Measure<Velocity<Distance>> MAX_SPEED = MetersPerSecond.of(0); // (rate of change of distance)
     public static final Measure<Velocity<Velocity<Distance>>> MAX_ACCELERATION = MetersPerSecondPerSecond.of(0); // (rate of change of rate of change of distance)
+
+    public static final Translation2d[] WHEEL_LOCATIONS = {}; 
   }
 
   public static class SwerveModuleConstants {
@@ -44,7 +48,6 @@ public final class Constants {
     public static final int BACK_LEFT_DRIVE_ID = 0;
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
-
 
     public static final double DRIVE_KS = 1;
     public static final double DRIVE_KV = 1;

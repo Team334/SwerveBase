@@ -8,6 +8,7 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -17,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.FaultLogger;
 import frc.lib.Alert.AlertType;
 import frc.lib.util.CTREUtil;
+import frc.robot.Robot;
 
 public class RealModule implements ModuleIO {
   private final TalonFX _driveMotor;
@@ -31,6 +33,8 @@ public class RealModule implements ModuleIO {
 
   private boolean _driveMotorConfigError;
   private boolean _turnMotorConfigError;
+
+  private double _oldVelocity = 0;
 
   public RealModule(int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
@@ -55,14 +59,17 @@ public class RealModule implements ModuleIO {
   }
 
   @Override
-  public void setDriveTargets(double velocity, double acceleration) {
-    VelocityVoltage control = new VelocityVoltage(velocity).withAcceleration(acceleration);
+  public void setVelocity(double velocity, boolean isOpenLoop) {
+    VelocityVoltage control = new VelocityVoltage(velocity).withAcceleration((velocity - _oldVelocity) / Robot.kDefaultPeriod);
+    control.Slot = isOpenLoop ? 0 : 1;
     _driveMotor.setControl(control);
+
+    _oldVelocity = velocity;
   }
 
   @Override
-  public void setAngle(double angle) {
-    PositionVoltage control = new PositionVoltage(angle);
+  public void setAngle(Rotation2d angle) {
+    PositionVoltage control = new PositionVoltage(angle.getDegrees());
     _turnMotor.setControl(control);
   }
 
