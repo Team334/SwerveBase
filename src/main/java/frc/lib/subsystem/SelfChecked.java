@@ -17,4 +17,20 @@ public interface SelfChecked {
   public default Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
     return Commands.none();
   };
+
+  /**
+   * Creates a new sequential command group that ends and prevents any other commands in the group
+   * from running when a given condition is met.
+   * 
+   * This should be used to create a sequential command group of individual instant self check commands for robot self checking.
+   * 
+   * @param condition The condition that if true, ends the command.
+   * @param commands The commands that make up the group.
+   */
+  public static Command sequentialUntil(BooleanSupplier condition, Command... commands) {
+    for (int i = 1; i < commands.length; ++i) {
+      commands[i] = commands[i].unless(condition);
+    }
+    return Commands.sequence(commands).until(condition);
+  }
 }

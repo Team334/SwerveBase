@@ -1,14 +1,13 @@
 package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-import static frc.robot.util.Misc.sequentialUntil;
+import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;

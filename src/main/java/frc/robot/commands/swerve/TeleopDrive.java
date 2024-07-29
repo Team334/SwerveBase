@@ -10,6 +10,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 
 public class TeleopDrive extends Command {
   private final Swerve _swerve;
@@ -35,15 +36,23 @@ public class TeleopDrive extends Command {
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    _swerve.isFieldOriented = false;
+    _swerve.controlMode = ControlMode.OPEN_LOOP;
+    _swerve.allowTurnInPlace = false;
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
     _swerve.drive(
-      _xVelLimiter.calculate(_velX.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
-      _yVelLimiter.calculate(_velY.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
-      _omegaVelLimiter.calculate(_velOmega.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
+      // _xVelLimiter.calculate(_velX.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
+      // _yVelLimiter.calculate(_velY.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
+      // _omegaVelLimiter.calculate(_velOmega.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
+      1,
+      0,
+      Math.PI
+      // 0
     );
   }
 

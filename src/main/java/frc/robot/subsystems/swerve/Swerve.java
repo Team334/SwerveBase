@@ -4,7 +4,7 @@
 
 package frc.robot.subsystems.swerve;
 
-import static frc.robot.util.Misc.sequentialUntil;
+import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
 import java.util.List;
@@ -111,7 +111,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       chassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
     }
 
-    chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod); // wtf does this mean
+    
+    chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
 
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
@@ -153,7 +154,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   @Override
   public void simulationPeriodic() {
-    _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
+    _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
   }
 
   /** Returns the pose of the drive from the pose estimator. */
@@ -165,7 +166,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the heading of the drive. */
   @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
-    return getPose().getRotation();
+    // return getPose().getRotation();
+    return getRawHeading();
   }
 
   /** Returns the raw heading of the gyro. */

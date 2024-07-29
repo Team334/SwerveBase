@@ -1,7 +1,7 @@
 package frc.robot.subsystems.swerve.gyro;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
-import static frc.robot.util.Misc.sequentialUntil;
+import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
