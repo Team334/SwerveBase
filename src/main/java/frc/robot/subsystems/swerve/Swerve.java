@@ -111,7 +111,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       chassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
     }
 
-    
     chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
 
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
@@ -166,8 +165,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the heading of the drive. */
   @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
-    // return getPose().getRotation();
-    return getRawHeading();
+    return getPose().getRotation();
   }
 
   /** Returns the raw heading of the gyro. */

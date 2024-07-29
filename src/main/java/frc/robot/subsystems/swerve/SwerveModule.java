@@ -8,10 +8,13 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.SelfChecked;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
-public class SwerveModule implements SelfChecked {
+public class SwerveModule implements SelfChecked, Logged {
   private final ModuleIO _io;
 
+  @Log.NT.Once
   private final String _name;
 
   private SwerveModuleState _desiredState = new SwerveModuleState();
@@ -35,11 +38,13 @@ public class SwerveModule implements SelfChecked {
   }
 
   /** Returns the last desired set state for this module. */
+  @Log.NT(key = "Desired Module State")
   public SwerveModuleState getDesiredState() {
     return _desiredState;
   }
 
   /** Get the measured state of this module. */
+  @Log.NT(key = "Module State")
   public SwerveModuleState getModuleState() {
     return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
   }
