@@ -1,0 +1,36 @@
+{
+  "version": "3.0.1",
+  "layout": [
+    {
+      "type": 9,
+      "fields": [
+        {
+          "key": "NT:/Robot/m_robotContainer/_swerve/Module States",
+          "sourceTypeIndex": 1,
+          "sourceType": "SwerveModuleState[]"
+        },
+        {
+          "key": "NT:/Robot/m_robotContainer/_swerve/Desired Module States",
+          "sourceTypeIndex": 1,
+          "sourceType": "SwerveModuleState[]"
+        },
+        {
+          "key": "NT:/Robot/m_robotContainer/_swerve/Raw Heading",
+          "sourceTypeIndex": 1,
+          "sourceType": "Rotation2d"
+        }
+      ],
+      "listFields": [],
+      "options": {
+        "maxSpeed": 5,
+        "rotationUnits": "radians",
+        "arrangement": "0,1,2,3",
+        "sizeLeftRight": 0.65,
+        "sizeFrontBack": 0.65,
+        "forwardDirection": "up"
+      },
+      "configHidden": false,
+      "title": "Swerve"
+    }
+  ]
+}
