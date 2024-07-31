@@ -43,7 +43,7 @@ public class SimModule implements ModuleIO {
       outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
       outVolts += _drivePID.calculate(getDriveVelocity(), velocity);
     }
-    
+
     _driveMotor.setInputVoltage(outVolts);
     _driveMotor.update(Robot.kDefaultPeriod);
 

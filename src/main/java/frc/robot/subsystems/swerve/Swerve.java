@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
@@ -40,15 +41,18 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final GyroIO _gyro;
   private Rotation2d _simYaw = new Rotation2d();
 
-  private SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.WHEEL_LOCATIONS);
+  private final SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.MODULE_POSITIONS);
 
   /** The control of the drive motors in the swerve's modules. */
+  @Log.NT(key = "Module Control Mode")
   public ControlMode controlMode = ControlMode.OPEN_LOOP;
 
   /** Whether to allow the modules in the drive to turn in place. */
+  @Log.NT(key = "Allow Turn In Place")
   public boolean allowTurnInPlace = false;
 
   /** Whether the swerve is driven field oriented or not. */
+  @Log.NT(key = "Field Oriented")
   public boolean isFieldOriented = false;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
@@ -113,6 +117,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
 
+    log("Desired Chassis Speeds", chassisSpeeds);
+
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
 
@@ -136,7 +142,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** Set all the module states (must be in correct order). */
   public void setModuleStates(SwerveModuleState[] states) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude());
+    SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
 
     for (int i = 0; i < _modules.size(); i++) {
       _modules.get(i).setModuleState(states[i], controlMode, allowTurnInPlace);

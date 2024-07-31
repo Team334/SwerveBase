@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.robot.Constants.Ports;
 import frc.robot.commands.swerve.TeleopDrive;
 import frc.robot.subsystems.swerve.Swerve;
 import monologue.Logged;
@@ -20,10 +22,17 @@ import monologue.Logged;
  */
 public class RobotContainer implements Logged {
   private final Swerve _swerve = Swerve.create();
+
+  private final CommandPS5Controller _driverController = new CommandPS5Controller(Ports.DRIVER_CONTROLLER);
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    _swerve.setDefaultCommand(new TeleopDrive(_swerve, null, null, null));
+    _swerve.setDefaultCommand(new TeleopDrive(
+      _swerve,
+      _driverController::getLeftY,
+      _driverController::getLeftX,
+      _driverController::getRightX
+    ));
 
     // Configure the trigger bindings
     configureBindings();

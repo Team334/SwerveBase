@@ -4,6 +4,8 @@
 
 package frc.robot.commands.swerve;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -46,13 +48,9 @@ public class TeleopDrive extends Command {
   @Override
   public void execute() {
     _swerve.drive(
-      // _xVelLimiter.calculate(_velX.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
-      // _yVelLimiter.calculate(_velY.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.magnitude()),
-      // _omegaVelLimiter.calculate(_velOmega.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
-      1,
-      0,
-      Math.PI
-      // 0
+      _xVelLimiter.calculate(-_velX.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
+      _yVelLimiter.calculate(-_velY.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
+      _omegaVelLimiter.calculate(-_velOmega.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
     );
   }
 

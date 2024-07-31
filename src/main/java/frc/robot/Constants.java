@@ -22,26 +22,27 @@ import edu.wpi.first.math.geometry.Translation2d;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  // TODO: tune all these values according to robot
   public static class Ports {
     public static final int DRIVER_CONTROLLER = 0;
   }
 
   public static class SwerveConstants {
-    // (rate of change of distance)
-    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(10);
-    // (rate of change of rate of change of distance)
-    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(0);
+    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = FeetPerSecond.of(16.5);
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = FeetPerSecond.of(18).per(Second);
     
-    public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(0);
-    public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.of(0).per(Second);
+    public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(Math.PI);
+    public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.of(Math.PI * 1.5).per(Second);
 
+    public static final Measure<Distance> DRIVE_WIDTH = Meters.of(0.584);
+    public static final Measure<Distance> DRIVE_LENGTH = Meters.of(0.584);
 
-    public static final Translation2d[] WHEEL_LOCATIONS = {
-      new Translation2d(0.292, 0.292), 
-      new Translation2d(0.292, -0.292), 
-      new Translation2d(-0.292, -0.292),
-      new Translation2d(-0.292, 0.292)
-    }; 
+    public static final Translation2d[] MODULE_POSITIONS = new Translation2d[]{
+      new Translation2d(DRIVE_LENGTH.divide(2), DRIVE_WIDTH.divide(2)),
+      new Translation2d(DRIVE_LENGTH.divide(2), DRIVE_WIDTH.divide(2).negate()),
+      new Translation2d(DRIVE_LENGTH.divide(2).negate(), DRIVE_WIDTH.divide(2).negate()),
+      new Translation2d(DRIVE_LENGTH.divide(2).negate(), DRIVE_WIDTH.divide(2))
+    };
   }
 
   public static class SwerveModuleConstants {
@@ -61,19 +62,19 @@ public final class Constants {
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
-    public static final double DRIVE_KS = 1;
-    public static final double DRIVE_KV = 1;
-    public static final double DRIVE_KA = 1;
+    public static final double DRIVE_KS = 0;
+    public static final double DRIVE_KV = 2.4;
+    public static final double DRIVE_KA = 2;
 
-    public static final double DRIVE_KP = 1;
+    public static final double DRIVE_KP = 0;
 
     public static final double DRIVE_GEARING = 6.75;
 
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
-    // this is only needed for sim
-    public static final double TURN_KV = 1;
-    public static final double TURN_KA = 1;
+    // turn feedforward is only needed for sim
+    public static final double TURN_KV = 1.58;
+    public static final double TURN_KA = 0.0001;
 
     public static final double TURN_KP = 1;
 
