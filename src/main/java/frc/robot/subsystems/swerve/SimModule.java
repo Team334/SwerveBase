@@ -11,13 +11,20 @@ import frc.robot.Robot;
 
 public class SimModule implements ModuleIO {
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(SwerveModuleConstants.DRIVE_KV, SwerveModuleConstants.DRIVE_KA),
+    LinearSystemId.createDCMotorSystem(
+      // convert meters to radians
+      SwerveModuleConstants.DRIVE_KV / ((2 * Math.PI) / SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude()),
+      SwerveModuleConstants.DRIVE_KA / ((2 * Math.PI) / SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude())
+    ),
     DCMotor.getFalcon500(1),
     SwerveModuleConstants.DRIVE_GEARING
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(SwerveModuleConstants.TURN_KV, SwerveModuleConstants.TURN_KA),
+    LinearSystemId.createDCMotorSystem(
+      SwerveModuleConstants.TURN_KV,
+      SwerveModuleConstants.TURN_KA
+    ),
     DCMotor.getFalcon500(1),
     SwerveModuleConstants.TURN_GEARING
   );
@@ -39,7 +46,7 @@ public class SimModule implements ModuleIO {
 
     if (isOpenLoop) {
       outVolts = _driveFF.calculate(velocity);
-    } else {
+    } else {  
       outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
       outVolts += _drivePID.calculate(getDriveVelocity(), velocity);
     }

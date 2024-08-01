@@ -171,7 +171,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the heading of the drive. */
   @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
-    return getPose().getRotation();
+    // return getPose().getRotation();
+    return getRawHeading();
   }
 
   /** Returns the raw heading of the gyro. */

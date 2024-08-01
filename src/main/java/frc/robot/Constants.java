@@ -12,6 +12,7 @@ import edu.wpi.first.units.Velocity;
 import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -62,8 +63,9 @@ public final class Constants {
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
-    public static final double DRIVE_KS = 0.3;
-    public static final double DRIVE_KV = 2.6;
+    // feedforward (meters)
+    public static final double DRIVE_KS = 0.1;
+    public static final double DRIVE_KV = 2.38;
     public static final double DRIVE_KA = 0.01;
 
     public static final double DRIVE_KP = 0;
@@ -72,11 +74,11 @@ public final class Constants {
 
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
-    // turn feedforward is only needed for sim
+    // turn feedforward is only needed for sim (radians)
     public static final double TURN_KV = 1.58;
-    public static final double TURN_KA = 0.0001;
+    public static final double TURN_KA = 0.001;
 
-    public static final double TURN_KP = 1;
+    public static final double TURN_KP = 1.5;
 
     public static final double TURN_GEARING = 150/7;
   }

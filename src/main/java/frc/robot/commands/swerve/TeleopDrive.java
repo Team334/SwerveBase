@@ -39,7 +39,7 @@ public class TeleopDrive extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    _swerve.isFieldOriented = false;
+    _swerve.isFieldOriented = true;
     _swerve.controlMode = ControlMode.OPEN_LOOP;
     _swerve.allowTurnInPlace = false;
   }
