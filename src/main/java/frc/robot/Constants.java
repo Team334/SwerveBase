@@ -62,9 +62,9 @@ public final class Constants {
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
-    public static final double DRIVE_KS = 0;
-    public static final double DRIVE_KV = 2.4;
-    public static final double DRIVE_KA = 2;
+    public static final double DRIVE_KS = 0.3;
+    public static final double DRIVE_KV = 2.6;
+    public static final double DRIVE_KA = 0.01;
 
     public static final double DRIVE_KP = 0;
 

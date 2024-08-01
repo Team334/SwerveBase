@@ -60,16 +60,16 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getDrivePosition() {
-    return (_driveMotor.getAngularPositionRotations() / SwerveModuleConstants.DRIVE_GEARING) * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
   public double getDriveVelocity() {
-    return (_driveMotor.getAngularVelocityRPM() / 60 / SwerveModuleConstants.DRIVE_GEARING) * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularVelocityRPM() / 60 * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
   public Rotation2d getAngle() {
-    return Rotation2d.fromRadians(_turnMotor.getAngularPositionRotations() / SwerveModuleConstants.TURN_GEARING);
+    return Rotation2d.fromRotations(_turnMotor.getAngularPositionRotations());
   }
 }
