@@ -85,6 +85,30 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
+  public static class OdometryThread {
+    private Thread _thread = new Thread(this::run, "Odometry Thread");
+
+    public OdometryThread() {
+      
+    }
+
+    public void start() {
+      _thread.start();
+    }
+
+    public void stop() {
+      try {
+        _thread.join(0);
+      } catch (Exception e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+
+    private void run() {
+
+    }
+  }
+
   /** Creates a new Swerve. */
   public Swerve(
     ModuleIO frontLeft,
@@ -180,7 +204,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the pose of the drive from the pose estimator. */
   @Log.NT(key = "Pose")
   public Pose2d getPose() {
-    return new Pose2d();
+    return _poseEstimator.getEstimatedPosition();
   }
 
   /** Returns the heading of the drive. */
