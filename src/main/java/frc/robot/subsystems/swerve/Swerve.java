@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,6 +44,13 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private Rotation2d _simYaw = new Rotation2d();
 
   private final SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.MODULE_POSITIONS);
+
+  private final SwerveDrivePoseEstimator _poseEstimator = new SwerveDrivePoseEstimator(
+    _kinematics,
+    getRawHeading(),
+    getModulePositions(),
+    new Pose2d(0, 0, getRawHeading())
+  );
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -138,6 +147,12 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   @Log.NT(key = "Module States")
   public SwerveModuleState[] getModuleStates() {
     return _modules.stream().map(SwerveModule::getModuleState).toArray(SwerveModuleState[]::new);
+  }
+
+  /** Get all the module positions (in correct order). */
+  @Log.NT(key = "Module Positions")
+  public SwerveModulePosition[] getModulePositions() {
+    return _modules.stream().map(SwerveModule::getModulePosition).toArray(SwerveModulePosition[]::new);
   }
 
   /** Set all the module states (must be in correct order). */

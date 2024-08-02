@@ -31,6 +31,32 @@
       },
       "configHidden": false,
       "title": "Swerve"
+    },
+    {
+      "type": 6,
+      "fields": [],
+      "listFields": [
+        [],
+        [
+          {
+            "type": "Robot",
+            "key": "NT:/Robot/m_robotContainer/_swerve/Pose",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose2d"
+          }
+        ]
+      ],
+      "options": {
+        "field": "2024 Field",
+        "alliance": "blue",
+        "robot": "Crab Bot",
+        "unitDistance": "meters",
+        "unitRotation": "radians",
+        "cameraIndex": -1,
+        "fov": 50
+      },
+      "configHidden": false,
+      "title": "3D Field"
     }
   ]
 }

@@ -4,6 +4,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
@@ -47,6 +48,11 @@ public class SwerveModule implements SelfChecked, Logged {
   @Log.NT(key = "Module State")
   public SwerveModuleState getModuleState() {
     return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
+  }
+
+  @Log.NT(key = "Module Position")
+  public SwerveModulePosition getModulePosition() {
+    return new SwerveModulePosition(_io.getDrivePosition(), _io.getAngle());
   }
 
   /** Set the desired target state for this module. */
