@@ -48,14 +48,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   private final SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.MODULE_POSITIONS);
 
-  private final SwerveDrivePoseEstimator _poseEstimator = new SwerveDrivePoseEstimator(
-    _kinematics,
-    getRawHeading(),
-    getModulePositions(),
-    new Pose2d(0, 0, getRawHeading())
-  );
+  private final SwerveDrivePoseEstimator _poseEstimator;
 
-  private final OdometryThread _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
+  private final OdometryThread _odomThread;
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -101,8 +96,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
+      _thread.setPriority(Thread.MIN_PRIORITY);
 
       if (RobotBase.isSimulation()) return;
+
+      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
 
       for (int i = 0; i < _modules.size(); i++) {
         BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getSignals();
@@ -134,14 +132,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     private void run() {
-      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
-      _thread.setPriority(Thread.MIN_PRIORITY);
-
       while (true) {
         Timer.delay(1 / _frequency); // delay, allowing signals to be re-fetched
 
         refreshSignals(); // update signals
-
+        
         _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
       }
     }
@@ -164,6 +159,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
 
+    _poseEstimator = new SwerveDrivePoseEstimator(
+      _kinematics,
+      getRawHeading(),
+      getModulePositions(),
+      new Pose2d(0, 0, getRawHeading())
+    );
+
+    _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
     _odomThread.start();
   }
 
@@ -250,8 +253,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the heading of the drive. */
   @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
-    // return getPose().getRotation();
-    return getRawHeading();
+    return getPose().getRotation();
+    // return getRawHeading();
   }
 
   /** Returns the raw heading of the gyro. */
