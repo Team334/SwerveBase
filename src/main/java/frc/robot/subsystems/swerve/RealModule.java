@@ -6,6 +6,7 @@ import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -26,7 +27,7 @@ public class RealModule implements ModuleIO {
 
   private final StatusSignal<Double> _drivePositionGetter;
   private final StatusSignal<Double> _driveVelocityGetter;
-  private final StatusSignal<Double> _encoderPositionGetter;
+  private final StatusSignal<Double> _turnPositionGetter;
 
   private String _name;
 
@@ -42,7 +43,7 @@ public class RealModule implements ModuleIO {
 
     _drivePositionGetter = _driveMotor.getPosition();
     _driveVelocityGetter = _driveMotor.getVelocity();
-    _encoderPositionGetter = _turnEncoder.getAbsolutePosition();
+    _turnPositionGetter = _turnEncoder.getAbsolutePosition();
 
     // TODO: Add all motor configs here
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, null);
@@ -74,19 +75,37 @@ public class RealModule implements ModuleIO {
 
   @Override
   public double getDrivePosition() {
-    return _drivePositionGetter.refresh().getValue();
+    return _drivePositionGetter.getValue();
   }
 
   @Override
   public double getDriveVelocity() {
-    return _driveVelocityGetter.refresh().getValue();
+    return _driveVelocityGetter.getValue();
   }
 
   @Override
   public Rotation2d getAngle() {
-    return Rotation2d.fromRotations(_encoderPositionGetter.refresh().getValueAsDouble());
+    return Rotation2d.fromRotations(_turnPositionGetter.getValue());
   }
 
+  /**
+   * Returns the CTRE StatusSignals relevant to this module as an array. These signals must be refreshed
+   * periodically for the io getters of this module to update in value.
+   * 
+   * <pre>
+   * array[0] - Drive Position
+   * array[1] - Drive Velocity
+   * array[2] - Turn Position
+   * </pre>
+   */
+  public BaseStatusSignal[] getSignals() {
+    return new BaseStatusSignal[] {
+      _drivePositionGetter,
+      _driveVelocityGetter,
+      _turnPositionGetter
+    };
+  }
+  
   @Override
   public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
     return sequentialUntil(

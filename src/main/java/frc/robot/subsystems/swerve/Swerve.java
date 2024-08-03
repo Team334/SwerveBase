@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
@@ -51,6 +54,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     getModulePositions(),
     new Pose2d(0, 0, getRawHeading())
   );
+
+  private final OdometryThread _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -85,17 +90,41 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
-  public static class OdometryThread {
+  /** 
+   * An odometry thread that updates module signals at a specified frequency and feeds the signals into a pose estimator.
+   */
+  public class OdometryThread {
     private Thread _thread = new Thread(this::run, "Odometry Thread");
+    private final double _frequency;
 
-    public OdometryThread() {
-      
+    private final BaseStatusSignal[] _signals = new BaseStatusSignal[3 * 4];
+
+    public OdometryThread(double frequency) {
+      _frequency = frequency;
+
+      if (RobotBase.isSimulation()) return;
+
+      for (int i = 0; i < _modules.size(); i++) {
+        BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getSignals();
+        _signals[(i*3) + 0] = moduleSignals[0];
+        _signals[(i*3) + 1] = moduleSignals[1];
+        _signals[(i*3) + 2] = moduleSignals[2];
+      }
     }
 
+    /** Refreshes all the odom signals. */
+    public void refreshSignals() {
+      if (RobotBase.isReal()) {
+        BaseStatusSignal.refreshAll(_signals);
+      }
+    }
+
+    /** Starts the odom thread. */
     public void start() {
       _thread.start();
     }
 
+    /** Stops the odom thread. */
     public void stop() {
       try {
         _thread.join(0);
@@ -105,7 +134,15 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     private void run() {
+      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
 
+      while (true) {
+        Timer.delay(1 / _frequency); // delay, allowing signals to be re-fetched
+
+        refreshSignals(); // update signals
+
+        _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
+      }
     }
   }
 
@@ -125,6 +162,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _gyro = gyro;
 
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
+
+    _odomThread.start();
   }
 
   /** 

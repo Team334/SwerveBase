@@ -29,6 +29,8 @@ public final class Constants {
   }
 
   public static class SwerveConstants {
+    public static final double ODOM_FREQUENCY = 100;
+
     public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = FeetPerSecond.of(16.5);
     public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = FeetPerSecond.of(18).per(Second);
     

@@ -38,6 +38,10 @@ public class SwerveModule implements SelfChecked, Logged {
     if (_io instanceof RealModule) ((RealModule) _io).setName(_name);
   }
 
+  public ModuleIO getIO() {
+    return _io;
+  }
+
   /** Returns the last desired set state for this module. */
   @Log.NT(key = "Desired Module State")
   public SwerveModuleState getDesiredState() {
