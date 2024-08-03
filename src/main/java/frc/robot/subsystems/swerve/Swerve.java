@@ -135,6 +135,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     private void run() {
       BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
+      _thread.setPriority(Thread.MIN_PRIORITY);
 
       while (true) {
         Timer.delay(1 / _frequency); // delay, allowing signals to be re-fetched
