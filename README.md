@@ -11,3 +11,4 @@ Elastic alerts widgets are used for multiple purposes in this project. A FaultLo
 - [Team 1155 Swerve Base](https://github.com/SciBorgs/Hydrogen/)
 - [Team 3015 Code for 2024](https://github.com/3015RangerRobotics/2024Public/tree/main/RobotCode2024/src/main/java/frc)
 - [Team 353 Code for 2024](https://github.com/POBots-353/2024RobotCode/tree/main)
+- [CTRE Swerve API](https://api.ctr-electronics.com/phoenix6/release/java/com/ctre/phoenix6/mechanisms/swerve/SwerveDrivetrain.html)
