@@ -4,9 +4,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.lib.subsystem.SelfChecked;
 
 public interface ModuleIO extends SelfChecked {
-  /** Returns the position of the drive wheel in meters. */
-  public double getDrivePosition();
-
   /** Returns the velocity of the drive wheel in m/s. */
   public double getDriveVelocity();
 
@@ -22,4 +19,16 @@ public interface ModuleIO extends SelfChecked {
 
   /** Sets the angle of the module. */
   public void setAngle(Rotation2d angle);
+
+  /**
+   * Returns the angle of the module for odom. Note this only can be called in the odom thread
+   * to avoid thread safety issues with signals.
+  */
+  public Rotation2d getAngleOdom();
+
+  /**
+   * Returns the drive motor position for odom. Note this only can be called in the odom thread
+   * to avoid thread safety issues with signals.
+  */
+  public double getDrivePositionOdom();
 }

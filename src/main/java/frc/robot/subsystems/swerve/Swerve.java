@@ -9,6 +9,10 @@ import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
@@ -51,6 +55,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final SwerveDrivePoseEstimator _poseEstimator;
 
   private final OdometryThread _odomThread;
+  private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
+
+  private Pose2d _cachedPose;
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -92,22 +99,20 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     private Thread _thread = new Thread(this::run, "Odometry Thread");
     private final double _frequency;
 
-    private final BaseStatusSignal[] _signals = new BaseStatusSignal[3 * 4];
+    private final BaseStatusSignal[] _signals = new BaseStatusSignal[2 * 4]; // two status signals per module
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
-      _thread.setPriority(Thread.MIN_PRIORITY);
 
       if (RobotBase.isSimulation()) return;
 
-      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
-
       for (int i = 0; i < _modules.size(); i++) {
-        BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getSignals();
-        _signals[(i*3) + 0] = moduleSignals[0];
-        _signals[(i*3) + 1] = moduleSignals[1];
-        _signals[(i*3) + 2] = moduleSignals[2];
+        BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getOdomSignals();
+        _signals[(i*2) + 0] = moduleSignals[0];
+        _signals[(i*2) + 1] = moduleSignals[1];
       }
+
+      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
     }
 
     /** Refreshes all the odom signals. */
@@ -126,18 +131,23 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     public void stop() {
       try {
         _thread.join(0);
-      } catch (Exception e) {
+      } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
     }
 
     private void run() {
       while (true) {
-        Timer.delay(1 / _frequency); // delay, allowing signals to be re-fetched
+        Timer.delay(1 / _frequency); // delay, allowing signals to be resent
 
+        _odomLock.writeLock().lock();
         refreshSignals(); // update signals
-        
-        _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
+      
+        log("Raw Heading", getRawHeading());
+        log("Module Positions", getModulePositions());
+
+        _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
+        _odomLock.writeLock().unlock();
       }
     }
   }
@@ -165,6 +175,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       getModulePositions(),
       new Pose2d(0, 0, getRawHeading())
     );
+
+    _cachedPose = _poseEstimator.getEstimatedPosition();
 
     _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
     _odomThread.start();
@@ -216,8 +228,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     return _modules.stream().map(SwerveModule::getModuleState).toArray(SwerveModuleState[]::new);
   }
 
-  /** Get all the module positions (in correct order). */
-  @Log.NT(key = "Module Positions")
+  /** 
+   * Get all the module positions (in correct order). Note this can only be called inside the odom thread
+   * or in a lock shared with the odom thread.
+   */
   public SwerveModulePosition[] getModulePositions() {
     return _modules.stream().map(SwerveModule::getModulePosition).toArray(SwerveModulePosition[]::new);
   }
@@ -247,18 +261,38 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the pose of the drive from the pose estimator. */
   @Log.NT(key = "Pose")
   public Pose2d getPose() {
-    return _poseEstimator.getEstimatedPosition();
+    return _cachedPose;
+  }
+
+  /** Resets the pose of the pose estimator. */
+  public void resetPose(Pose2d newPose) {
+    _odomLock.writeLock().lock();
+    _poseEstimator.resetPosition(
+      getRawHeading(),
+      getModulePositions(),
+      newPose
+    );
+    _odomLock.writeLock().unlock();
+  }
+
+  /** Resets the heading of the pose estimator. */
+  public void resetHeading(Rotation2d newHeading) {
+    Pose2d oldPose = getPose();
+    Pose2d newPose = new Pose2d(oldPose.getTranslation(), newHeading);
+
+    resetPose(newPose);
   }
 
   /** Returns the heading of the drive. */
   @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
     return getPose().getRotation();
-    // return getRawHeading();
   }
 
-  /** Returns the raw heading of the gyro. */
-  @Log.NT(key = "Raw Heading")
+  /** 
+   * Returns the raw heading of the gyro. Note that (if a pigeon is used) this can only be called in the odom thread
+   * or inside a lock shared by the odom thread.
+   */
   public Rotation2d getRawHeading() {
     if (RobotBase.isReal()) {
       return _gyro.getYaw();

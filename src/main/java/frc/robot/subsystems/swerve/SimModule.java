@@ -58,6 +58,12 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
+  public double getDriveVelocity() {
+    return _driveMotor.getAngularVelocityRPM() / 60 * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+  }
+
+
+  @Override
   public void setAngle(Rotation2d angle) {
     double outVolts = _turnPID.calculate(getAngle().getDegrees(), angle.getDegrees());
 
@@ -66,17 +72,17 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public double getDrivePosition() {
+  public Rotation2d getAngle() {
+    return Rotation2d.fromRotations(_turnMotor.getAngularPositionRotations());
+  }
+
+  @Override
+  public double getDrivePositionOdom() {
     return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override
-  public double getDriveVelocity() {
-    return _driveMotor.getAngularVelocityRPM() / 60 * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
-  }
-
-  @Override
-  public Rotation2d getAngle() {
-    return Rotation2d.fromRotations(_turnMotor.getAngularPositionRotations());
+  public Rotation2d getAngleOdom() {
+    return getAngle();
   }
 }

@@ -19,15 +19,18 @@ import frc.lib.FaultLogger;
 import frc.lib.Alert.AlertType;
 import frc.lib.util.CTREUtil;
 import frc.robot.Robot;
+import frc.robot.Constants.SwerveConstants;
 
 public class RealModule implements ModuleIO {
   private final TalonFX _driveMotor;
   private final TalonFX _turnMotor;
   private final CANcoder _turnEncoder;
 
-  private final StatusSignal<Double> _drivePositionGetter;
-  private final StatusSignal<Double> _driveVelocityGetter;
-  private final StatusSignal<Double> _turnPositionGetter;
+  private final StatusSignal<Double> _driveVelocity;
+  private final StatusSignal<Double> _turnAngle;
+
+  private final StatusSignal<Double> _drivePositionOdom;
+  private final StatusSignal<Double> _turnAngleOdom;
 
   private String _name;
 
@@ -41,9 +44,15 @@ public class RealModule implements ModuleIO {
     _turnMotor = new TalonFX(turnMotorId);
     _turnEncoder = new CANcoder(encoderId);
 
-    _drivePositionGetter = _driveMotor.getPosition();
-    _driveVelocityGetter = _driveMotor.getVelocity();
-    _turnPositionGetter = _turnEncoder.getAbsolutePosition();
+    _driveVelocity = _driveMotor.getVelocity();
+    _turnAngle = _turnEncoder.getAbsolutePosition();
+
+    _turnAngle.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
+
+    _drivePositionOdom = _driveMotor.getPosition();
+    _turnAngleOdom = _turnAngle.clone();
+
+    _drivePositionOdom.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
     // TODO: Add all motor configs here
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, null);
@@ -68,41 +77,45 @@ public class RealModule implements ModuleIO {
   }
 
   @Override
+  public double getDriveVelocity() {
+    return _driveVelocity.refresh().getValue();
+  }
+
+  @Override
   public void setAngle(Rotation2d angle) {
     PositionVoltage control = new PositionVoltage(angle.getDegrees());
     _turnMotor.setControl(control);
   }
 
   @Override
-  public double getDrivePosition() {
-    return _drivePositionGetter.getValue();
-  }
-
-  @Override
-  public double getDriveVelocity() {
-    return _driveVelocityGetter.getValue();
-  }
-
-  @Override
   public Rotation2d getAngle() {
-    return Rotation2d.fromRotations(_turnPositionGetter.getValue());
+    return Rotation2d.fromDegrees(_turnAngle.refresh().getValue());
+  }
+
+  @Override
+  public Rotation2d getAngleOdom() {
+    // refreshed by odom thread
+    return Rotation2d.fromDegrees(_turnAngleOdom.getValue());
+  }
+
+  @Override
+  public double getDrivePositionOdom() {
+    // refreshed by odom thread
+    return _drivePositionOdom.getValue();
   }
 
   /**
-   * Returns the CTRE StatusSignals relevant to this module as an array. These signals must be refreshed
-   * periodically for the io getters of this module to update in value.
+   * Returns the CTRE StatusSignals to be refreshed periodically in the odom thread. 
    * 
    * <pre>
    * array[0] - Drive Position
-   * array[1] - Drive Velocity
-   * array[2] - Turn Position
+   * array[1] - Turn Angle
    * </pre>
    */
-  public BaseStatusSignal[] getSignals() {
+  public BaseStatusSignal[] getOdomSignals() {
     return new BaseStatusSignal[] {
-      _drivePositionGetter,
-      _driveVelocityGetter,
-      _turnPositionGetter
+      _drivePositionOdom,
+      _turnAngleOdom
     };
   }
   

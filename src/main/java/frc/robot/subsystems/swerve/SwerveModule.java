@@ -54,9 +54,13 @@ public class SwerveModule implements SelfChecked, Logged {
     return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
   }
 
-  @Log.NT(key = "Module Position")
+  /**
+   * Returns the position (distance, angle) of this module. This method
+   * should only be called inside the odom thread to avoid thread safety issues,
+   * or enclosed in a lock shared by the odom thread.
+   */
   public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(_io.getDrivePosition(), _io.getAngle());
+    return new SwerveModulePosition(_io.getDrivePositionOdom(), _io.getAngleOdom());
   }
 
   /** Set the desired target state for this module. */
