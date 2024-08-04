@@ -103,6 +103,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
+      _thread.setDaemon(true);
 
       if (RobotBase.isSimulation()) return;
 
