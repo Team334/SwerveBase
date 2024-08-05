@@ -8,19 +8,25 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.struct.Pose2dStruct;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -31,7 +37,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import frc.robot.Robot;
+import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
@@ -58,6 +66,28 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
 
   private Pose2d _cachedPose;
+
+  private final PhotonCamera _leftArducam = new PhotonCamera(VisionConstants.LEFT_ARDUCAM_NAME);
+  private final PhotonCamera _rightArducam = new PhotonCamera(VisionConstants.RIGHT_ARDUCAM_NAME);
+
+  private final PhotonPoseEstimator _leftArducamPoseEstimator = new PhotonPoseEstimator(
+    FieldConstants.FIELD_LAYOUT,
+    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+    _leftArducam,
+    VisionConstants.LEFT_ARDUCAM_LOCATION
+  );
+
+  private final PhotonPoseEstimator _rightArducamPoseEstimator = new PhotonPoseEstimator(
+    FieldConstants.FIELD_LAYOUT,
+    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+    _rightArducam,
+    VisionConstants.RIGHT_ARDUCAM_LOCATION
+  );
+  
+  private List<PoseEstimate> _acceptedEstimates = new ArrayList<PoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
+  private List<PoseEstimate> _rejectedEstimates = new ArrayList<PoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
+
+  private List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -91,6 +121,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       );
     }
   }
+
+  /** Represents a pose estimate from an arducam. */
+  public record PoseEstimate() {};
 
   /** 
    * An odometry thread that updates module signals at a specified frequency and feeds the signals into a pose estimator.
@@ -246,12 +279,38 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
+  // reads the estimated pose from the left arducam, and determines if it's valid
+  private void updateLeftArducam() {
+    // adds to accepted/rejected pose estimates and seen targets
+  }
+
+  // reads the estimated pose from the right arducam, and determines if it's valid
+  private void updateRightArducam() {
+    // adds to accepted/rejected pose estimates and seen targets
+  }
+
+  // updates the pose estimator with potential vision estimates
+  private void updateVisionPoseEstimates() {
+    _acceptedEstimates.clear();
+    _rejectedEstimates.clear();
+    _detectedTargets.clear();
+    
+    updateLeftArducam();
+    updateRightArducam();
+    
+    log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
+
+    // update pose estimator here
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     for (SwerveModule module : _modules) {
       module.periodic();
     }
+
+    updateVisionPoseEstimates();
   }
 
   @Override

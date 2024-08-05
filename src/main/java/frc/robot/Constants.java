@@ -11,8 +11,11 @@ import edu.wpi.first.units.Velocity;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -26,6 +29,19 @@ public final class Constants {
   // TODO: tune all these values according to robot
   public static class Ports {
     public static final int DRIVER_CONTROLLER = 0;
+  }
+
+  public static final class VisionConstants {
+    public static final String LEFT_ARDUCAM_NAME = "left-arducam";
+    public static final String RIGHT_ARDUCAM_NAME = "right-arducam";
+
+    // arducam locations relative to robot center
+    public static final Transform3d LEFT_ARDUCAM_LOCATION = new Transform3d(0, 0, 0, new Rotation3d());
+    public static final Transform3d RIGHT_ARDUCAM_LOCATION = new Transform3d(0, 0, 0, new Rotation3d());
+  }
+
+  public static final class FieldConstants {
+    public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
   }
 
   public static class SwerveConstants {
