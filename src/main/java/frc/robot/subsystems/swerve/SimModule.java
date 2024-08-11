@@ -77,12 +77,7 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public double getDrivePositionOdom() {
+  public double getDrivePosition() {
     return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
-  }
-
-  @Override
-  public Rotation2d getAngleOdom() {
-    return getAngle();
   }
 }

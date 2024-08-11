@@ -28,9 +28,7 @@ public class RealModule implements ModuleIO {
 
   private final StatusSignal<Double> _driveVelocity;
   private final StatusSignal<Double> _turnAngle;
-
-  private final StatusSignal<Double> _drivePositionOdom;
-  private final StatusSignal<Double> _turnAngleOdom;
+  private final StatusSignal<Double> _drivePosition;
 
   private String _name;
 
@@ -45,14 +43,13 @@ public class RealModule implements ModuleIO {
     _turnEncoder = new CANcoder(encoderId);
 
     _driveVelocity = _driveMotor.getVelocity();
-    _turnAngle = _turnEncoder.getAbsolutePosition();
+    _driveVelocity.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
+    _turnAngle = _turnEncoder.getAbsolutePosition();
     _turnAngle.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
-    _drivePositionOdom = _driveMotor.getPosition();
-    _turnAngleOdom = _turnAngle.clone();
-
-    _drivePositionOdom.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
+    _drivePosition = _driveMotor.getPosition();
+    _drivePosition.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
     // TODO: Add all motor configs here
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, null);
@@ -78,7 +75,8 @@ public class RealModule implements ModuleIO {
 
   @Override
   public double getDriveVelocity() {
-    return _driveVelocity.refresh().getValue();
+    // refreshed by odom thread
+    return _driveVelocity.getValue();
   }
 
   @Override
@@ -89,33 +87,30 @@ public class RealModule implements ModuleIO {
 
   @Override
   public Rotation2d getAngle() {
-    return Rotation2d.fromDegrees(_turnAngle.refresh().getValue());
+    // refreshed by odom thread
+    return Rotation2d.fromDegrees(_turnAngle.getValue());
   }
 
   @Override
-  public Rotation2d getAngleOdom() {
+  public double getDrivePosition() {
     // refreshed by odom thread
-    return Rotation2d.fromDegrees(_turnAngleOdom.getValue());
-  }
-
-  @Override
-  public double getDrivePositionOdom() {
-    // refreshed by odom thread
-    return _drivePositionOdom.getValue();
+    return _drivePosition.getValue();
   }
 
   /**
    * Returns the CTRE StatusSignals to be refreshed periodically in the odom thread. 
    * 
    * <pre>
-   * array[0] - Drive Position
+   * array[0] - Drive Velocity
    * array[1] - Turn Angle
+   * array[2] - Drive Position
    * </pre>
    */
   public BaseStatusSignal[] getOdomSignals() {
     return new BaseStatusSignal[] {
-      _drivePositionOdom,
-      _turnAngleOdom
+      _driveVelocity,
+      _turnAngle,
+      _drivePosition
     };
   }
   

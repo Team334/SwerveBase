@@ -5,6 +5,9 @@
       "/SmartDashboard/Robot Self Check": "Command"
     }
   },
+  "NetworkTables Info": {
+    "visible": true
+  },
   "NetworkTables View": {
     "visible": false
   }

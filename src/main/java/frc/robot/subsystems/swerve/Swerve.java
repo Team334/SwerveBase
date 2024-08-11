@@ -65,6 +65,12 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final OdometryThread _odomThread;
   private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
 
+
+  // these values are updated by the odometry thread to prevent thread-safety issues
+  // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
+  private Rotation2d _cachedRawHeading;
+  private SwerveModuleState[] _cachedModuleStates;
+  private SwerveModulePosition[] _cachedModulePositions;
   private Pose2d _cachedPose;
 
   private final PhotonCamera _leftArducam = new PhotonCamera(VisionConstants.LEFT_ARDUCAM_NAME);
@@ -177,8 +183,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         _odomLock.writeLock().lock();
         refreshSignals(); // update signals
       
-        log("Raw Heading", getRawHeading());
-        log("Module Positions", getModulePositions());
+        // updated all cached data
+        updateCached();
 
         _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
         _odomLock.writeLock().unlock();
@@ -202,6 +208,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _gyro = gyro;
 
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
+
+    updateCached();
 
     _poseEstimator = new SwerveDrivePoseEstimator(
       _kinematics,
@@ -244,30 +252,56 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
 
+  // updates all cached data (should only be called in odom thread)
+  private void updateCached() {
+    updateCachedRawHeading();
+    updateCachedModuleStates();
+    updateCachedModulePositions();
+  }
+
+  // updates the cached raw heading (should only be called in odom thread)
+  private void updateCachedRawHeading() {
+    if (RobotBase.isReal()) {
+      _cachedRawHeading = _gyro.getYaw();
+    } else {
+      _cachedRawHeading = _simYaw;
+    }
+  }
+
+  // updates the cached module states (should only be called in odom thread)
+  private void updateCachedModuleStates() {
+    _cachedModuleStates = _modules.stream().map(SwerveModule::getModuleState).toArray(SwerveModuleState[]::new);
+  }
+
+  // updates the cached module states (should only be called in odom thread)
+  private void updateCachedModulePositions() {
+    _cachedModulePositions = _modules.stream().map(SwerveModule::getModulePosition).toArray(SwerveModulePosition[]::new);
+  }
+
   /** Returns the robot-relative ChassisSpeeds of the drive. */
   @Log.NT(key = "Chassis Speeds")
   public ChassisSpeeds getChassisSpeeds() {
     return _kinematics.toChassisSpeeds(getModuleStates());
   }
 
-  /** Get all the desired states of all the modules (in correct order). */
+  /** Get all the desired module states (in correct order). */
   @Log.NT(key = "Desired Module States")
   public SwerveModuleState[] getDesiredModuleStates() {
     return _modules.stream().map(SwerveModule::getDesiredState).toArray(SwerveModuleState[]::new);
   }
   
-  /** Get all the module states (in correct order). */
+  /** Get all the module states since the last odom update (in correct order). */
   @Log.NT(key = "Module States")
   public SwerveModuleState[] getModuleStates() {
-    return _modules.stream().map(SwerveModule::getModuleState).toArray(SwerveModuleState[]::new);
+    return _cachedModuleStates;
   }
 
   /** 
-   * Get all the module positions (in correct order). Note this can only be called inside the odom thread
-   * or in a lock shared with the odom thread.
+   * Get all the modules positions since the last odom update (in correct order).
    */
+  @Log.NT(key = "Module Positions")
   public SwerveModulePosition[] getModulePositions() {
-    return _modules.stream().map(SwerveModule::getModulePosition).toArray(SwerveModulePosition[]::new);
+    return _cachedModulePositions;
   }
 
   /** Set all the module states (must be in correct order). */
@@ -350,15 +384,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   /** 
-   * Returns the raw heading of the gyro. Note that (if a pigeon is used) this can only be called in the odom thread
-   * or inside a lock shared by the odom thread.
+   * Returns the cached raw heading since the last odom update.
    */
+  @Log.NT(key = "Raw Heading")
   public Rotation2d getRawHeading() {
-    if (RobotBase.isReal()) {
-      return _gyro.getYaw();
-    } else {
-      return _simYaw;
-    }
+    return _cachedRawHeading;
   }
 
   @Override

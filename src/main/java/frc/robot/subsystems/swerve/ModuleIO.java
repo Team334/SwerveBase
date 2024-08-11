@@ -21,14 +21,7 @@ public interface ModuleIO extends SelfChecked {
   public void setAngle(Rotation2d angle);
 
   /**
-   * Returns the angle of the module for odom. Note this only can be called in the odom thread
-   * to avoid thread safety issues with signals.
+   * Returns the drive motor position.
   */
-  public Rotation2d getAngleOdom();
-
-  /**
-   * Returns the drive motor position for odom. Note this only can be called in the odom thread
-   * to avoid thread safety issues with signals.
-  */
-  public double getDrivePositionOdom();
+  public double getDrivePosition();
 }

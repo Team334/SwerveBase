@@ -60,7 +60,7 @@ public class SwerveModule implements SelfChecked, Logged {
    * or enclosed in a lock shared by the odom thread.
    */
   public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(_io.getDrivePositionOdom(), _io.getAngleOdom());
+    return new SwerveModulePosition(_io.getDrivePosition(), _io.getAngle());
   }
 
   /** Set the desired target state for this module. */
