@@ -12,6 +12,7 @@ For odometery, a custom thread running at a higher frequency (>50hz) in order to
 
 ## Todo
 - Finish vision template code (std devs calculation will require actual testing).
+- Have someone check the odom code.
 - Add sysid characterization for mechanisms.
 - Add pathplanner (or choreo?) following/path generation.
 - Add leds code.
