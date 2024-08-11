@@ -8,7 +8,7 @@ For logging, the swerve base uses Monologue to log robot-specficic data. SignalL
 Elastic alerts widgets are used for multiple purposes in this project. A FaultLogger class displays device faults (and failed device configurations) on one alerts widget as telemetry when testing. During prematch, there will be a prematch self-check command for each subsystem which will run test commands of the subsystem and alert the statuses of those commands. Checks for device faults/configuration errors are included in the self-check command.
 
 ## Odometery
-For odometery, a custom thread running at a higher frequency (>50hz) in order to have more accurate odometery (according to ctre's document (here)[https://v6.docs.ctr-electronics.com/en/latest/docs/application-notes/update-frequency-impact.html]). There is also basic latency compensation on status signals using linear interpolation.
+For odometery, a custom thread running at a higher frequency (>50hz) in order to have more accurate odometery (according to ctre's document [here](https://v6.docs.ctr-electronics.com/en/latest/docs/application-notes/update-frequency-impact.html)). There is also basic latency compensation on status signals using linear interpolation.
 
 ## Todo
 - Finish vision template code (std devs calculation will require actual testing).
