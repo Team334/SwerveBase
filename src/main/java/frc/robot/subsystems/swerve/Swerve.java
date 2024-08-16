@@ -15,7 +15,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -26,13 +25,12 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.struct.Pose2dStruct;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
@@ -65,6 +63,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final OdometryThread _odomThread;
   private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
 
+  // to log odom signal successfulness (based on 353)
+  private int _odomUpdatesCount = 0;
+  private int _badOdomUpdatesCount = 0;
 
   // these values are updated by the odometry thread to prevent thread-safety issues
   // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
@@ -135,14 +136,13 @@ public class Swerve extends AdvancedSubsystem implements Logged {
    * An odometry thread that updates module signals at a specified frequency and feeds the signals into a pose estimator.
    */
   public class OdometryThread {
-    private Thread _thread = new Thread(this::run, "Odometry Thread");
+    private Notifier _notifier = new Notifier(this::update);
     private final double _frequency;
 
     private final BaseStatusSignal[] _signals = new BaseStatusSignal[2 * 4]; // two status signals per module
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
-      _thread.setDaemon(true);
 
       if (RobotBase.isSimulation()) return;
 
@@ -152,43 +152,48 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         _signals[(i*2) + 1] = moduleSignals[1];
       }
 
+      _notifier.setName("Odometry Thread");
+
       BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
     }
 
-    /** Refreshes all the odom signals. */
-    public void refreshSignals() {
+    /** Refreshes all the odom signals, returning whether the action was successful or not. */
+    public boolean refreshSignals() {
       if (RobotBase.isReal()) {
-        BaseStatusSignal.refreshAll(_signals);
+        return BaseStatusSignal.refreshAll(_signals).isOK();
       }
+
+      return true;
     }
 
     /** Starts the odom thread. */
     public void start() {
-      _thread.start();
+      _notifier.startPeriodic(1 / _frequency);
     }
 
     /** Stops the odom thread. */
     public void stop() {
-      try {
-        _thread.join(0);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+      _notifier.stop();
     }
 
-    private void run() {
-      while (true) {
-        Timer.delay(1 / _frequency); // delay, allowing signals to be resent
+    private void update() {
+      _odomLock.writeLock().lock();
+      _odomUpdatesCount ++;
 
-        _odomLock.writeLock().lock();
-        refreshSignals(); // update signals
-      
-        // updated all cached data
-        updateCached();
-
-        _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions()); // update odom with new signals
+      // update signals (exit if not successful)
+      if (!refreshSignals()) {
+        _badOdomUpdatesCount ++;
         _odomLock.writeLock().unlock();
+        return;
       }
+    
+      // updated all cached data
+      updateCached();
+
+      // update odom with new signals
+      _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
+      
+      _odomLock.writeLock().unlock();
     }
   }
 
@@ -345,6 +350,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     updateVisionPoseEstimates();
+  
+    log("Odometry Signal-Read Success %", (_odomUpdatesCount - _badOdomUpdatesCount) / _odomUpdatesCount * 100.0);
   }
 
   @Override
