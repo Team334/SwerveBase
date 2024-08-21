@@ -63,9 +63,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final OdometryThread _odomThread;
   private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
 
-  // to log odom signal successfulness (based on 353)
-  private int _odomUpdatesCount = 0;
-  private int _badOdomUpdatesCount = 0;
+  // to log odom update successfulness (based on 353)
+  private int _attemptedOdomUpdates = 0;
+  private int _failedOdomUpdates = 0;
+
+  private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
 
   // these values are updated by the odometry thread to prevent thread-safety issues
   // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
@@ -133,7 +135,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public record PoseEstimate() {};
 
   /** 
-   * An odometry thread that updates module signals at a specified frequency and feeds the signals into a pose estimator.
+   * An odometry thread that updates module status signals at a specified frequency and feeds the signals into a pose estimator.
    */
   public class OdometryThread {
     private Notifier _notifier = new Notifier(this::update);
@@ -157,13 +159,13 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
     }
 
-    /** Refreshes all the odom signals, returning whether the action was successful or not. */
-    public boolean refreshSignals() {
+    /** Refreshes all the odom status signals, returning true if the action failed. */
+    public boolean refreshStatusSignals() {
       if (RobotBase.isReal()) {
-        return BaseStatusSignal.refreshAll(_signals).isOK();
+        return BaseStatusSignal.refreshAll(_signals).isError();
       }
 
-      return true;
+      return false;
     }
 
     /** Starts the odom thread. */
@@ -178,21 +180,45 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     private void update() {
       _odomLock.writeLock().lock();
-      _odomUpdatesCount ++;
+      _attemptedOdomUpdates ++;
 
-      // update signals (exit if not successful)
-      if (!refreshSignals()) {
-        _badOdomUpdatesCount ++;
+      boolean willOdomUpdateFail = false;
+
+      // refresh status signals, and check if successful refresh
+      willOdomUpdateFail = refreshStatusSignals();
+
+      // in the case of a navx, a different refresh and success check is used
+      if (_gyro instanceof NavXGyro) {
+        willOdomUpdateFail = false; // TODO: figure this out
+      }
+
+      // updated all cached device data
+      // if a refresh failed, then the cached data would just
+      // be from the last successful refresh
+      updateCached();
+      
+      // log everything now instead of the main thread to 
+      // reduce logging latency
+      log("Module States", getModuleStates());
+      log("Desired Module States", getDesiredModuleStates());
+      log("Chassis Speeds", getChassisSpeeds());
+      log("Desired Chassis Speeds", _desiredChassisSpeeds);
+      log("Module Positions", getModulePositions());
+      log("Raw Heading", getRawHeading());
+      
+
+      // all the devices didn't successfully refresh, so don't update odom
+      if (willOdomUpdateFail) {
+        _failedOdomUpdates ++;
         _odomLock.writeLock().unlock();
         return;
       }
-    
-      // updated all cached data
-      updateCached();
 
-      // update odom with new signals
+      // all devices refreshed, so update odom with new device data
       _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
       
+      log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
+
       _odomLock.writeLock().unlock();
     }
   }
@@ -251,8 +277,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
-
-    log("Desired Chassis Speeds", chassisSpeeds);
+    _desiredChassisSpeeds = chassisSpeeds;
 
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
@@ -284,19 +309,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   /** Returns the robot-relative ChassisSpeeds of the drive. */
-  @Log.NT(key = "Chassis Speeds")
   public ChassisSpeeds getChassisSpeeds() {
     return _kinematics.toChassisSpeeds(getModuleStates());
   }
 
   /** Get all the desired module states (in correct order). */
-  @Log.NT(key = "Desired Module States")
   public SwerveModuleState[] getDesiredModuleStates() {
     return _modules.stream().map(SwerveModule::getDesiredState).toArray(SwerveModuleState[]::new);
   }
   
   /** Get all the module states since the last odom update (in correct order). */
-  @Log.NT(key = "Module States")
   public SwerveModuleState[] getModuleStates() {
     return _cachedModuleStates;
   }
@@ -304,7 +326,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** 
    * Get all the modules positions since the last odom update (in correct order).
    */
-  @Log.NT(key = "Module Positions")
   public SwerveModulePosition[] getModulePositions() {
     return _cachedModulePositions;
   }
@@ -351,7 +372,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     updateVisionPoseEstimates();
   
-    log("Odometry Signal-Read Success %", (_odomUpdatesCount - _badOdomUpdatesCount) / _odomUpdatesCount * 100.0);
+    log("Odometry Signal-Read Success %", (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0);
   }
 
   @Override
@@ -360,7 +381,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   /** Returns the pose of the drive from the pose estimator. */
-  @Log.NT(key = "Pose")
   public Pose2d getPose() {
     return _cachedPose;
   }
@@ -393,7 +413,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** 
    * Returns the cached raw heading since the last odom update.
    */
-  @Log.NT(key = "Raw Heading")
   public Rotation2d getRawHeading() {
     return _cachedRawHeading;
   }
