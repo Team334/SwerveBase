@@ -218,6 +218,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
       
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
+      log("Robot Heading", getHeading());
 
       _odomLock.writeLock().unlock();
     }
@@ -405,7 +406,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   /** Returns the heading of the drive. */
-  @Log.NT(key = "Heading")
   public Rotation2d getHeading() {
     return getPose().getRotation();
   }
