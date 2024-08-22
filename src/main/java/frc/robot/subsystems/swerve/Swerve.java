@@ -8,7 +8,9 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -18,17 +20,21 @@ import java.util.function.BooleanSupplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.struct.Pose2dStruct;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -42,6 +48,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
+import frc.robot.util.ArducamPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -92,9 +99,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _rightArducam,
     VisionConstants.RIGHT_ARDUCAM_LOCATION
   );
-  
-  private List<PoseEstimate> _acceptedEstimates = new ArrayList<PoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
-  private List<PoseEstimate> _rejectedEstimates = new ArrayList<PoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
+
+  private List<ArducamPoseEstimate> _acceptedEstimates = new ArrayList<ArducamPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
+  private List<ArducamPoseEstimate> _rejectedEstimates = new ArrayList<ArducamPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
 
   private List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
@@ -131,9 +138,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
-  /** Represents a pose estimate from an arducam. */
-  public record PoseEstimate() {};
-
   /** 
    * An odometry thread that updates module status signals at a specified frequency and feeds the signals into a pose estimator.
    */
@@ -145,6 +149,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
+      _notifier.setName("Odometry Thread");
 
       if (RobotBase.isSimulation()) return;
 
@@ -153,8 +158,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         _signals[(i*2) + 0] = moduleSignals[0];
         _signals[(i*2) + 1] = moduleSignals[1];
       }
-
-      _notifier.setName("Odometry Thread");
 
       BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
     }
@@ -358,10 +361,33 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     
     updateLeftArducam();
     updateRightArducam();
-    
+
+    log("Accepted Estimates Poses", _acceptedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
+    log("Rejected Estimates Poses", _rejectedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
+
+    log("Accepted Estimates", _acceptedEstimates.toArray(ArducamPoseEstimate[]::new));
+    log("Rejected Estimates", _rejectedEstimates.toArray(ArducamPoseEstimate[]::new));
+
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 
-    // update pose estimator here
+    // order accepted pose estimates from lowest to highest timestamp (so vision measurements are added correctly)
+    Collections.sort(_acceptedEstimates, (e1, e2) -> {
+      if (e1.timestamp() > e2.timestamp()) return 1;
+      if (e1.timestamp() < e2.timestamp()) return -1;
+      return 0;
+    });
+
+    if (_acceptedEstimates.size() == 0) return;
+
+    _odomLock.writeLock().lock();
+    _acceptedEstimates.forEach((estimate) -> {
+      _poseEstimator.addVisionMeasurement(
+        estimate.pose(),
+        estimate.timestamp(),
+        VecBuilder.fill(estimate.xStdDev(), estimate.yStdDev(), estimate.thetaStdDev())
+      );
+    });
+    _odomLock.writeLock().unlock();
   }
 
   @Override
@@ -373,7 +399,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     updateVisionPoseEstimates();
   
-    log("Odometry Signal-Read Success %", (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0);
+    log("Odometry Update Success %", (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0);
   }
 
   @Override
