@@ -8,9 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,19 +20,14 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import com.ctre.phoenix6.BaseStatusSignal;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.struct.Pose2dStruct;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.util.struct.Struct;
-import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -370,23 +363,18 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 
-    // order accepted pose estimates from lowest to highest timestamp (so vision measurements are added correctly)
-    Collections.sort(_acceptedEstimates, (e1, e2) -> {
-      if (e1.timestamp() > e2.timestamp()) return 1;
-      if (e1.timestamp() < e2.timestamp()) return -1;
-      return 0;
-    });
-
     if (_acceptedEstimates.size() == 0) return;
 
+    // first sort by timestamp, an earlier timestamp must come first so it can change
+    // all the poses in the buffer in front of it, and that way the later timestamp will be able
+    // to further correct the changed poses, also if two estimates fall in the same timestamp,
+    // they must be sorted by increasing std devs so that the final pose in the timestamp will closer match
+    // the less noisy vision estimate (with lower std devs) see this:
+    // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
+    _acceptedEstimates.sort(ArducamPoseEstimate.comparator);
+
     _odomLock.writeLock().lock();
-    _acceptedEstimates.forEach((estimate) -> {
-      _poseEstimator.addVisionMeasurement(
-        estimate.pose(),
-        estimate.timestamp(),
-        VecBuilder.fill(estimate.xStdDev(), estimate.yStdDev(), estimate.thetaStdDev())
-      );
-    });
+    _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose(), e.timestamp(), e.stdDevs()));
     _odomLock.writeLock().unlock();
   }
 
