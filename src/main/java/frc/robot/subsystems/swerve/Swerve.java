@@ -355,6 +355,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     updateLeftArducam();
     updateRightArducam();
 
+    // first sort by timestamp, an earlier timestamp must come first so it can change
+    // all the poses in the buffer in front of it, and that way the later timestamp will be able
+    // to further correct the changed poses, also if two estimates fall in the same timestamp,
+    // they must be sorted by increasing std devs so that the final pose in the timestamp will closer match
+    // the less noisy vision estimate (with lower std devs) see this:
+    // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
+    _acceptedEstimates.sort(ArducamPoseEstimate.comparator);
+
     log("Accepted Estimates Poses", _acceptedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
     log("Rejected Estimates Poses", _rejectedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
 
@@ -365,17 +373,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     if (_acceptedEstimates.size() == 0) return;
 
-    // first sort by timestamp, an earlier timestamp must come first so it can change
-    // all the poses in the buffer in front of it, and that way the later timestamp will be able
-    // to further correct the changed poses, also if two estimates fall in the same timestamp,
-    // they must be sorted by increasing std devs so that the final pose in the timestamp will closer match
-    // the less noisy vision estimate (with lower std devs) see this:
-    // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
-    _acceptedEstimates.sort(ArducamPoseEstimate.comparator);
-
-    _odomLock.writeLock().lock();
-    _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose(), e.timestamp(), e.stdDevs()));
-    _odomLock.writeLock().unlock();
+    // _odomLock.writeLock().lock();
+    // _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose(), e.timestamp(), e.stdDevs()));
+    // _odomLock.writeLock().unlock();
   }
 
   @Override
