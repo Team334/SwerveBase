@@ -10,11 +10,13 @@ import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on ca
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
@@ -41,7 +43,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
-import frc.robot.util.ArducamPoseEstimate;
+import frc.robot.util.VisionPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -93,8 +95,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     VisionConstants.RIGHT_ARDUCAM_LOCATION
   );
 
-  private List<ArducamPoseEstimate> _acceptedEstimates = new ArrayList<ArducamPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
-  private List<ArducamPoseEstimate> _rejectedEstimates = new ArrayList<ArducamPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
+  private List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
+  private List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
 
   private List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
@@ -336,12 +338,19 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
-  // reads the estimated pose from the left arducam, and determines if it's valid
-  private void updateLeftArducam() {
-    // adds to accepted/rejected pose estimates and seen targets
+  // filters recieved vision estimate (for a camera) from pv, the filtered estimate is returned,
+  // if the estimate is invalid in the first place nothing is returned
+  private Optional<EstimatedRobotPose> filterVisionEstimate(EstimatedRobotPose estimate) {
+    return Optional.of(estimate);
   }
 
-  // reads the estimated pose from the right arducam, and determines if it's valid
+
+  // updates vision estimate from left arducam
+  private void updateLeftArducam() {
+
+  }
+
+  // updates vision estimate from right arducam
   private void updateRightArducam() {
     // adds to accepted/rejected pose estimates and seen targets
   }
@@ -361,13 +370,13 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // they must be sorted by increasing std devs so that the final pose in the timestamp will closer match
     // the less noisy vision estimate (with lower std devs) see this:
     // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
-    _acceptedEstimates.sort(ArducamPoseEstimate.comparator);
+    _acceptedEstimates.sort(VisionPoseEstimate.comparator);
 
-    log("Accepted Estimates Poses", _acceptedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
-    log("Rejected Estimates Poses", _rejectedEstimates.stream().map(ArducamPoseEstimate::pose).toArray(Pose2d[]::new));
+    log("Accepted Estimates Poses", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
+    log("Rejected Estimates Poses", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
 
-    log("Accepted Estimates", _acceptedEstimates.toArray(ArducamPoseEstimate[]::new));
-    log("Rejected Estimates", _rejectedEstimates.toArray(ArducamPoseEstimate[]::new));
+    log("Accepted Estimates", _acceptedEstimates.toArray(VisionPoseEstimate[]::new));
+    log("Rejected Estimates", _rejectedEstimates.toArray(VisionPoseEstimate[]::new));
 
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 
