@@ -347,7 +347,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _detectedTargets.clear();
     
     VisionConstants.CAMERAS.forEach(c -> {
-      var estimatedPose = c.getEstimatedPose();
+      var estimatedPose = c.getEstimatedPose(_lastestVisionTimestamp);
       if (estimatedPose.isEmpty()) return; // if nothing found, next camera
       // TODO: add detected targets into detected targets array (need to switch to protobuf)
       if (!estimatedPose.get().isValid()) { _rejectedEstimates.add(estimatedPose.get()); return; } // if invalid, add to rejected
@@ -363,10 +363,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
     _acceptedEstimates.sort(VisionPoseEstimate.comparator);
     
-    // remove an estimate if it's timestamp is older than the most latest timestamp (from the last periodic)
-    _acceptedEstimates.removeIf(e -> e.timestamp() < _lastestVisionTimestamp);
-    _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
-
     log("Accepted Estimates Poses", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
     log("Rejected Estimates Poses", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
 
@@ -376,6 +372,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 
     if (_acceptedEstimates.size() == 0) return;
+    _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
 
     // _odomLock.writeLock().lock();
     // _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose(), e.timestamp(), e.stdDevs()));

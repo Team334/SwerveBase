@@ -79,37 +79,42 @@ public class VisionPoseEstimator {
   /**
    * Filters the raw estimate returned from photon vision.
    */
-  protected VisionPoseEstimate filterEstimate(EstimatedRobotPose estimate) {
+  protected VisionPoseEstimate filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp) {
+    boolean tooOld = estimate.timestampSeconds < latestVisionTimestamp;
+
+    // and a bunch more filtering
+
+    boolean isValid = tooOld;
+    
     return new VisionPoseEstimate(
       estimate.estimatedPose.toPose2d(),
       estimate.timestampSeconds,
       VecBuilder.fill(0, 0, 0),
-      true
+      isValid
     );
   }
 
   /**
    * Calculates the standard deviations for the given filtered estimate.
    */
-  protected void calculateStdDevs(VisionPoseEstimate estimate) {
-    
+  protected VisionPoseEstimate calculateStdDevs(VisionPoseEstimate estimate) {
+    return estimate;
   }
 
   /**
    * Returns an optional containing the vision pose estimate, if no tags were seen this optional will be empty.
    */
-  public Optional<VisionPoseEstimate> getEstimatedPose() {
+  public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp) {
     // first see if camera has any tags in the frame (or if it's even connected)
     Optional<EstimatedRobotPose> rawEstimate = _poseEstimator.update();
     if (rawEstimate.isEmpty()) return Optional.empty();
 
     // if that worked, filter the estimate, and if the estimate is invalid, just return it as invalid
-    VisionPoseEstimate filteredEstimate = filterEstimate(rawEstimate.get());
+    VisionPoseEstimate filteredEstimate = filterEstimate(rawEstimate.get(), latestVisionTimestamp);
     if (!filteredEstimate.isValid) return Optional.of(filteredEstimate);
 
     // if the estimate is valid, return it with calculated std devs
-    calculateStdDevs(filteredEstimate);
-    return Optional.of(filteredEstimate);
+    return Optional.of(calculateStdDevs(filteredEstimate));
   }
 
   /** Returns the simulation camera, this is null if the robot isn't being simulated. */
@@ -165,7 +170,7 @@ public class VisionPoseEstimator {
 
       @Override
       public String getSchema() {
-        return "Pose2d pose;double timestamp;double xStdDev;double yStdDev;double thetaStdDev;int valid;";
+        return "Pose2d pose;double timestamp;double xStdDev;double yStdDev;double thetaStdDev;int passedFilter;";
       }
 
       @Override
@@ -175,9 +180,9 @@ public class VisionPoseEstimator {
         double xStdDev = bb.getDouble();
         double yStdDev = bb.getDouble();
         double thetaStdDev = bb.getDouble();
-        boolean valid = bb.getInt() == 1 ? true : false;
+        boolean isValid = bb.getInt() == 1 ? true : false;
 
-        return new VisionPoseEstimate(pose, timestamp, VecBuilder.fill(xStdDev, yStdDev, thetaStdDev), valid);
+        return new VisionPoseEstimate(pose, timestamp, VecBuilder.fill(xStdDev, yStdDev, thetaStdDev), isValid);
       }
 
       @Override
