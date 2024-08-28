@@ -10,16 +10,12 @@ import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on ca
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -28,10 +24,12 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
@@ -43,7 +41,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
-import frc.robot.util.VisionPoseEstimate;
+import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -61,6 +59,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final SwerveDriveKinematics _kinematics = new SwerveDriveKinematics(SwerveConstants.MODULE_POSITIONS);
 
   private final SwerveDrivePoseEstimator _poseEstimator;
+  private final SwerveDriveOdometry _simOdometry; // odometry to be used by sim vision
 
   private final OdometryThread _odomThread;
   private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
@@ -77,28 +76,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private SwerveModuleState[] _cachedModuleStates;
   private SwerveModulePosition[] _cachedModulePositions;
   private Pose2d _cachedPose;
+  private Pose2d _cachedSimOdomPose;
 
-  private final PhotonCamera _leftArducam = new PhotonCamera(VisionConstants.LEFT_ARDUCAM_NAME);
-  private final PhotonCamera _rightArducam = new PhotonCamera(VisionConstants.RIGHT_ARDUCAM_NAME);
+  private final VisionSystemSim _visionSim;
+  private double _lastestVisionTimestamp = 0;
 
-  private final PhotonPoseEstimator _leftArducamPoseEstimator = new PhotonPoseEstimator(
-    FieldConstants.FIELD_LAYOUT,
-    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-    _leftArducam,
-    VisionConstants.LEFT_ARDUCAM_LOCATION
-  );
-
-  private final PhotonPoseEstimator _rightArducamPoseEstimator = new PhotonPoseEstimator(
-    FieldConstants.FIELD_LAYOUT,
-    PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-    _rightArducam,
-    VisionConstants.RIGHT_ARDUCAM_LOCATION
-  );
-
-  private List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
-  private List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
-
-  private List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
+  private final List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
+  private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
+  private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -214,9 +199,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
       // all devices refreshed, so update odom with new device data
       _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
-      
+      _cachedSimOdomPose = _simOdometry.update(getRawHeading(), getModulePositions());
+
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
       log("Robot Heading", getHeading());
+      // if (RobotBase.isSimulation()) log("Robot Sim Odometry", _cachedSimOdomPose);
 
       _odomLock.writeLock().unlock();
     }
@@ -248,7 +235,21 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       new Pose2d(0, 0, getRawHeading())
     );
 
-    _cachedPose = _poseEstimator.getEstimatedPosition();
+    _simOdometry = new SwerveDriveOdometry(
+      _kinematics,
+      getRawHeading(),
+      getModulePositions(),
+      new Pose2d(0, 0, getRawHeading())
+    );
+
+    if (RobotBase.isSimulation()) {
+      _visionSim = new VisionSystemSim("main");
+      _visionSim.addAprilTags(FieldConstants.FIELD_LAYOUT);
+
+      VisionConstants.CAMERAS.forEach(c -> _visionSim.addCamera(c.getSimCamera(), c.robotToCam));
+    } else {
+      _visionSim = null;
+    }
 
     _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
     _odomThread.start();
@@ -338,22 +339,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
-  // filters recieved vision estimate (for a camera) from pv, the filtered estimate is returned,
-  // if the estimate is invalid in the first place nothing is returned
-  private Optional<EstimatedRobotPose> filterVisionEstimate(EstimatedRobotPose estimate) {
-    return Optional.of(estimate);
-  }
-
-
-  // updates vision estimate from left arducam
-  private void updateLeftArducam() {
-
-  }
-
-  // updates vision estimate from right arducam
-  private void updateRightArducam() {
-    // adds to accepted/rejected pose estimates and seen targets
-  }
 
   // updates the pose estimator with potential vision estimates
   private void updateVisionPoseEstimates() {
@@ -361,8 +346,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _rejectedEstimates.clear();
     _detectedTargets.clear();
     
-    updateLeftArducam();
-    updateRightArducam();
+    VisionConstants.CAMERAS.forEach(c -> {
+      var estimatedPose = c.getEstimatedPose();
+      if (estimatedPose.isEmpty()) return; // if nothing found, next camera
+      // TODO: add detected targets into detected targets array (need to switch to protobuf)
+      if (!estimatedPose.get().isValid()) { _rejectedEstimates.add(estimatedPose.get()); return; } // if invalid, add to rejected
+      
+      _acceptedEstimates.add(estimatedPose.get()); // if valid, add to accepted
+    });
 
     // first sort by timestamp, an earlier timestamp must come first so it can change
     // all the poses in the buffer in front of it, and that way the later timestamp will be able
@@ -371,6 +362,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // the less noisy vision estimate (with lower std devs) see this:
     // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
     _acceptedEstimates.sort(VisionPoseEstimate.comparator);
+    
+    // remove an estimate if it's timestamp is older than the most latest timestamp (from the last periodic)
+    _acceptedEstimates.removeIf(e -> e.timestamp() < _lastestVisionTimestamp);
+    _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
 
     log("Accepted Estimates Poses", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
     log("Rejected Estimates Poses", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
@@ -395,13 +390,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     updateVisionPoseEstimates();
-  
+
     log("Odometry Update Success %", (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0);
   }
 
   @Override
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
+    _visionSim.update(_cachedSimOdomPose);
+
+    SmartDashboard.putData("Sim Vision Field", _visionSim.getDebugField());
   }
 
   /** Returns the pose of the drive from the pose estimator. */
@@ -413,6 +411,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public void resetPose(Pose2d newPose) {
     _odomLock.writeLock().lock();
     _poseEstimator.resetPosition(
+      getRawHeading(),
+      getModulePositions(),
+      newPose
+    );
+    _simOdometry.resetPosition(
       getRawHeading(),
       getModulePositions(),
       newPose

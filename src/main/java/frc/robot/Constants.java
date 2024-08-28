@@ -8,8 +8,11 @@ import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
+import frc.robot.util.VisionPoseEstimator;
 
 import static edu.wpi.first.units.Units.*;
+
+import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -32,12 +35,9 @@ public final class Constants {
   }
 
   public static final class VisionConstants {
-    public static final String LEFT_ARDUCAM_NAME = "left-arducam";
-    public static final String RIGHT_ARDUCAM_NAME = "right-arducam";
-
-    // arducam locations relative to robot center
-    public static final Transform3d LEFT_ARDUCAM_LOCATION = new Transform3d(0, 0, 0, new Rotation3d());
-    public static final Transform3d RIGHT_ARDUCAM_LOCATION = new Transform3d(0, 0, 0, new Rotation3d());
+    public static final List<VisionPoseEstimator> CAMERAS = List.of(
+  
+    );
   }
 
   public static final class FieldConstants {
