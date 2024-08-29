@@ -41,7 +41,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
-import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
+import frc.robot.util.VisionPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
