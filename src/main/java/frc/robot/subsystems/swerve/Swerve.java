@@ -18,7 +18,6 @@ import java.util.function.BooleanSupplier;
 import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -41,6 +40,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
+import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
@@ -78,6 +78,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private Pose2d _cachedPose;
   private Pose2d _cachedSimOdomPose;
 
+  private final List<VisionPoseEstimator> _cameras;
   private final VisionSystemSim _visionSim;
   private double _lastestVisionTimestamp = 0;
 
@@ -223,8 +224,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _backLeft = new SwerveModule("Back Left Module", backLeft);
 
     _gyro = gyro;
-
     _modules = List.of(_frontLeft, _frontRight, _backRight, _backLeft);
+
+    _cameras = VisionPoseEstimator.buildFromCameras(VisionConstants.CAM_CONSTANTS);
 
     updateCached();
 
@@ -246,7 +248,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       _visionSim = new VisionSystemSim("main");
       _visionSim.addAprilTags(FieldConstants.FIELD_LAYOUT);
 
-      VisionConstants.CAMERAS.forEach(cam -> _visionSim.addCamera(cam.getSimCamera(), cam.robotToCam));
+      _cameras.forEach(cam -> _visionSim.addCamera(cam.getSimCamera(), cam.robotToCam));
     } else {
       _visionSim = null;
     }
@@ -346,19 +348,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _rejectedEstimates.clear();
     _detectedTargets.clear();
 
-    VisionConstants.CAMERAS.forEach(cam -> {
+    _cameras.forEach(cam -> {
       var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp);
-      if (possibleEstimate.isEmpty()) return; // if nothing found, next camera
+      cam.logLatestEstimate();
+
+      if (possibleEstimate.isEmpty()) return;
       
       VisionPoseEstimate estimatedPose = possibleEstimate.get();
       
-      // add all detected ids into detected targets
-      for (int tagId : estimatedPose.detectedTags()) {
-        var tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId);
-        if (tagPose.isEmpty()) break; // reached -1 in the detected tags array
-
-        _detectedTargets.add(tagPose.get());
-      }
+      // add all detected ids into detected targets list
+      for (int tagId : estimatedPose.detectedTags()) _detectedTargets.add(FieldConstants.FIELD_LAYOUT.getTagPose(tagId).get());
 
       // then check if the pose is valid for the estimator
       if (!estimatedPose.isValid()) { 
@@ -377,19 +376,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
     _acceptedEstimates.sort(VisionPoseEstimate.comparator);
     
-    log("Accepted Estimates Poses", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
-    log("Rejected Estimates Poses", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
-
-    log("Accepted Estimates", _acceptedEstimates.toArray(VisionPoseEstimate[]::new));
-    log("Rejected Estimates", _rejectedEstimates.toArray(VisionPoseEstimate[]::new));
-
-    log("YOOO", new VisionPoseEstimate(
-      new Pose2d(),
-      78,
-      new int[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-      VecBuilder.fill(1, 1, 1),
-      false
-    ));
+    log("Accepted Estimates", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
+    log("Rejected Estimates", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
 
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 

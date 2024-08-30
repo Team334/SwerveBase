@@ -8,7 +8,7 @@ import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Velocity;
-import frc.robot.util.VisionPoseEstimator;
+import frc.robot.util.VisionPoseEstimator.VisionPoseEstimatorConstants;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -36,8 +36,8 @@ public final class Constants {
   }
 
   public static final class VisionConstants {
-    public static final List<VisionPoseEstimator> CAMERAS = List.of(
-      new VisionPoseEstimator(
+    public static final List<VisionPoseEstimatorConstants> CAM_CONSTANTS = List.of(
+      new VisionPoseEstimatorConstants(
         "left-arducam",
         new Transform3d(new Translation3d(0, 0, 1), new Rotation3d()),
         0.2,

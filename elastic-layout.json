@@ -1,1 +1,1 @@
-{"version":1.0,"grid_size":90,"tabs":[{"name":"Tab 1","grid_layout":{"layouts":[],"containers":[{"title":"bruh","x":0.0,"y":0.0,"width":90.0,"height":90.0,"type":"Text Display","properties":{"topic":"/Robot/bruh","period":0.06,"data_type":"string","show_submit_button":false}}]}}]}
+{"version":1.0,"grid_size":90,"tabs":[{"name":"Tab 1","grid_layout":{"layouts":[],"containers":[]}}]}

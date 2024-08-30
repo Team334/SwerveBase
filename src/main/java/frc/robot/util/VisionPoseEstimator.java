@@ -1,8 +1,8 @@
 package frc.robot.util;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -18,37 +18,74 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.util.struct.Struct;
-import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
-import frc.robot.Constants.FieldConstants;
+import monologue.Logged;
+import monologue.Annotations.Log;
 
 /** 
  * A class that handles filtering and finding standard deviations for an estimated pose
  * returned from a single photon vision camera.
  */
-public class VisionPoseEstimator {
-  /**
-   * The ambiguity threshold on this camera to limit incoming vision estimates (used for filtering).
-   */
-  public final double ambiguityThreshold;
-  
-  /**
-   * Std devs factor based on this specific camera, increase it if the resolution is lowered on this camera,
-   * or if the fov is high.
-   */
-  public final double cameraStdDevsFactor;
-
-  /**
-   * The location of the camera relative to the robot's center.
-   */
-  public final Transform3d robotToCam;
+public class VisionPoseEstimator implements Logged {
+  private VisionPoseEstimate _latestEstimate;
 
   private final PhotonCamera _camera;
   private final PhotonCameraSim _simCamera;
 
   private final PhotonPoseEstimator _poseEstimator;
+
+  /**
+   * The camera's NT name.
+   */
+  @Log.NT.Once(key = "Camera Name")
+  public final String camName;
+
+  /**
+   * The ambiguity threshold on this camera to limit incoming vision estimates (used for filtering).
+   */
+  @Log.NT.Once(key = "Ambiguity Threshold")
+  public final double ambiguityThreshold;
+  
+  /**
+   * Std devs factor based on this specific camera, increase it if the resolution is lowered on this camera,
+   * if the fov is high, if the ambiguity threshold is increased, etc.
+   */
+  @Log.NT.Once(key = "Camera Std Devs Factor")
+  public final double cameraStdDevsFactor;
+
+  /**
+   * The location of the camera relative to the robot's center.
+   */
+  @Log.NT.Once(key = "Robot To Cam Transform")
+  public final Transform3d robotToCam;
+
+  /**
+   * Builds a new vision pose estimator from a single camera constants.
+   */
+  public static VisionPoseEstimator buildFromCamera(VisionPoseEstimatorConstants camConstants) {
+    return new VisionPoseEstimator(
+      camConstants.camName,
+      camConstants.robotToCam,
+      camConstants.ambiguityThreshold,
+      camConstants.cameraStdDevsFactor
+    );
+  }
+
+  /**
+   * Builds multiple vision pose estimators from a list of camera constants.
+   * 
+   * @return An array of estimators.
+   */
+  public static List<VisionPoseEstimator> buildFromCameras(List<VisionPoseEstimatorConstants> allConstants) {
+    List<VisionPoseEstimator> estimators = new ArrayList<VisionPoseEstimator>();
+
+    allConstants.forEach(camConstants -> {
+      estimators.add(buildFromCamera(camConstants));
+    });
+
+    return estimators;
+  }
 
   public VisionPoseEstimator(
     String camName, 
@@ -56,6 +93,7 @@ public class VisionPoseEstimator {
     double ambiguityThreshold, 
     double cameraStdDevsFactor
   ) {
+    this.camName = camName;
     this.robotToCam = robotToCam;
     this.ambiguityThreshold = ambiguityThreshold;
     this.cameraStdDevsFactor = cameraStdDevsFactor;
@@ -85,30 +123,21 @@ public class VisionPoseEstimator {
   /**
    * Filters the raw estimate returned from photon vision.
    */
-  protected VisionPoseEstimate filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp) {
+  protected void filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp) {
     boolean tooOld = estimate.timestampSeconds <= latestVisionTimestamp;
     
     // and a bunch more filtering
 
-    boolean isValid = !tooOld;
+    // boolean isValid = !tooOld;
+    boolean isValid = true;
 
-    // tag ids array of fixed size for the struct to work
-    int[] detectedIds = new int[FieldConstants.FIELD_TAG_AMOUNT];
-    Arrays.fill(detectedIds, -1);
-
-    System.arraycopy(
-      estimate.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray(), // targetsUsed will always be all visible targets (multitag)
-      0, 
-      detectedIds, 
-      0, 
-      estimate.targetsUsed.size()
-    );
+    int[] detectedTags = estimate.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray();
     
-    return new VisionPoseEstimate( //dummy
+    _latestEstimate = new VisionPoseEstimate(
       estimate.estimatedPose.toPose2d(),
       estimate.timestampSeconds,
-      detectedIds,
-      VecBuilder.fill(0, 0, 0),
+      detectedTags,
+      _latestEstimate.stdDevs,
       isValid
     );
   }
@@ -124,22 +153,48 @@ public class VisionPoseEstimator {
    * Returns an optional containing the vision pose estimate, if no tags were seen this optional will be empty.
    */
   public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp) {
+    _latestEstimate = VisionPoseEstimate.noDetectedTags();
+
     // first see if camera has any tags in the frame (or if it's even connected)
     Optional<EstimatedRobotPose> rawEstimate = _poseEstimator.update();
     if (rawEstimate.isEmpty()) return Optional.empty();
 
     // if that worked, filter the estimate, and if the estimate is invalid, just return it as invalid
-    VisionPoseEstimate filteredEstimate = filterEstimate(rawEstimate.get(), latestVisionTimestamp);
-    if (!filteredEstimate.isValid()) return Optional.of(filteredEstimate);
+    filterEstimate(rawEstimate.get(), latestVisionTimestamp);
+    if (!_latestEstimate.isValid()) return Optional.of(_latestEstimate);
 
     // if the estimate is valid, return it with calculated std devs
-    return Optional.of(calculateStdDevs(filteredEstimate));
+    calculateStdDevs(_latestEstimate);
+    return Optional.of(_latestEstimate);
+  }
+
+  /**
+   * Logs the latest estimate since the last {@link #getEstimatedPose} call.
+   */
+  public void logLatestEstimate() {
+    log("Pose", _latestEstimate.pose);
+    log("Timestamp", _latestEstimate.timestamp);
+    log("Detected Tags", _latestEstimate.detectedTags);
+    log("X Std Devs", _latestEstimate.stdDevs.get(0, 0));
+    log("Y Std Devs", _latestEstimate.stdDevs.get(1, 0));
+    log("Theta Std Devs", _latestEstimate.stdDevs.get(2, 0));
+    log("Is Valid", _latestEstimate.isValid);
   }
 
   /** Returns the simulation camera, this is null if the robot isn't being simulated. */
   public PhotonCameraSim getSimCamera() {
     return _simCamera;
   }
+
+  /**
+   * Constants for a single vision pose estimator camera.
+   */
+  public record VisionPoseEstimatorConstants(
+    String camName, 
+    Transform3d robotToCam, 
+    double ambiguityThreshold, 
+    double cameraStdDevsFactor
+  ) {};
 
   /** Represents a vision pose estimate. */
   public record VisionPoseEstimate(
@@ -148,8 +203,20 @@ public class VisionPoseEstimator {
     int[] detectedTags,
     Vector<N3> stdDevs,
     boolean isValid
-  ) implements StructSerializable {
-    public final static VisionPoseEstimateStruct struct = new VisionPoseEstimateStruct();
+  ) {
+    /** 
+     * Returns a vision pose estimate that represents an estimate with no 
+     * detected tags (or camera was disconnected).
+     */
+    public final static VisionPoseEstimate noDetectedTags() {
+      return new VisionPoseEstimate(
+        new Pose2d(),
+        -1,
+        new int[0],
+        VecBuilder.fill(-1, -1, -1),
+        false
+      );
+    }
 
     /**
      * Used for sorting a list of arducam pose estimates, first the timestamps are sorted,
@@ -171,58 +238,5 @@ public class VisionPoseEstimator {
         );
       }
     );
-
-    private static class VisionPoseEstimateStruct implements Struct<VisionPoseEstimate> {
-      @Override
-      public Class<VisionPoseEstimate> getTypeClass() {
-        return VisionPoseEstimate.class;
-      }
-
-      @Override
-      public String getTypeString() {
-        return "struct:ArducamPoseEstimate";
-      }
-
-      @Override
-      public int getSize() {
-        // pose2d + timestamp(double) + 3 std devs(double) + tag amount(int) + isvalid(bool)
-        return Pose2d.struct.getSize() + kSizeDouble * 4 + kSizeInt8 * FieldConstants.FIELD_TAG_AMOUNT + kSizeBool;
-      }
-
-      @Override
-      public String getSchema() {
-        return String.format(
-          "Pose2d pose;double timestamp;int8 detectedTags[%d];double xStdDev;double yStdDev;double thetaStdDev;bool isValid;",
-          FieldConstants.FIELD_TAG_AMOUNT
-        );
-      }
-
-      @Override
-      public VisionPoseEstimate unpack(ByteBuffer bb) {
-        Pose2d pose = Pose2d.struct.unpack(bb);
-        double timestamp = bb.getDouble();
-        
-        int[] detectedTags = new int[FieldConstants.FIELD_TAG_AMOUNT];
-        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) detectedTags[i] = bb.get();
-        
-        double xStdDev = bb.getDouble();
-        double yStdDev = bb.getDouble();
-        double thetaStdDev = bb.getDouble();
-        boolean isValid = bb.get() == 1 ? true : false;
-
-        return new VisionPoseEstimate(pose, timestamp, detectedTags, VecBuilder.fill(xStdDev, yStdDev, thetaStdDev), isValid);
-      }
-
-      @Override
-      public void pack(ByteBuffer bb, VisionPoseEstimate value) {
-        Pose2d.struct.pack(bb, value.pose);
-        bb.putDouble(value.timestamp);
-        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) bb.put((byte) value.detectedTags[i]);
-        bb.putDouble(value.stdDevs.get(0, 0));
-        bb.putDouble(value.stdDevs.get(1, 0));
-        bb.putDouble(value.stdDevs.get(2, 0));
-        bb.put((byte) (value.isValid() ? 1 : 0));
-      }
-    }
   };
 }
