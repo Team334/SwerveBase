@@ -12,6 +12,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.swerve.Swerve.DriveOrientation;
 import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 
 public class TeleopDrive extends Command {
@@ -39,7 +40,7 @@ public class TeleopDrive extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    _swerve.isFieldOriented = false;
+    _swerve.driveOrientation = DriveOrientation.ROBOT_ORIENTED;
     _swerve.controlMode = ControlMode.OPEN_LOOP;
     _swerve.allowTurnInPlace = false;
   }

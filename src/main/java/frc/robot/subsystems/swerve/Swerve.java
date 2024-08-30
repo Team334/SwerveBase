@@ -11,6 +11,7 @@ import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on ca
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
@@ -62,7 +63,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final SwerveDriveOdometry _simOdometry; // odometry to be used by sim vision
 
   private final OdometryThread _odomThread;
-  private final ReadWriteLock _odomLock = new ReentrantReadWriteLock();
+  private final ReentrantLock _odomUpdateLock = new ReentrantLock();
 
   // to log odom update successfulness (based on 353)
   private int _attemptedOdomUpdates = 0;
@@ -95,8 +96,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public boolean allowTurnInPlace = false;
 
   /** Whether the swerve is driven field oriented or not. */
-  @Log.NT(key = "Field Oriented")
-  public boolean isFieldOriented = false;
+  @Log.NT(key = "Drive Orientation")
+  public DriveOrientation driveOrientation = DriveOrientation.ROBOT_ORIENTED;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -117,6 +118,15 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         new SimGyro()
       );
     }
+  }
+
+  /** Represents the orientation of the robot drive. */
+  public enum DriveOrientation {
+    /** Drives the robot with chassis speeds relative to the robot frame. */
+    ROBOT_ORIENTED,
+
+    /** Drives the robot with chassis speeds relative to the field coordinate system. */
+    FIELD_ORIENTED
   }
 
   /** 
@@ -163,7 +173,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     private void update() {
-      _odomLock.writeLock().lock();
+      _odomUpdateLock.lock();
       _attemptedOdomUpdates ++;
 
       boolean willOdomUpdateFail = false;
@@ -194,7 +204,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       // all the devices didn't successfully refresh, so don't update odom
       if (willOdomUpdateFail) {
         _failedOdomUpdates ++;
-        _odomLock.writeLock().unlock();
+        _odomUpdateLock.unlock();
         return;
       }
 
@@ -206,7 +216,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       log("Robot Heading", getHeading());
       // if (RobotBase.isSimulation()) log("Robot Sim Odometry", _cachedSimOdomPose);
 
-      _odomLock.writeLock().unlock();
+      _odomUpdateLock.unlock();
     }
   }
 
@@ -267,7 +277,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public void drive(double velX, double velY, double velOmega) {
     ChassisSpeeds chassisSpeeds;
 
-    if (isFieldOriented) {
+    if (driveOrientation == DriveOrientation.FIELD_ORIENTED) {
       chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
         velX,
         velY,
@@ -414,7 +424,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** Resets the pose of the pose estimator. */
   public void resetPose(Pose2d newPose) {
-    _odomLock.writeLock().lock();
+    _odomUpdateLock.lock();
     _poseEstimator.resetPosition(
       getRawHeading(),
       getModulePositions(),
@@ -425,7 +435,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       getModulePositions(),
       newPose
     );
-    _odomLock.writeLock().unlock();
+    _odomUpdateLock.unlock();
   }
 
   /** Resets the heading of the pose estimator. */
