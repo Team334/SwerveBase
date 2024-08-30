@@ -8,11 +8,11 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
@@ -86,6 +86,12 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
+
+  // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
+  // private final Deque<Pose2d> _fasterOdomPoses = new ArrayDeque<>();
+  // private final Deque<Pose2d> _slowerOdomPoses = new ArrayDeque<>();
+  // private final Pose2d _fasterOdomLastPose = new Pose2d();
+  // private final Pose2d _slowerOdomLastPose = new Pose2d();
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")

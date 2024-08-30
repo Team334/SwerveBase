@@ -128,8 +128,8 @@ public class VisionPoseEstimator implements Logged {
     
     // and a bunch more filtering
 
-    // boolean isValid = !tooOld;
-    boolean isValid = true;
+    boolean isValid = !tooOld;
+    // boolean isValid = true;
 
     int[] detectedTags = estimate.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray();
     
