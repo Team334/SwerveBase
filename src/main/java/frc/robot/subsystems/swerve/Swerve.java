@@ -18,6 +18,7 @@ import java.util.function.BooleanSupplier;
 import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -349,7 +350,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     VisionConstants.CAMERAS.forEach(cam -> {
       var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp);
       if (possibleEstimate.isEmpty()) return; // if nothing found, next camera
-
+      
       VisionPoseEstimate estimatedPose = possibleEstimate.get();
       
       // add all detected ids into detected targets
@@ -383,6 +384,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     log("Accepted Estimates", _acceptedEstimates.toArray(VisionPoseEstimate[]::new));
     log("Rejected Estimates", _rejectedEstimates.toArray(VisionPoseEstimate[]::new));
 
+    log("YOOO", new VisionPoseEstimate(
+      new Pose2d(),
+      78,
+      new int[]{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+      VecBuilder.fill(1, 1, 1),
+      false
+    ));
+
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 
     if (_acceptedEstimates.size() == 0) return;
@@ -409,8 +418,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
     _visionSim.update(_cachedSimOdomPose);
-
-    SmartDashboard.putData("Sim Vision Field", _visionSim.getDebugField());
   }
 
   /** Returns the pose of the drive from the pose estimator. */

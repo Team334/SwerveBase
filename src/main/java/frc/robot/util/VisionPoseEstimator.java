@@ -73,6 +73,9 @@ public class VisionPoseEstimator {
   
     if (RobotBase.isSimulation()) {
       SimCameraProperties simProps = new SimCameraProperties();
+
+      simProps.setCalibError(0.01, 0.005);
+
       _simCamera = new PhotonCameraSim(_camera, simProps);
     } else {
       _simCamera = null;
@@ -83,12 +86,11 @@ public class VisionPoseEstimator {
    * Filters the raw estimate returned from photon vision.
    */
   protected VisionPoseEstimate filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp) {
-    boolean tooOld = estimate.timestampSeconds < latestVisionTimestamp;
-
+    boolean tooOld = estimate.timestampSeconds <= latestVisionTimestamp;
+    
     // and a bunch more filtering
 
-    // boolean isValid = tooOld;
-    boolean isValid = true;
+    boolean isValid = !tooOld;
 
     // tag ids array of fixed size for the struct to work
     int[] detectedIds = new int[FieldConstants.FIELD_TAG_AMOUNT];
@@ -101,7 +103,7 @@ public class VisionPoseEstimator {
       0, 
       estimate.targetsUsed.size()
     );
-
+    
     return new VisionPoseEstimate( //dummy
       estimate.estimatedPose.toPose2d(),
       estimate.timestampSeconds,
@@ -183,14 +185,14 @@ public class VisionPoseEstimator {
 
       @Override
       public int getSize() {
-        // pose2d + timestamp(double) + 3 std devs(double) + tag amount(int) + isvalid(int)
-        return Pose2d.struct.getSize() + kSizeDouble * 4 + kSizeInt8 * (FieldConstants.FIELD_TAG_AMOUNT + 1);
+        // pose2d + timestamp(double) + 3 std devs(double) + tag amount(int) + isvalid(bool)
+        return Pose2d.struct.getSize() + kSizeDouble * 4 + kSizeInt8 * FieldConstants.FIELD_TAG_AMOUNT + kSizeBool;
       }
 
       @Override
       public String getSchema() {
         return String.format(
-          "Pose2d pose;double timestamp;int8 detectedTags[%d];double xStdDev;double yStdDev;double thetaStdDev;int8 isValid;",
+          "Pose2d pose;double timestamp;int8 detectedTags[%d];double xStdDev;double yStdDev;double thetaStdDev;bool isValid;",
           FieldConstants.FIELD_TAG_AMOUNT
         );
       }
@@ -201,12 +203,12 @@ public class VisionPoseEstimator {
         double timestamp = bb.getDouble();
         
         int[] detectedTags = new int[FieldConstants.FIELD_TAG_AMOUNT];
-        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) detectedTags[i] = bb.getInt();
+        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) detectedTags[i] = bb.get();
         
         double xStdDev = bb.getDouble();
         double yStdDev = bb.getDouble();
         double thetaStdDev = bb.getDouble();
-        boolean isValid = bb.getInt() == 1 ? true : false;
+        boolean isValid = bb.get() == 1 ? true : false;
 
         return new VisionPoseEstimate(pose, timestamp, detectedTags, VecBuilder.fill(xStdDev, yStdDev, thetaStdDev), isValid);
       }
@@ -215,11 +217,11 @@ public class VisionPoseEstimator {
       public void pack(ByteBuffer bb, VisionPoseEstimate value) {
         Pose2d.struct.pack(bb, value.pose);
         bb.putDouble(value.timestamp);
-        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) bb.putInt(value.detectedTags[i]);
+        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) bb.put((byte) value.detectedTags[i]);
         bb.putDouble(value.stdDevs.get(0, 0));
         bb.putDouble(value.stdDevs.get(1, 0));
         bb.putDouble(value.stdDevs.get(2, 0));
-        bb.putInt(value.isValid ? 1 : 0);
+        bb.put((byte) (value.isValid() ? 1 : 0));
       }
     }
   };
