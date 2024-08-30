@@ -8,9 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
@@ -41,6 +39,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
+import frc.robot.util.OdomDemo;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Logged;
@@ -88,10 +87,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
-  // private final Deque<Pose2d> _fasterOdomPoses = new ArrayDeque<>();
-  // private final Deque<Pose2d> _slowerOdomPoses = new ArrayDeque<>();
-  // private final Pose2d _fasterOdomLastPose = new Pose2d();
-  // private final Pose2d _slowerOdomLastPose = new Pose2d();
+  private final OdomDemo _fastOdomDemo;
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -220,6 +216,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
       log("Robot Heading", getHeading());
+      // log("Odom Poses", _fastOdomDemo.update(getModulePositions(), getHeading()));
       // if (RobotBase.isSimulation()) log("Robot Sim Odometry", _cachedSimOdomPose);
 
       _odomUpdateLock.unlock();
@@ -259,6 +256,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       getModulePositions(),
       new Pose2d(0, 0, getRawHeading())
     );
+
+    _fastOdomDemo = new OdomDemo(_kinematics);
+    _fastOdomDemo.reset(new Pose2d(), getModulePositions(), getRawHeading());
 
     if (RobotBase.isSimulation()) {
       _visionSim = new VisionSystemSim("main");
