@@ -41,7 +41,7 @@ import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
 import frc.robot.subsystems.swerve.gyro.GyroIO;
 import frc.robot.subsystems.swerve.gyro.NavXGyro;
 import frc.robot.subsystems.swerve.gyro.SimGyro;
-import frc.robot.util.VisionPoseEstimate;
+import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -246,7 +246,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       _visionSim = new VisionSystemSim("main");
       _visionSim.addAprilTags(FieldConstants.FIELD_LAYOUT);
 
-      VisionConstants.CAMERAS.forEach(c -> _visionSim.addCamera(c.getSimCamera(), c.robotToCam));
+      VisionConstants.CAMERAS.forEach(cam -> _visionSim.addCamera(cam.getSimCamera(), cam.robotToCam));
     } else {
       _visionSim = null;
     }
@@ -345,14 +345,28 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _acceptedEstimates.clear();
     _rejectedEstimates.clear();
     _detectedTargets.clear();
-    
-    VisionConstants.CAMERAS.forEach(c -> {
-      var estimatedPose = c.getEstimatedPose(_lastestVisionTimestamp);
-      if (estimatedPose.isEmpty()) return; // if nothing found, next camera
-      // TODO: add detected targets into detected targets array (need to switch to protobuf)
-      if (!estimatedPose.get().isValid()) { _rejectedEstimates.add(estimatedPose.get()); return; } // if invalid, add to rejected
+
+    VisionConstants.CAMERAS.forEach(cam -> {
+      var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp);
+      if (possibleEstimate.isEmpty()) return; // if nothing found, next camera
+
+      VisionPoseEstimate estimatedPose = possibleEstimate.get();
       
-      _acceptedEstimates.add(estimatedPose.get()); // if valid, add to accepted
+      // add all detected ids into detected targets
+      for (int tagId : estimatedPose.detectedTags()) {
+        var tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId);
+        if (tagPose.isEmpty()) break; // reached -1 in the detected tags array
+
+        _detectedTargets.add(tagPose.get());
+      }
+
+      // then check if the pose is valid for the estimator
+      if (!estimatedPose.isValid()) { 
+        _rejectedEstimates.add(estimatedPose); 
+        return;
+      }
+      
+      _acceptedEstimates.add(estimatedPose); // if valid, add to accepted
     });
 
     // first sort by timestamp, an earlier timestamp must come first so it can change

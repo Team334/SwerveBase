@@ -1,5 +1,8 @@
 package frc.robot.util;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 
 import org.photonvision.EstimatedRobotPose;
@@ -8,11 +11,18 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.util.struct.Struct;
+import edu.wpi.first.util.struct.StructSerializable;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
+import frc.robot.Constants.FieldConstants;
 
 /** 
  * A class that handles filtering and finding standard deviations for an estimated pose
@@ -77,11 +87,25 @@ public class VisionPoseEstimator {
 
     // and a bunch more filtering
 
-    boolean isValid = tooOld;
-    
-    return new VisionPoseEstimate(
+    // boolean isValid = tooOld;
+    boolean isValid = true;
+
+    // tag ids array of fixed size for the struct to work
+    int[] detectedIds = new int[FieldConstants.FIELD_TAG_AMOUNT];
+    Arrays.fill(detectedIds, -1);
+
+    System.arraycopy(
+      estimate.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray(), // targetsUsed will always be all visible targets (multitag)
+      0, 
+      detectedIds, 
+      0, 
+      estimate.targetsUsed.size()
+    );
+
+    return new VisionPoseEstimate( //dummy
       estimate.estimatedPose.toPose2d(),
       estimate.timestampSeconds,
+      detectedIds,
       VecBuilder.fill(0, 0, 0),
       isValid
     );
@@ -114,4 +138,89 @@ public class VisionPoseEstimator {
   public PhotonCameraSim getSimCamera() {
     return _simCamera;
   }
+
+  /** Represents a vision pose estimate. */
+  public record VisionPoseEstimate(
+    Pose2d pose,
+    double timestamp,
+    int[] detectedTags,
+    Vector<N3> stdDevs,
+    boolean isValid
+  ) implements StructSerializable {
+    public final static VisionPoseEstimateStruct struct = new VisionPoseEstimateStruct();
+
+    /**
+     * Used for sorting a list of arducam pose estimates, first the timestamps are sorted,
+     * then the standard deviations are sorted (based on which standard deviation is overall better).
+     */
+    public final static Comparator<VisionPoseEstimate> comparator = Comparator.comparing(
+      VisionPoseEstimate::timestamp,
+      (t1, t2) -> {
+        if (t1 > t2) return 1;
+        if (t1 < t2) return -1;
+        return 0;
+      }
+    ).thenComparing(
+      VisionPoseEstimate::stdDevs,
+      (s1, s2) -> {
+        return -Double.compare(
+          s1.get(0, 0) + s1.get(1, 0) + s1.get(2, 0),
+          s2.get(0, 0) + s2.get(1, 0) + s2.get(2, 0)
+        );
+      }
+    );
+
+    private static class VisionPoseEstimateStruct implements Struct<VisionPoseEstimate> {
+      @Override
+      public Class<VisionPoseEstimate> getTypeClass() {
+        return VisionPoseEstimate.class;
+      }
+
+      @Override
+      public String getTypeString() {
+        return "struct:ArducamPoseEstimate";
+      }
+
+      @Override
+      public int getSize() {
+        // pose2d + timestamp(double) + 3 std devs(double) + tag amount(int) + isvalid(int)
+        return Pose2d.struct.getSize() + kSizeDouble * 4 + kSizeInt8 * (FieldConstants.FIELD_TAG_AMOUNT + 1);
+      }
+
+      @Override
+      public String getSchema() {
+        return String.format(
+          "Pose2d pose;double timestamp;int8 detectedTags[%d];double xStdDev;double yStdDev;double thetaStdDev;int8 isValid;",
+          FieldConstants.FIELD_TAG_AMOUNT
+        );
+      }
+
+      @Override
+      public VisionPoseEstimate unpack(ByteBuffer bb) {
+        Pose2d pose = Pose2d.struct.unpack(bb);
+        double timestamp = bb.getDouble();
+        
+        int[] detectedTags = new int[FieldConstants.FIELD_TAG_AMOUNT];
+        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) detectedTags[i] = bb.getInt();
+        
+        double xStdDev = bb.getDouble();
+        double yStdDev = bb.getDouble();
+        double thetaStdDev = bb.getDouble();
+        boolean isValid = bb.getInt() == 1 ? true : false;
+
+        return new VisionPoseEstimate(pose, timestamp, detectedTags, VecBuilder.fill(xStdDev, yStdDev, thetaStdDev), isValid);
+      }
+
+      @Override
+      public void pack(ByteBuffer bb, VisionPoseEstimate value) {
+        Pose2d.struct.pack(bb, value.pose);
+        bb.putDouble(value.timestamp);
+        for (int i = 0; i < FieldConstants.FIELD_TAG_AMOUNT; i++) bb.putInt(value.detectedTags[i]);
+        bb.putDouble(value.stdDevs.get(0, 0));
+        bb.putDouble(value.stdDevs.get(1, 0));
+        bb.putDouble(value.stdDevs.get(2, 0));
+        bb.putInt(value.isValid ? 1 : 0);
+      }
+    }
+  };
 }

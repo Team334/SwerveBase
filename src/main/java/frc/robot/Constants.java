@@ -16,6 +16,7 @@ import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 /**
@@ -34,12 +35,18 @@ public final class Constants {
 
   public static final class VisionConstants {
     public static final List<VisionPoseEstimator> CAMERAS = List.of(
-  
+      new VisionPoseEstimator(
+        "left-arducam",
+        new Transform3d(),
+        0.2,
+        1
+      )
     );
   }
 
   public static final class FieldConstants {
     public static final AprilTagFieldLayout FIELD_LAYOUT = AprilTagFields.k2024Crescendo.loadAprilTagLayoutField();
+    public static final int FIELD_TAG_AMOUNT = FIELD_LAYOUT.getTags().size();
   }
 
   public static class SwerveConstants {
