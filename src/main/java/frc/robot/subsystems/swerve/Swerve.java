@@ -365,7 +365,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _detectedTargets.clear();
 
     _cameras.forEach(cam -> {
-      var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp);
+      var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp, getHeading());
       cam.logLatestEstimate();
 
       if (possibleEstimate.isEmpty()) return;
@@ -392,8 +392,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     // https://github.com/wpilibsuite/allwpilib/pull/4917#issuecomment-1376178648
     _acceptedEstimates.sort(VisionPoseEstimate.comparator);
     
-    log("Accepted Estimates", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
-    log("Rejected Estimates", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose2d[]::new));
+    log("Accepted Estimates", _acceptedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose3d[]::new));
+    log("Rejected Estimates", _rejectedEstimates.stream().map(VisionPoseEstimate::pose).toArray(Pose3d[]::new));
 
     log("Detected Targets", _detectedTargets.toArray(Pose3d[]::new));
 

@@ -16,10 +16,13 @@ import java.util.List;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N3;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -36,6 +39,9 @@ public final class Constants {
   }
 
   public static final class VisionConstants {
+    public static final Vector<N3> SINGLE_TAG_BASE_STDDEVS = VecBuilder.fill(5, 5, 5);
+    public static final Vector<N3> MULTI_TAG_BASE_STDDEVS = VecBuilder.fill(1, 1, 1);
+
     public static final List<VisionPoseEstimatorConstants> CAM_CONSTANTS = List.of(
       new VisionPoseEstimatorConstants(
         "left-arducam",

@@ -11,15 +11,16 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
-import org.photonvision.targeting.PhotonTrackedTarget;
-
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.Constants;
+import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.VisionConstants;
 import monologue.Logged;
 import monologue.Annotations.Log;
 
@@ -59,6 +60,12 @@ public class VisionPoseEstimator implements Logged {
    */
   @Log.NT.Once(key = "Robot To Cam Transform")
   public final Transform3d robotToCam;
+
+  /**
+   * Whether this estimator is ignoring the vision heading estimate (if this is true the vision theta std devs will be super high).
+   */
+  @Log.NT(key = "Ignore Theta Estimate")
+  public final boolean ignoreThetaEstimate = true;
 
   /**
    * Builds a new vision pose estimator from a single camera constants.
@@ -123,20 +130,53 @@ public class VisionPoseEstimator implements Logged {
   /**
    * Filters the raw estimate returned from photon vision.
    */
-  protected void filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp) {
-    boolean tooOld = estimate.timestampSeconds <= latestVisionTimestamp;
-    
-    // and a bunch more filtering
+  protected void filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp, Rotation2d gyroHeading) {
+    // get all info from the estimate
+    Pose3d estimatedPose = estimate.estimatedPose;
+    double timestamp = estimate.timestampSeconds;
+    double ambiguity = -1;
+    int tagAmount = estimate.targetsUsed.size();
+    int[] detectedTags = new int[tagAmount];
+    double avgTagDistance = 0;
 
-    boolean isValid = !tooOld;
-    // boolean isValid = true;
+    // disambiguate (only necessary for a single tag)
+    if (tagAmount == 1) {
+      // some disambiguation here
+      // int tagId = detectedTags[0];
+      ambiguity = estimate.targetsUsed.get(0).getPoseAmbiguity();
+      // Pose3d tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId).get();
+      // Pose3d betterHeading = tagPose.transformBy(estimate.targetsUsed.get(0).getBestCameraToTarget().inverse());
+      // Pose3d worseHeading = tagPose.transformBy(estimate.targetsUsed.get(0).getAlternateCameraToTarget().inverse());
 
-    int[] detectedTags = estimate.targetsUsed.stream().mapToInt(PhotonTrackedTarget::getFiducialId).toArray();
+      // estimatedPose = (Math.abs(betterReprojError.getRotation().toRotation2d().minus(gyroHeading)))
+    }
+
+    // get tag distance
+    for (int i = 0; i < tagAmount; i++) {
+      int tagId = estimate.targetsUsed.get(i).getFiducialId();
+      Pose3d tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId).get();
+      detectedTags[i] = tagId;
+      avgTagDistance += tagPose.getTranslation().getDistance(
+        estimatedPose.getTranslation()
+      );
+    }
+
+    avgTagDistance /= tagAmount;
+
+
+    // run all filtering
+    boolean tooOld = timestamp <= latestVisionTimestamp;
+    boolean badAmbiguity = ambiguity >= ambiguityThreshold;
+
+    // boolean isValid = !tooOld || badAmbiguity;
+    boolean isValid = true;
     
     _latestEstimate = new VisionPoseEstimate(
-      estimate.estimatedPose.toPose2d(),
-      estimate.timestampSeconds,
+      estimatedPose,
+      timestamp,
+      ambiguity,
       detectedTags,
+      avgTagDistance,
       _latestEstimate.stdDevs,
       isValid
     );
@@ -145,14 +185,36 @@ public class VisionPoseEstimator implements Logged {
   /**
    * Calculates the standard deviations for the given filtered estimate.
    */
-  protected VisionPoseEstimate calculateStdDevs(VisionPoseEstimate estimate) {
-    return estimate;
+  protected void calculateStdDevs(VisionPoseEstimate estimate) {
+    Vector<N3> baseStdDevs = estimate.detectedTags.length == 1 ? 
+      VisionConstants.SINGLE_TAG_BASE_STDDEVS :
+      VisionConstants.MULTI_TAG_BASE_STDDEVS;
+
+    double xStdDevs = baseStdDevs.get(0, 0) * Math.pow(estimate.avgTagDistance, 2) * cameraStdDevsFactor;
+    double yStdDevs = baseStdDevs.get(1, 0) * Math.pow(estimate.avgTagDistance, 2) * cameraStdDevsFactor;
+    double thetaStdDevs = baseStdDevs.get(2, 0) * Math.pow(estimate.avgTagDistance, 2) * cameraStdDevsFactor;
+    
+    if (ignoreThetaEstimate) thetaStdDevs = 999999999;
+
+    _latestEstimate = new VisionPoseEstimate(
+      estimate.pose,
+      estimate.timestamp,
+      estimate.ambiguity,
+      estimate.detectedTags,
+      estimate.avgTagDistance,
+      VecBuilder.fill(xStdDevs, yStdDevs, thetaStdDevs),
+      estimate.isValid
+    );
   }
 
   /**
    * Returns an optional containing the vision pose estimate, if no tags were seen this optional will be empty.
+   * 
+   * @param latestVisionTimestamp The timestamp of the latest vision estimate used in the swerve pose estimator.
+   * @param gyroHeading The heading of the gyro, used to disambiguate single tag estimates.
    */
-  public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp) {
+  public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp, Rotation2d gyroHeading) {
+    // start with no detected tags
     _latestEstimate = VisionPoseEstimate.noDetectedTags();
 
     // first see if camera has any tags in the frame (or if it's even connected)
@@ -160,7 +222,7 @@ public class VisionPoseEstimator implements Logged {
     if (rawEstimate.isEmpty()) return Optional.empty();
 
     // if that worked, filter the estimate, and if the estimate is invalid, just return it as invalid
-    filterEstimate(rawEstimate.get(), latestVisionTimestamp);
+    filterEstimate(rawEstimate.get(), latestVisionTimestamp, gyroHeading);
     if (!_latestEstimate.isValid()) return Optional.of(_latestEstimate);
 
     // if the estimate is valid, return it with calculated std devs
@@ -174,7 +236,9 @@ public class VisionPoseEstimator implements Logged {
   public void logLatestEstimate() {
     log("Pose", _latestEstimate.pose);
     log("Timestamp", _latestEstimate.timestamp);
+    log("Ambiguity", _latestEstimate.ambiguity);
     log("Detected Tags", _latestEstimate.detectedTags);
+    log("Average Tag Distance", _latestEstimate.avgTagDistance);
     log("X Std Devs", _latestEstimate.stdDevs.get(0, 0));
     log("Y Std Devs", _latestEstimate.stdDevs.get(1, 0));
     log("Theta Std Devs", _latestEstimate.stdDevs.get(2, 0));
@@ -198,9 +262,11 @@ public class VisionPoseEstimator implements Logged {
 
   /** Represents a vision pose estimate. */
   public record VisionPoseEstimate(
-    Pose2d pose,
+    Pose3d pose,
     double timestamp,
+    double ambiguity,
     int[] detectedTags,
+    double avgTagDistance,
     Vector<N3> stdDevs,
     boolean isValid
   ) {
@@ -210,9 +276,11 @@ public class VisionPoseEstimator implements Logged {
      */
     public final static VisionPoseEstimate noDetectedTags() {
       return new VisionPoseEstimate(
-        new Pose2d(),
+        new Pose3d(),
+        -1,
         -1,
         new int[0],
+        -1,
         VecBuilder.fill(-1, -1, -1),
         false
       );
