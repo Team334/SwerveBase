@@ -42,6 +42,18 @@
             "key": "NT:/Robot/m_robotContainer/_swerve/Detected Targets",
             "sourceTypeIndex": 2,
             "sourceType": "Pose3d[]"
+          },
+          {
+            "type": "Yellow Ghost",
+            "key": "NT:/Robot/m_robotContainer/_swerve/Rejected Estimates",
+            "sourceTypeIndex": 2,
+            "sourceType": "Pose3d[]"
+          },
+          {
+            "type": "Green Ghost",
+            "key": "NT:/Robot/m_robotContainer/_swerve/Accepted Estimates",
+            "sourceTypeIndex": 2,
+            "sourceType": "Pose3d[]"
           }
         ],
         [
@@ -50,18 +62,6 @@
             "key": "NT:/Robot/m_robotContainer/_swerve/Robot Pose",
             "sourceTypeIndex": 1,
             "sourceType": "Pose2d"
-          },
-          {
-            "type": "Yellow Ghost",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Rejected Estimates Poses",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose2d[]"
-          },
-          {
-            "type": "Green Ghost",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Accepted Estimates Poses",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose2d[]"
           }
         ]
       ],
