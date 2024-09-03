@@ -11,6 +11,8 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -139,16 +141,29 @@ public class VisionPoseEstimator implements Logged {
     int[] detectedTags = new int[tagAmount];
     double avgTagDistance = 0;
 
-    // disambiguate (only necessary for a single tag)
+    // disambiguate poses using gyro measurement (only necessary for a single tag)
     if (tagAmount == 1) {
-      // some disambiguation here
-      // int tagId = detectedTags[0];
-      ambiguity = estimate.targetsUsed.get(0).getPoseAmbiguity();
-      // Pose3d tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId).get();
-      // Pose3d betterHeading = tagPose.transformBy(estimate.targetsUsed.get(0).getBestCameraToTarget().inverse());
-      // Pose3d worseHeading = tagPose.transformBy(estimate.targetsUsed.get(0).getAlternateCameraToTarget().inverse());
+      PhotonTrackedTarget target = estimate.targetsUsed.get(0);
+      int tagId = target.getFiducialId();
+      Pose3d tagPose = FieldConstants.FIELD_LAYOUT.getTagPose(tagId).get();
+      
+      ambiguity = target.getPoseAmbiguity();
 
-      // estimatedPose = (Math.abs(betterReprojError.getRotation().toRotation2d().minus(gyroHeading)))
+      Pose3d betterReprojPose = tagPose.transformBy(target.getBestCameraToTarget().inverse());
+      Pose3d worseReprojPose = tagPose.transformBy(target.getAlternateCameraToTarget().inverse());
+
+      betterReprojPose = betterReprojPose.transformBy(robotToCam.inverse());
+      worseReprojPose = worseReprojPose.transformBy(robotToCam.inverse());
+
+      // check which of the poses is closer to the correct gyro heading
+      if (
+        Math.abs(betterReprojPose.toPose2d().getRotation().minus(gyroHeading).getDegrees()) <
+        Math.abs(worseReprojPose.toPose2d().getRotation().minus(gyroHeading).getDegrees())
+      ) {
+        estimatedPose = betterReprojPose;
+      } else {
+        estimatedPose = worseReprojPose;
+      }
     }
 
     // get tag distance
@@ -167,9 +182,10 @@ public class VisionPoseEstimator implements Logged {
     // run all filtering
     boolean tooOld = timestamp <= latestVisionTimestamp;
     boolean badAmbiguity = ambiguity >= ambiguityThreshold;
-
-    // boolean isValid = !tooOld || badAmbiguity;
-    boolean isValid = true;
+    boolean unrealisticPose = false; // TODO
+    
+    boolean isValid = !(tooOld || badAmbiguity || unrealisticPose);
+    // boolean isValid = true;
     
     _latestEstimate = new VisionPoseEstimate(
       estimatedPose,
