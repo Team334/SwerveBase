@@ -165,14 +165,9 @@ public class VisionPoseEstimator implements Logged {
         Math.abs(worseReprojPose.toPose2d().getRotation().minus(gyroHeading).getDegrees())
       ) {
         estimatedPose = betterReprojPose;
-        log("USED BETTER", true);
       } else {
         estimatedPose = worseReprojPose;
-        log("USED BETTER", false);
       }
-
-      log("Angles", "Better " + Double.toString(betterReprojPose.toPose2d().getRotation().getDegrees()) + "Worse " + Double.toString(worseReprojPose.toPose2d().getRotation().getDegrees()));
-      log("Gyro Heading @ T", gyroHeading.getDegrees());
     }
 
     // get tag distance
