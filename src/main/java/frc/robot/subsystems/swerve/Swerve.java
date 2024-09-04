@@ -21,6 +21,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.interpolation.TimeInterpolatableBuffer;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
@@ -28,6 +29,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
@@ -60,6 +62,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   private final SwerveDrivePoseEstimator _poseEstimator;
   private final SwerveDriveOdometry _simOdometry; // odometry to be used by sim vision
+
+  // this is necessary for vision disambiguation due to vision latency
+  private final TimeInterpolatableBuffer<Rotation2d> _headingBuffer = TimeInterpolatableBuffer.createBuffer(1.5); 
 
   private final OdometryThread _odomThread;
   private final ReentrantLock _odomUpdateLock = new ReentrantLock();
@@ -213,6 +218,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       // all devices refreshed, so update odom with new device data
       _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
       _cachedSimOdomPose = _simOdometry.update(getRawHeading(), getModulePositions());
+      _headingBuffer.addSample(Timer.getFPGATimestamp(), _cachedRawHeading);
 
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
       log("Robot Heading", getHeading());
@@ -365,7 +371,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _detectedTargets.clear();
 
     _cameras.forEach(cam -> {
-      var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp, getHeading());
+      var possibleEstimate = cam.getEstimatedPose(_lastestVisionTimestamp, this::getHeadingAtTime);
       cam.logLatestEstimate();
 
       if (possibleEstimate.isEmpty()) return;
@@ -455,6 +461,18 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Returns the heading of the drive. */
   public Rotation2d getHeading() {
     return getPose().getRotation();
+  }
+
+  /**
+   * Gets the heading at the given timestamp. If the timestamp is less than (currentTime - 1.5s), 
+   * the current heading is returned (same happens if the FPGA time is less than 1.5 seconds).
+   */
+  public Rotation2d getHeadingAtTime(double timestamp) {
+    var possibleHeading = _headingBuffer.getSample(timestamp);
+
+    if (possibleHeading.isPresent()) return possibleHeading.get();
+    
+    return getHeading();
   }
 
   /** 

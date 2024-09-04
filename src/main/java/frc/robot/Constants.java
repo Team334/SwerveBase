@@ -42,6 +42,10 @@ public final class Constants {
     public static final Vector<N3> SINGLE_TAG_BASE_STDDEVS = VecBuilder.fill(5, 5, 5);
     public static final Vector<N3> MULTI_TAG_BASE_STDDEVS = VecBuilder.fill(1, 1, 1);
 
+    public static final double X_BOUND_MARGIN = 0;
+    public static final double Y_BOUND_MARGIN = 0;
+    public static final double Z_BOUND_MARGIN = 0.1;
+
     public static final List<VisionPoseEstimatorConstants> CAM_CONSTANTS = List.of(
       new VisionPoseEstimatorConstants(
         "left-arducam",

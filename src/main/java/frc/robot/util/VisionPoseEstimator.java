@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
@@ -96,6 +97,9 @@ public class VisionPoseEstimator implements Logged {
     return estimators;
   }
 
+  /**
+   * Creates a new VisionPoseEstimator (all params are members that are javadocced already).
+   */
   public VisionPoseEstimator(
     String camName, 
     Transform3d robotToCam, 
@@ -161,9 +165,14 @@ public class VisionPoseEstimator implements Logged {
         Math.abs(worseReprojPose.toPose2d().getRotation().minus(gyroHeading).getDegrees())
       ) {
         estimatedPose = betterReprojPose;
+        log("USED BETTER", true);
       } else {
         estimatedPose = worseReprojPose;
+        log("USED BETTER", false);
       }
+
+      log("Angles", "Better " + Double.toString(betterReprojPose.toPose2d().getRotation().getDegrees()) + "Worse " + Double.toString(worseReprojPose.toPose2d().getRotation().getDegrees()));
+      log("Gyro Heading @ T", gyroHeading.getDegrees());
     }
 
     // get tag distance
@@ -182,9 +191,16 @@ public class VisionPoseEstimator implements Logged {
     // run all filtering
     boolean tooOld = timestamp <= latestVisionTimestamp;
     boolean badAmbiguity = ambiguity >= ambiguityThreshold;
-    boolean unrealisticPose = false; // TODO
+    boolean outOfBounds = (
+      estimatedPose.getX() <= -VisionConstants.X_BOUND_MARGIN ||
+      estimatedPose.getX() >= FieldConstants.FIELD_LAYOUT.getFieldLength() + VisionConstants.X_BOUND_MARGIN ||
+      estimatedPose.getY() <= -VisionConstants.Y_BOUND_MARGIN ||
+      estimatedPose.getY() >= FieldConstants.FIELD_LAYOUT.getFieldWidth() + VisionConstants.Y_BOUND_MARGIN ||
+      estimatedPose.getZ() >= VisionConstants.Z_BOUND_MARGIN ||
+      estimatedPose.getZ() <= -VisionConstants.Z_BOUND_MARGIN
+    );
     
-    boolean isValid = !(tooOld || badAmbiguity || unrealisticPose);
+    boolean isValid = !(tooOld || badAmbiguity || outOfBounds);
     // boolean isValid = true;
     
     _latestEstimate = new VisionPoseEstimate(
@@ -227,9 +243,9 @@ public class VisionPoseEstimator implements Logged {
    * Returns an optional containing the vision pose estimate, if no tags were seen this optional will be empty.
    * 
    * @param latestVisionTimestamp The timestamp of the latest vision estimate used in the swerve pose estimator.
-   * @param gyroHeading The heading of the gyro, used to disambiguate single tag estimates.
+   * @param gyroHeadingAtTime Function to get the heading of the gyro at a timestamp, used to disambiguate single tag estimates.
    */
-  public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp, Rotation2d gyroHeading) {
+  public Optional<VisionPoseEstimate> getEstimatedPose(double latestVisionTimestamp, Function<Double, Rotation2d> gyroHeadingAtTime) {
     // start with no detected tags
     _latestEstimate = VisionPoseEstimate.noDetectedTags();
 
@@ -238,7 +254,7 @@ public class VisionPoseEstimator implements Logged {
     if (rawEstimate.isEmpty()) return Optional.empty();
 
     // if that worked, filter the estimate, and if the estimate is invalid, just return it as invalid
-    filterEstimate(rawEstimate.get(), latestVisionTimestamp, gyroHeading);
+    filterEstimate(rawEstimate.get(), latestVisionTimestamp, gyroHeadingAtTime.apply(rawEstimate.get().timestampSeconds));
     if (!_latestEstimate.isValid()) return Optional.of(_latestEstimate);
 
     // if the estimate is valid, return it with calculated std devs
@@ -270,20 +286,40 @@ public class VisionPoseEstimator implements Logged {
    * Constants for a single vision pose estimator camera.
    */
   public record VisionPoseEstimatorConstants(
+    /** The NT name of the camera. */
     String camName, 
-    Transform3d robotToCam, 
-    double ambiguityThreshold, 
+
+    /** The robot to camera transform */
+    Transform3d robotToCam,
+
+    /** The ambiguity threshold for filtering */
+    double ambiguityThreshold,
+
+    /** The camera's std devs factor. */
     double cameraStdDevsFactor
   ) {};
 
   /** Represents a vision pose estimate. */
   public record VisionPoseEstimate(
+    /** The pose to add into the estimator. */
     Pose3d pose,
+
+    /** The timestamp of when the frame was taken. (-1 when no tags). */
     double timestamp,
+
+    /** The ambiguity of this measurement (-1 when no tags or when multi-tag). */
     double ambiguity,
+
+    /** The detected tag ids in this measurement. */
     int[] detectedTags,
+
+    /** The average distance from the tag(s) (-1 when no tags). */
     double avgTagDistance,
+
+    /** The [xMeters, yMeters, thetaRadians] noise standard deviations of this pose estimate ([-1, -1, -1] when no tags or invalid). */
     Vector<N3> stdDevs,
+
+    /** Whether this estimate passed the filter or not. */
     boolean isValid
   ) {
     /** 
