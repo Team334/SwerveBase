@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve.gyro;
+package frc.robot.subsystems.swerve.gyros;
 
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;

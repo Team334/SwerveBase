@@ -20,10 +20,10 @@ public class SwerveModule implements SelfChecked, Logged {
 
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
-  private ControlMode _controlMode = ControlMode.OPEN_LOOP;
+  private ModuleControlMode _controlMode = ModuleControlMode.OPEN_LOOP;
 
   /** Represents the control over the module's drive motor. */
-  public static enum ControlMode {
+  public static enum ModuleControlMode {
     /** Drives this module open loop. */
     OPEN_LOOP,
 
@@ -64,7 +64,7 @@ public class SwerveModule implements SelfChecked, Logged {
   }
 
   /** Set the desired target state for this module. */
-  public void setModuleState(SwerveModuleState state, ControlMode controlMode, boolean allowTurnInPlace) {
+  public void setModuleState(SwerveModuleState state, ModuleControlMode controlMode, boolean allowTurnInPlace) {
     _desiredState = SwerveModuleState.optimize(state, _io.getAngle());
 
     if (_desiredState.speedMetersPerSecond == 0 && !allowTurnInPlace) {
@@ -82,7 +82,7 @@ public class SwerveModule implements SelfChecked, Logged {
 
   /** Set the target velocity and acceleration for this module. */
   public void setDrive(double velocity) {
-    _io.setVelocity(velocity, _controlMode == ControlMode.OPEN_LOOP ? true : false);
+    _io.setVelocity(velocity, _controlMode == ModuleControlMode.OPEN_LOOP ? true : false);
   }
 
   /** Set the target angle for this module. */ 

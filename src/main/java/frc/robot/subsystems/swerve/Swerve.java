@@ -13,11 +13,13 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,10 +39,10 @@ import frc.robot.Robot;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.subsystems.swerve.SwerveModule.ControlMode;
-import frc.robot.subsystems.swerve.gyro.GyroIO;
-import frc.robot.subsystems.swerve.gyro.NavXGyro;
-import frc.robot.subsystems.swerve.gyro.SimGyro;
+import frc.robot.subsystems.swerve.SwerveModule.ModuleControlMode;
+import frc.robot.subsystems.swerve.gyros.GyroIO;
+import frc.robot.subsystems.swerve.gyros.NavXGyro;
+import frc.robot.subsystems.swerve.gyros.SimGyro;
 import frc.robot.util.OdomDemo;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
@@ -75,6 +77,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
 
+  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.magnitude());
+  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.magnitude());
+  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
+
   // these values are updated by the odometry thread to prevent thread-safety issues
   // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
   private Rotation2d _cachedRawHeading;
@@ -96,7 +102,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
-  public ControlMode controlMode = ControlMode.OPEN_LOOP;
+  public ModuleControlMode moduleControlMode = ModuleControlMode.OPEN_LOOP;
 
   /** Whether to allow the modules in the drive to turn in place. */
   @Log.NT(key = "Allow Turn In Place")
@@ -279,6 +285,32 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _odomThread.start();
   }
 
+  /**
+   * Creates a new Command that drives the drive. The driving configuration is set with the 
+   * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
+   * 
+   * @param xStick The x vel joystick input [-1, 1].
+   * @param yStick The y vel joystick input [-1, 1].
+   * @param omegaStick The omega vel joystick input [-1, 1].
+   */
+  public Command drive(DoubleSupplier xStick, DoubleSupplier yStick, DoubleSupplier omegaStick) {
+    ChassisSpeeds currentSpeeds = (driveOrientation == DriveOrientation.FIELD_ORIENTED) ? 
+      ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading()) : 
+      getChassisSpeeds();
+
+    _xAccelLimiter.reset(currentSpeeds.vxMetersPerSecond);
+    _yAccelLimiter.reset(currentSpeeds.vyMetersPerSecond);
+    _omegaAccelLimiter.reset(currentSpeeds.omegaRadiansPerSecond);
+
+    return run(() -> {
+      drive(
+        _xAccelLimiter.calculate(xStick.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
+        _yAccelLimiter.calculate(yStick.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
+        _omegaAccelLimiter.calculate(omegaStick.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
+      );
+    });
+  }
+
   /** 
    * Drives the swerve drive.
    * 
@@ -359,7 +391,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
 
     for (int i = 0; i < _modules.size(); i++) {
-      _modules.get(i).setModuleState(states[i], controlMode, allowTurnInPlace);
+      _modules.get(i).setModuleState(states[i], moduleControlMode, allowTurnInPlace);
     }
   }
 

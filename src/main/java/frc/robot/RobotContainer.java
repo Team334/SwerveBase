@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.robot.Constants.Ports;
-import frc.robot.commands.swerve.TeleopDrive;
 import frc.robot.subsystems.swerve.Swerve;
 import monologue.Logged;
 
@@ -27,11 +26,10 @@ public class RobotContainer implements Logged {
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    _swerve.setDefaultCommand(new TeleopDrive(
-      _swerve,
-      _driverController::getLeftY,
-      _driverController::getLeftX,
-      _driverController::getRightX
+    _swerve.setDefaultCommand(_swerve.drive(
+      () -> -_driverController.getLeftY(),
+      () -> -_driverController.getLeftX(),
+      () -> -_driverController.getRightX()
     ));
 
     // Configure the trigger bindings

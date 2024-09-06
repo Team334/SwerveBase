@@ -36,6 +36,7 @@ Pose estimation is a combination of odometry and vision measurements. WPILib's `
 ### Logging/Alerts
 - Stay tuned with all the wpilib updates (I think 6328 Alerts are a part of wpilib now).
 ### Everything else
+- Create "none" io in addition to the ones that exist (to disable a subsystem when the robot is missing it).
 - Figure out how to use sysid, set it up for all control loops.
 - Research on whether to stick with pathplanner or switch to choreo.
 - Research on different code structures (like using finite state machines).
