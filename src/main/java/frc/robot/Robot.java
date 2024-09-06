@@ -10,6 +10,7 @@ import com.ctre.phoenix6.SignalLogger;
 
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -41,14 +42,15 @@ public class Robot extends TimedRobot implements Logged {
     m_robotContainer = new RobotContainer();
 
     Monologue.setupMonologue(this, "Robot", false, true);
-
-    // DataLogManager.start();
-    // URCL.start();
-
-    // DriverStation.startDataLog(DataLogManager.getLog());
+ 
+    if (RobotBase.isSimulation()) return;
     
-    // // SignalLogger.setPath("/logs/ctre-logs/"); // not working in sim
-    // SignalLogger.start();
+    URCL.start();
+
+    DriverStation.startDataLog(DataLogManager.getLog());
+    
+    SignalLogger.setPath("/logs/ctre-logs/");
+    SignalLogger.start();
 
     addPeriodic(FaultLogger::update, 1);
   }

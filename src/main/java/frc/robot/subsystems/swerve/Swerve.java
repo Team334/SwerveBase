@@ -43,7 +43,6 @@ import frc.robot.subsystems.swerve.SwerveModule.ModuleControlMode;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
 import frc.robot.subsystems.swerve.gyros.NavXGyro;
 import frc.robot.subsystems.swerve.gyros.SimGyro;
-import frc.robot.util.OdomDemo;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Logged;
@@ -86,7 +85,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private Rotation2d _cachedRawHeading;
   private SwerveModuleState[] _cachedModuleStates;
   private SwerveModulePosition[] _cachedModulePositions;
-  private Pose2d _cachedPose;
+  private Pose2d _cachedEstimatedPose;
   private Pose2d _cachedSimOdomPose;
 
   private final List<VisionPoseEstimator> _cameras;
@@ -98,7 +97,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
-  private final OdomDemo _fastOdomDemo;
+  // TODO: an odom demo thing
 
   /** The control of the drive motors in the swerve's modules. */
   @Log.NT(key = "Module Control Mode")
@@ -222,13 +221,12 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       }
 
       // all devices refreshed, so update odom with new device data
-      _cachedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
+      _cachedEstimatedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
       _cachedSimOdomPose = _simOdometry.update(getRawHeading(), getModulePositions());
-      _headingBuffer.addSample(Timer.getFPGATimestamp(), _cachedRawHeading);
+      _headingBuffer.addSample(Timer.getFPGATimestamp(), getHeading());
 
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
       log("Robot Heading", getHeading());
-      // log("Odom Poses", _fastOdomDemo.update(getModulePositions(), getHeading()));
       // if (RobotBase.isSimulation()) log("Robot Sim Odometry", _cachedSimOdomPose);
 
       _odomUpdateLock.unlock();
@@ -269,8 +267,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       new Pose2d(0, 0, getRawHeading())
     );
 
-    _fastOdomDemo = new OdomDemo(_kinematics);
-    _fastOdomDemo.reset(new Pose2d(), getModulePositions(), getRawHeading());
+    _cachedEstimatedPose = _poseEstimator.getEstimatedPosition();
+    _cachedSimOdomPose = _simOdometry.getPoseMeters();
 
     if (RobotBase.isSimulation()) {
       _visionSim = new VisionSystemSim("main");
@@ -463,7 +461,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** Returns the pose of the drive from the pose estimator. */
   public Pose2d getPose() {
-    return _cachedPose;
+    return _cachedEstimatedPose;
   }
 
   /** Resets the pose of the pose estimator. */
