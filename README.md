@@ -2,7 +2,11 @@
 A base project for future robots that has code for swerve drive, PhotonVision processing, and led strip control.
 
 ## Project Structure
-The project is Command-Based, and structured to support easy switching between real-life testing and sim testing. Every subsystem has some sort of hardware "IO" (input-output) it controls, which can be some physical io (like an arm motor) or some simulated io (DCMotorSim) depending on whether the code is being run in sim mode or not. Because of this every subsystem will have a private `_io` member which is an implementation of an interface describing an io for that subsystem. For example, an arm io interface may have methods `setPosition` and `getPosition`, which are implemented differently by a "real io" and a "sim io", either of which can be used as `_io` in an "arm subsystem", the use case depending on whether the code is being simulated or not. (INSPIRED BY TEAM 1155 SEE BELOW)
+### Overall Structure
+Each subsystem has its own subsystem code, and in addition has factory methods that create Commands which perform the subsystem's atomic operations. This is much nicer contrary to creating Commands as individual files for each subsystem. Commands that are complex and are the action of multiple subsystem atomic commands built on top of each other are made through static Command factory methods located in the Superstructure file.
+
+### Real vs Sim Switching
+The project is structured to support easy switching between real-life testing and sim testing. Every subsystem has some sort of hardware "IO" (input-output) it controls, which can be some physical io (like an arm motor) or some simulated io (DCMotorSim) depending on whether the code is being run in sim mode or not. Because of this every subsystem will have a private `_io` member which is an implementation of an interface describing an io for that subsystem. For example, an arm io interface may have methods `setPosition` and `getPosition`, which are implemented differently by a "real io" and a "sim io", either of which can be used as `_io` in an "arm subsystem", the use case depending on whether the code is being simulated or not. (INSPIRED BY TEAM 1155 SEE BELOW)
 
 ## Logging
 For logging, the swerve base uses Monologue to log robot-specific data. SignalLogger and URCL are used to log device-specific (motors/encoders) data.
