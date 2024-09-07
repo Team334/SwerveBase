@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 import frc.lib.FaultLogger;
-
 import monologue.Logged;
 import monologue.Monologue;
 
@@ -41,13 +40,14 @@ public class Robot extends TimedRobot implements Logged {
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
 
-    Monologue.setupMonologue(this, "Robot", false, true);
- 
+    // note: have existing smartdashboard telemetry when fms is attached
+    Monologue.setupMonologue(this, "Robot", DriverStation.isFMSAttached(), true);
+
+    DriverStation.startDataLog(DataLogManager.getLog());
+
     if (RobotBase.isSimulation()) return;
     
     URCL.start();
-
-    DriverStation.startDataLog(DataLogManager.getLog());
     
     SignalLogger.setPath("/logs/ctre-logs/");
     SignalLogger.start();

@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import frc.lib.PrintAndLog;
 import frc.robot.Constants.Ports;
 import frc.robot.subsystems.swerve.Swerve;
 import monologue.Logged;
@@ -37,9 +38,9 @@ public class RobotContainer implements Logged {
 
     // add self check command
     SmartDashboard.putData("Robot Self Check", Commands.sequence(
-      new PrintCommand("Robot self check started."),
+      new PrintAndLog("Robot self check started."),
       _swerve.fullSelfCheck(),
-      new PrintCommand("Robot self check finished.")
+      new PrintAndLog("Robot self check finished.")
     ));
   }
 

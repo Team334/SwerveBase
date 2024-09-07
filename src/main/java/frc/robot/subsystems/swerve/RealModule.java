@@ -15,9 +15,9 @@ import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.lib.Alert.AlertType;
-import frc.lib.util.CTREUtil;
 import frc.robot.Robot;
 import frc.robot.Constants.SwerveConstants;
 
