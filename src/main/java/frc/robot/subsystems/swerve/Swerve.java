@@ -13,13 +13,10 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-
 import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -33,6 +30,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.InputStream;
 import frc.lib.Alert.AlertType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import frc.robot.Robot;
@@ -75,10 +73,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private int _failedOdomUpdates = 0;
 
   private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
-
-  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.magnitude());
-  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.magnitude());
-  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
 
   // these values are updated by the odometry thread to prevent thread-safety issues
   // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
@@ -287,24 +281,16 @@ public class Swerve extends AdvancedSubsystem implements Logged {
    * Creates a new Command that drives the drive. The driving configuration is set with the 
    * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
    * 
-   * @param xStick The x vel joystick input [-1, 1].
-   * @param yStick The y vel joystick input [-1, 1].
-   * @param omegaStick The omega vel joystick input [-1, 1].
+   * @param velX The x velocity in meters per second.
+   * @param velY The y velocity in meters per second.
+   * @param velOmega The rotational velocity in radians per second.
    */
-  public Command drive(DoubleSupplier xStick, DoubleSupplier yStick, DoubleSupplier omegaStick) {
-    ChassisSpeeds currentSpeeds = (driveOrientation == DriveOrientation.FIELD_ORIENTED) ? 
-      ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading()) : 
-      getChassisSpeeds();
-
-    _xAccelLimiter.reset(currentSpeeds.vxMetersPerSecond);
-    _yAccelLimiter.reset(currentSpeeds.vyMetersPerSecond);
-    _omegaAccelLimiter.reset(currentSpeeds.omegaRadiansPerSecond);
-
+  public Command drive(InputStream velX, InputStream velY, InputStream velOmega) {
     return run(() -> {
       drive(
-        _xAccelLimiter.calculate(xStick.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
-        _yAccelLimiter.calculate(yStick.getAsDouble() * SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
-        _omegaAccelLimiter.calculate(omegaStick.getAsDouble() * SwerveConstants.MAX_ANGULAR_SPEED.magnitude())
+        velX.get(),
+        velY.get(),
+        velOmega.get()
       );
     });
   }
@@ -317,6 +303,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
    * @param velOmega The rotational velocity in radians per second.
    */
   public void drive(double velX, double velY, double velOmega) {
+    _desiredChassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
+
     ChassisSpeeds chassisSpeeds;
 
     if (driveOrientation == DriveOrientation.FIELD_ORIENTED) {
@@ -331,7 +319,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
-    _desiredChassisSpeeds = chassisSpeeds;
 
     setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
   }
