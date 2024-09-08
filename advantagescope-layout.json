@@ -39,19 +39,19 @@
         [
           {
             "type": "Vision Target",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Detected Targets",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose3d[]"
-          },
-          {
-            "type": "Yellow Ghost",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Rejected Estimates",
+            "key": "NT:/Robot/_robotContainer/_swerve/Detected Targets",
             "sourceTypeIndex": 2,
             "sourceType": "Pose3d[]"
           },
           {
             "type": "Green Ghost",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Accepted Estimates",
+            "key": "NT:/Robot/_robotContainer/_swerve/Accepted Estimates",
+            "sourceTypeIndex": 2,
+            "sourceType": "Pose3d[]"
+          },
+          {
+            "type": "Yellow Ghost",
+            "key": "NT:/Robot/_robotContainer/_swerve/Rejected Estimates",
             "sourceTypeIndex": 2,
             "sourceType": "Pose3d[]"
           }
@@ -59,7 +59,7 @@
         [
           {
             "type": "Robot",
-            "key": "NT:/Robot/m_robotContainer/_swerve/Robot Pose",
+            "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
             "sourceTypeIndex": 1,
             "sourceType": "Pose2d"
           }
@@ -71,7 +71,7 @@
         "robot": "Crab Bot",
         "unitDistance": "meters",
         "unitRotation": "radians",
-        "cameraIndex": -1,
+        "cameraIndex": -2,
         "fov": 50
       },
       "configHidden": false,
