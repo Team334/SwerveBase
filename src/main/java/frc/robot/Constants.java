@@ -51,7 +51,7 @@ public final class Constants {
         "left-arducam",
         new Transform3d(new Translation3d(0, 0, 1), new Rotation3d()),
         0.2,
-        1
+        0.0001
       )
     );
   }
