@@ -27,14 +27,16 @@ Pose estimation is a combination of odometry and vision measurements. WPILib's `
 ## More on Vision
 (write stuff here TODO)
 
+## Currently Working On
+- Figuring out vision heuristic by gathering vision data to calculate std devs.
+- Figuring out how to better structure commands (ex: using factories + superstructures) and how to structure them for auton (dynamic???).
+
 ## Todo
 (this is def not everything)
 ### Swerve Drive
 - Switch to built-in encoder on swerve drive modules, which is updated by abs encoder (this is needed to achieve 1kHz pid loop).
 - 6328 Wheel radius characterization.
 ### Vision
-- Actually test out heuristic.
-- Tune heuristic.
 - How to calibrate with mrcal/mrgringham by recording a video (check out team 1155 in their 2024 build thread).
 - Best way to do multi-camera setup/potential "camera coverage" calculator using given cam positions and fovs.
 ### Logging/Alerts
