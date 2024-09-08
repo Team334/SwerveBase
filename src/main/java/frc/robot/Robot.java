@@ -28,7 +28,7 @@ import monologue.Monologue;
 public class Robot extends TimedRobot implements Logged {
   private Command m_autonomousCommand;
 
-  private RobotContainer m_robotContainer;
+  private RobotContainer _robotContainer;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -38,7 +38,7 @@ public class Robot extends TimedRobot implements Logged {
   public void robotInit() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
+    _robotContainer = new RobotContainer();
 
     // note: have existing smartdashboard telemetry when fms is attached
     Monologue.setupMonologue(this, "Robot", DriverStation.isFMSAttached(), true);
@@ -83,7 +83,7 @@ public class Robot extends TimedRobot implements Logged {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+    m_autonomousCommand = _robotContainer.getAutonomousCommand();
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
