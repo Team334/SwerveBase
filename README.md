@@ -29,7 +29,7 @@ Pose estimation is a combination of odometry and vision measurements. WPILib's `
 
 ## Currently Working On
 - Figuring out vision heuristic by gathering vision data to calculate std devs.
-- Figuring out how to better structure commands (ex: using factories + superstructures) and how to structure them for auton (dynamic???).
+- Adding sysid.
 
 ## Todo
 (this is def not everything)
