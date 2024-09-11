@@ -220,7 +220,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
       log("Robot Heading", getHeading());
-      log("FAST THREAD LOG ODOM POSE", _cachedSimOdomPose);
 
       _odomUpdateLock.unlock();
     }
@@ -448,9 +447,11 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   @Override
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
-    _visionSim.update(_cachedSimOdomPose);
+    
     _odomThread.update(); // note locks won't have any effect since this is synchronized
-    log("MAIN THREAD LOG ODOM POSE", _cachedSimOdomPose);
+    log("Sim Odom Pose", _cachedSimOdomPose);
+
+    _visionSim.update(_cachedSimOdomPose);
   }
 
   /** Returns the pose of the drive from the pose estimator. */
