@@ -160,7 +160,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     /** Refreshes all the odom status signals, returning true if the action failed. */
-    public boolean refreshStatusSignals() {
+    private boolean refreshStatusSignals() {
       if (RobotBase.isReal()) {
         return BaseStatusSignal.refreshAll(_signals).isError();
       }
@@ -205,7 +205,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       log("Desired Chassis Speeds", _desiredChassisSpeeds);
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());
-      
 
       // all the devices didn't successfully refresh, so don't update odom
       if (willOdomUpdateFail) {
@@ -264,6 +263,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     _cachedEstimatedPose = _poseEstimator.getEstimatedPosition();
     _cachedSimOdomPose = _simOdometry.getPoseMeters();
 
+    _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
+
     if (RobotBase.isSimulation()) {
       _visionSim = new VisionSystemSim("main");
       _visionSim.addAprilTags(FieldConstants.FIELD_LAYOUT);
@@ -271,10 +272,9 @@ public class Swerve extends AdvancedSubsystem implements Logged {
       _cameras.forEach(cam -> _visionSim.addCamera(cam.getSimCamera(), cam.robotToCam));
     } else {
       _visionSim = null;
-    }
 
-    _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
-    _odomThread.start();
+      _odomThread.start(); // use threading on rio only  
+    }
   }
 
   /**
@@ -430,20 +430,26 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     for (SwerveModule module : _modules) {
       module.periodic();
     }
 
     updateVisionPoseEstimates();
 
-    log("Odometry Update Success %", (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0);
+    double odomUpdateSuccessPercentage = -1;
+
+    if (_attemptedOdomUpdates != 0) {
+      odomUpdateSuccessPercentage = (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0;
+    }
+
+    log("Odometry Update Success %", odomUpdateSuccessPercentage);
   }
 
   @Override
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
     _visionSim.update(_cachedSimOdomPose);
+    _odomThread.update(); // note locks won't have any effect since this is synchronized
     log("MAIN THREAD LOG ODOM POSE", _cachedSimOdomPose);
   }
 

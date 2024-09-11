@@ -7,6 +7,9 @@
       "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d"
     }
   },
+  "NetworkTables Info": {
+    "visible": true
+  },
   "NetworkTables View": {
     "visible": false
   }
