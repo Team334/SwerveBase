@@ -5,17 +5,17 @@
       "type": 9,
       "fields": [
         {
-          "key": "NT:/Robot/m_robotContainer/_swerve/Module States",
+          "key": "NT:/Robot/_robotContainer/_swerve/Module States",
           "sourceTypeIndex": 1,
           "sourceType": "SwerveModuleState[]"
         },
         {
-          "key": "NT:/Robot/m_robotContainer/_swerve/Desired Module States",
+          "key": "NT:/Robot/_robotContainer/_swerve/Desired Module States",
           "sourceTypeIndex": 1,
           "sourceType": "SwerveModuleState[]"
         },
         {
-          "key": "NT:/Robot/m_robotContainer/_swerve/Raw Heading",
+          "key": "NT:/Robot/_robotContainer/_swerve/Robot Heading",
           "sourceTypeIndex": 1,
           "sourceType": "Rotation2d"
         }
@@ -38,12 +38,6 @@
       "listFields": [
         [
           {
-            "type": "Vision Target",
-            "key": "NT:/Robot/_robotContainer/_swerve/Detected Targets",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose3d[]"
-          },
-          {
             "type": "Green Ghost",
             "key": "NT:/Robot/_robotContainer/_swerve/Accepted Estimates",
             "sourceTypeIndex": 2,
@@ -52,6 +46,12 @@
           {
             "type": "Yellow Ghost",
             "key": "NT:/Robot/_robotContainer/_swerve/Rejected Estimates",
+            "sourceTypeIndex": 2,
+            "sourceType": "Pose3d[]"
+          },
+          {
+            "type": "Vision Target",
+            "key": "NT:/Robot/_robotContainer/_swerve/Detected Targets",
             "sourceTypeIndex": 2,
             "sourceType": "Pose3d[]"
           }

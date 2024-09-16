@@ -5,10 +5,7 @@
 package frc.robot;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Second;
-
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -37,16 +34,13 @@ public class RobotContainer implements Logged {
     _swerve.setDefaultCommand(_swerve.drive(
       InputStream.of(_driverController::getLeftY)
         .negate()
-        .scale(SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond))
-        .rateLimit(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond)),
+        .scale(SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
       InputStream.of(_driverController::getLeftX)
         .negate()
-        .scale(SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond))
-        .rateLimit(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond)),
+        .scale(SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond)),
       InputStream.of(_driverController::getRightX)
         .negate()
         .scale(SwerveConstants.MAX_ANGULAR_SPEED.in(RadiansPerSecond))
-        .rateLimit(SwerveConstants.MAX_ANGULAR_ACCELERATION.in(RadiansPerSecond.per(Second)))
     ));
 
     // Configure the trigger bindings
@@ -61,7 +55,7 @@ public class RobotContainer implements Logged {
   }
 
   private void configureBindings() {
-    
+    _driverController.cross().whileTrue(_swerve.brake());
   }
 
   /**

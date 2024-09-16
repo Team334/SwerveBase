@@ -5,6 +5,7 @@
 package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
@@ -17,6 +18,7 @@ import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -90,6 +92,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
+  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
+  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
+  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
+
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
 
@@ -104,6 +110,10 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   /** Whether the swerve is driven field oriented or not. */
   @Log.NT(key = "Drive Orientation")
   public DriveOrientation driveOrientation = DriveOrientation.ROBOT_ORIENTED;
+
+  /** Whether the acceleration should be limited when using requesting to drive the chassis. */
+  @Log.NT(key = "Should Limit Accel")
+  public boolean shouldLimitAccel = true;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -277,7 +287,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   }
 
   /**
-   * Creates a new Command that drives the drive. The driving configuration is set with the 
+   * Creates a new Command that drives the drive. The driving configuration is set with the {@link #shouldLimitAccel},
    * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second.
@@ -291,11 +301,32 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         velY.get(),
         velOmega.get()
       );
-    });
+    }).withName("Drive");
+  }
+
+  /**
+   * "Brakes" the swerve drive by angling all the modules to form an "X", making it so that the bot
+   * can't move anywhere.
+   */
+  public Command brake() {
+    return run(() -> {
+      setModuleStates(new SwerveModuleState[] {
+        new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(-45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
+      });
+    }).beforeStarting(() -> _desiredChassisSpeeds = new ChassisSpeeds())
+      .finallyDo(() -> resetAccelLimiters(new ChassisSpeeds()))
+      .withName("Brake");
+
+    // this command doesn't use the drive function, so it must 
+    // reset the acceleration limiter of the drive function for later driving
   }
 
   /** 
-   * Drives the swerve drive.
+   * Drives the swerve drive. The driving configuration is set with the {@link #shouldLimitAccel}, 
+   * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second. 
    * @param velY The y velocity in meters per second.
@@ -304,24 +335,40 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public void drive(double velX, double velY, double velOmega) {
     _desiredChassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
 
-    ChassisSpeeds chassisSpeeds;
+    ChassisSpeeds robotRelativeSpeeds;
 
     if (driveOrientation == DriveOrientation.FIELD_ORIENTED) {
-      chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+      robotRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
         velX,
         velY,
         velOmega,
         getHeading()
       );
     } else {
-      chassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
+      robotRelativeSpeeds = new ChassisSpeeds(velX, velY, velOmega);
     }
 
-    chassisSpeeds = ChassisSpeeds.discretize(chassisSpeeds, Robot.kDefaultPeriod);
+    robotRelativeSpeeds = (shouldLimitAccel) ? limitAccel(robotRelativeSpeeds) : robotRelativeSpeeds;    
+    robotRelativeSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, Robot.kDefaultPeriod);
 
-    setModuleStates(_kinematics.toSwerveModuleStates(chassisSpeeds));
+    setModuleStates(_kinematics.toSwerveModuleStates(robotRelativeSpeeds));
   }
 
+  // limit the acceleration on the given chassis speeds
+  private ChassisSpeeds limitAccel(ChassisSpeeds speeds) {
+    return new ChassisSpeeds(
+      _xAccelLimiter.calculate(speeds.vxMetersPerSecond),
+      _yAccelLimiter.calculate(speeds.vyMetersPerSecond),
+      _omegaAccelLimiter.calculate(speeds.omegaRadiansPerSecond)
+    );
+  }
+
+  private void resetAccelLimiters(ChassisSpeeds resetSpeeds) {
+    _xAccelLimiter.reset(resetSpeeds.vxMetersPerSecond);
+    _yAccelLimiter.reset(resetSpeeds.vyMetersPerSecond);
+    _omegaAccelLimiter.reset(resetSpeeds.omegaRadiansPerSecond);
+  }
+  
   // updates all cached data (should only be called in odom thread)
   private void updateCached() {
     updateCachedRawHeading();
@@ -442,6 +489,14 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     log("Odometry Update Success %", odomUpdateSuccessPercentage);
+
+    String currentCommandName = "None";
+
+    if (getCurrentCommand() != null) {
+      currentCommandName = getCurrentCommand().getName();
+    }
+
+    log("Current Command", currentCommandName);
   }
 
   @Override
