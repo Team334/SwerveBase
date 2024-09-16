@@ -301,7 +301,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         velY.get(),
         velOmega.get()
       );
-    }).withName("Drive");
+    }).beforeStarting(() -> resetAccelLimiters(getChassisSpeeds())) // reset the accel limiters if any earlier command(s) changed velocity
+      .withName("Drive");
   }
 
   /**
@@ -317,11 +318,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
       });
     }).beforeStarting(() -> _desiredChassisSpeeds = new ChassisSpeeds())
-      .finallyDo(() -> resetAccelLimiters(new ChassisSpeeds()))
       .withName("Brake");
-
-    // this command doesn't use the drive function, so it must 
-    // reset the acceleration limiter of the drive function for later driving
   }
 
   /** 
