@@ -7,8 +7,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.Alert;
 import frc.lib.Alert.AlertType;
+import monologue.Logged;
 
-public abstract class AdvancedSubsystem extends SubsystemBase implements SelfChecked {
+public abstract class AdvancedSubsystem extends SubsystemBase implements Logged, SelfChecked {
   private Set<Alert> _alerts = new HashSet<Alert>();
   private boolean _hasErrors = false;
 
@@ -49,5 +50,16 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements SelfChe
     selfCheck.addRequirements(this);
 
     return selfCheck;
+  }
+
+  @Override
+  public void periodic() {
+    String currentCommandName = "None";
+
+    if (getCurrentCommand() != null) {
+      currentCommandName = getCurrentCommand().getName();
+    }
+
+    log("Current Command", currentCommandName);
   }
 }

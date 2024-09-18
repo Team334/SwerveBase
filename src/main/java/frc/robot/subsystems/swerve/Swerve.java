@@ -45,10 +45,9 @@ import frc.robot.subsystems.swerve.gyros.NavXGyro;
 import frc.robot.subsystems.swerve.gyros.SimGyro;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
-import monologue.Logged;
 import monologue.Annotations.Log;
 
-public class Swerve extends AdvancedSubsystem implements Logged {
+public class Swerve extends AdvancedSubsystem {
   private final SwerveModule _frontLeft;
   private final SwerveModule _frontRight;
   private final SwerveModule _backRight;
@@ -108,8 +107,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
   public boolean allowTurnInPlace = false;
 
   /** Whether the swerve is driven field oriented or not. */
-  @Log.NT(key = "Drive Orientation")
-  public DriveOrientation driveOrientation = DriveOrientation.ROBOT_ORIENTED;
+  @Log.NT(key = "Is Field Oriented")
+  public boolean isFieldOriented = false;
 
   /** Whether the acceleration should be limited when using requesting to drive the chassis. */
   @Log.NT(key = "Should Limit Accel")
@@ -136,14 +135,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
   }
 
-  /** Represents the orientation of the robot drive. */
-  public enum DriveOrientation {
-    /** Drives the robot with chassis speeds relative to the robot frame. */
-    ROBOT_ORIENTED,
-
-    /** Drives the robot with chassis speeds relative to the field coordinate system. */
-    FIELD_ORIENTED
-  }
 
   /** 
    * An odometry thread that updates module status signals at a specified frequency and feeds the signals into a pose estimator.
@@ -288,7 +279,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /**
    * Creates a new Command that drives the drive. The driving configuration is set with the {@link #shouldLimitAccel},
-   * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
+   * {@link #isFieldOriented}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second.
    * @param velY The y velocity in meters per second.
@@ -323,7 +314,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   /** 
    * Drives the swerve drive. The driving configuration is set with the {@link #shouldLimitAccel}, 
-   * {@link #driveOrientation}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
+   * {@link #isFieldOriented}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second. 
    * @param velY The y velocity in meters per second.
@@ -334,7 +325,7 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
     ChassisSpeeds robotRelativeSpeeds;
 
-    if (driveOrientation == DriveOrientation.FIELD_ORIENTED) {
+    if (isFieldOriented) {
       robotRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
         velX,
         velY,
@@ -473,6 +464,8 @@ public class Swerve extends AdvancedSubsystem implements Logged {
 
   @Override
   public void periodic() {
+    super.periodic();
+
     for (SwerveModule module : _modules) {
       module.periodic();
     }
@@ -486,14 +479,6 @@ public class Swerve extends AdvancedSubsystem implements Logged {
     }
 
     log("Odometry Update Success %", odomUpdateSuccessPercentage);
-
-    String currentCommandName = "None";
-
-    if (getCurrentCommand() != null) {
-      currentCommandName = getCurrentCommand().getName();
-    }
-
-    log("Current Command", currentCommandName);
   }
 
   @Override
