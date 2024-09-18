@@ -56,7 +56,7 @@ public class RobotContainer implements Logged {
 
   private void configureBindings() {
     _driverController.cross().whileTrue(_swerve.brake());
-    _driverController.circle().onTrue(Commands.runOnce(() -> _swerve.isFieldOriented = !_swerve.isFieldOriented));
+    _driverController.circle().onTrue(_swerve.toggleOriented());
   }
 
   /**

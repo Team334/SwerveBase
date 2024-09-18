@@ -73,8 +73,6 @@ public class Swerve extends AdvancedSubsystem {
   private int _attemptedOdomUpdates = 0;
   private int _failedOdomUpdates = 0;
 
-  private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
-
   // these values are updated by the odometry thread to prevent thread-safety issues
   // that can be caused when a status signal is being read while it is concurrently being updated (in the odom thread)
   private Rotation2d _cachedRawHeading;
@@ -86,6 +84,8 @@ public class Swerve extends AdvancedSubsystem {
   private final List<VisionPoseEstimator> _cameras;
   private final VisionSystemSim _visionSim;
   private double _lastestVisionTimestamp = 0;
+
+  private ChassisSpeeds _inputChassisSpeeds = new ChassisSpeeds();
 
   private final List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
@@ -202,8 +202,8 @@ public class Swerve extends AdvancedSubsystem {
       // reduce logging latency
       log("Module States", getModuleStates());
       log("Desired Module States", getDesiredModuleStates());
+      log("Input Chassis Speeds", _inputChassisSpeeds);
       log("Chassis Speeds", getChassisSpeeds());
-      log("Desired Chassis Speeds", _desiredChassisSpeeds);
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());
 
@@ -292,8 +292,8 @@ public class Swerve extends AdvancedSubsystem {
         velY.get(),
         velOmega.get()
       );
-    }).beforeStarting(() -> resetAccelLimiters(getChassisSpeeds())) // reset the accel limiters if any earlier command(s) changed velocity
-      .withName("Drive");
+    }).beforeStarting(() -> resetAccelLimiters()) // reset the accel limiters since the command changed velocity
+      .withName("Teleop Drive");
   }
 
   /**
@@ -308,8 +308,14 @@ public class Swerve extends AdvancedSubsystem {
         new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
       });
-    }).beforeStarting(() -> _desiredChassisSpeeds = new ChassisSpeeds())
-      .withName("Brake");
+    }).withName("Brake");
+  }
+
+  /** Toggles {@link #isFieldOriented} by braking the swerve and changing the drive orientation. */
+  public Command toggleOriented() {
+    return brake().withTimeout(0.5)
+                  .andThen(() -> isFieldOriented = !isFieldOriented)
+                  .withName("Toggle Field Oriented");
   }
 
   /** 
@@ -321,25 +327,30 @@ public class Swerve extends AdvancedSubsystem {
    * @param velOmega The rotational velocity in radians per second.
    */
   public void drive(double velX, double velY, double velOmega) {
-    _desiredChassisSpeeds = new ChassisSpeeds(velX, velY, velOmega);
+    // input speeds as a chassis object
+    _inputChassisSpeeds = new ChassisSpeeds(
+      velX,
+      velY,
+      velOmega
+    );
 
-    ChassisSpeeds robotRelativeSpeeds;
+    // final desired speeds
+    ChassisSpeeds desiredChassisSpeeds;
+
+    // limit acceleration on input speeds if desired
+    desiredChassisSpeeds = (shouldLimitAccel) ? limitAccel(_inputChassisSpeeds) : _inputChassisSpeeds;
 
     if (isFieldOriented) {
-      robotRelativeSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-        velX,
-        velY,
-        velOmega,
+      // turn desired speeds into robot-relative if needed
+      desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+        desiredChassisSpeeds,
         getHeading()
       );
-    } else {
-      robotRelativeSpeeds = new ChassisSpeeds(velX, velY, velOmega);
     }
 
-    robotRelativeSpeeds = (shouldLimitAccel) ? limitAccel(robotRelativeSpeeds) : robotRelativeSpeeds;    
-    robotRelativeSpeeds = ChassisSpeeds.discretize(robotRelativeSpeeds, Robot.kDefaultPeriod);
+    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, Robot.kDefaultPeriod);
 
-    setModuleStates(_kinematics.toSwerveModuleStates(robotRelativeSpeeds));
+    setModuleStates(_kinematics.toSwerveModuleStates(desiredChassisSpeeds));
   }
 
   // limit the acceleration on the given chassis speeds
@@ -351,7 +362,13 @@ public class Swerve extends AdvancedSubsystem {
     );
   }
 
-  private void resetAccelLimiters(ChassisSpeeds resetSpeeds) {
+  private void resetAccelLimiters() {
+    ChassisSpeeds resetSpeeds = getChassisSpeeds();
+
+    if (isFieldOriented) {
+      resetSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading());
+    }
+
     _xAccelLimiter.reset(resetSpeeds.vxMetersPerSecond);
     _yAccelLimiter.reset(resetSpeeds.vyMetersPerSecond);
     _omegaAccelLimiter.reset(resetSpeeds.omegaRadiansPerSecond);
