@@ -39,7 +39,6 @@ import frc.robot.Robot;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.subsystems.swerve.SwerveModule.ModuleControlMode;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
 import frc.robot.subsystems.swerve.gyros.NavXGyro;
 import frc.robot.subsystems.swerve.gyros.NoGyro;
@@ -99,9 +98,9 @@ public class Swerve extends AdvancedSubsystem {
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
 
-  /** The control of the drive motors in the swerve's modules. */
-  @Log.NT(key = "Module Control Mode")
-  public ModuleControlMode moduleControlMode = ModuleControlMode.OPEN_LOOP;
+  /** Whether the velocity of the modules is controlled open-loop (FF only) or closed-loop (FF + PID). */
+  @Log.NT(key = "Is Open Loop")
+  public boolean isOpenLoop = false;
 
   /** Whether to allow the modules in the drive to turn in place. */
   @Log.NT(key = "Allow Turn In Place")
@@ -441,7 +440,7 @@ public class Swerve extends AdvancedSubsystem {
     SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
 
     for (int i = 0; i < _modules.size(); i++) {
-      _modules.get(i).setModuleState(states[i], moduleControlMode, allowTurnInPlace);
+      _modules.get(i).setModuleState(states[i], isOpenLoop, allowTurnInPlace);
     }
   }
 

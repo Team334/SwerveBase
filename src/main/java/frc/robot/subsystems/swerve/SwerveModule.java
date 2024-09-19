@@ -17,16 +17,7 @@ public class SwerveModule implements SelfChecked {
 
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
-  private ModuleControlMode _controlMode = ModuleControlMode.OPEN_LOOP;
-
-  /** Represents the control over the module's drive motor. */
-  public static enum ModuleControlMode {
-    /** Drives this module open loop. */
-    OPEN_LOOP,
-
-    /** Drives this module closed loop. */
-    CLOSED_LOOP
-  }
+  private boolean _isOpenLoop = false; 
 
   public SwerveModule(String name, ModuleIO io) {
     _io = io;
@@ -58,15 +49,21 @@ public class SwerveModule implements SelfChecked {
     return new SwerveModulePosition(_io.getPosition(), _io.getAngle());
   }
 
-  /** Set the desired target state for this module. */
-  public void setModuleState(SwerveModuleState state, ModuleControlMode controlMode, boolean allowTurnInPlace) {
+  /** 
+   * Set the desired target state for this module.
+   * 
+   * @param state The target state.
+   * @param isOpenLoop Whether the velocity of the state is met in an open loop (FF only) or closed loop manner (FF + PID).
+   * @param allowTurnInPlace If this is true, all rotation states will be ignored for velocities of 0.
+   */
+  public void setModuleState(SwerveModuleState state, boolean isOpenLoop, boolean allowTurnInPlace) {
     _desiredState = SwerveModuleState.optimize(state, _io.getAngle());
 
     if (_desiredState.speedMetersPerSecond == 0 && !allowTurnInPlace) {
-      _desiredState.speedMetersPerSecond = 0;
+      _desiredState.angle = getModuleState().angle;
     }
     
-    _controlMode = controlMode;
+    _isOpenLoop = isOpenLoop;
   }
 
   /** Updates this module periodically so it can reach the target state. */
@@ -77,7 +74,7 @@ public class SwerveModule implements SelfChecked {
 
   /** Set the target velocity and acceleration for this module. */
   public void setDrive(double velocity) {
-    _io.setVelocity(velocity, _controlMode == ModuleControlMode.OPEN_LOOP ? true : false);
+    _io.setVelocity(velocity, _isOpenLoop);
   }
 
   /** Set the target angle for this module. */ 
