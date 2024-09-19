@@ -33,6 +33,32 @@
       "title": "Swerve"
     },
     {
+      "type": 5,
+      "fields": [],
+      "listFields": [
+        [
+          {
+            "type": "Robot",
+            "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
+            "sourceTypeIndex": 1,
+            "sourceType": "Pose2d"
+          }
+        ]
+      ],
+      "options": {
+        "game": "2024 Field",
+        "unitDistance": "meters",
+        "unitRotation": "radians",
+        "origin": "right",
+        "size": 0.75,
+        "allianceBumpers": "auto",
+        "allianceOrigin": "blue",
+        "orientation": "blue left, red right"
+      },
+      "configHidden": false,
+      "title": "Odometry"
+    },
+    {
       "type": 6,
       "fields": [],
       "listFields": [
