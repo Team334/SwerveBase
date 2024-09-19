@@ -74,7 +74,7 @@ public class RealModule implements ModuleIO {
   }
 
   @Override
-  public double getDriveVelocity() {
+  public double getVelocity() {
     // refreshed by odom thread
     return _driveVelocity.getValue();
   }
@@ -92,7 +92,7 @@ public class RealModule implements ModuleIO {
   }
 
   @Override
-  public double getDrivePosition() {
+  public double getPosition() {
     // refreshed by odom thread
     return _drivePosition.getValue();
   }

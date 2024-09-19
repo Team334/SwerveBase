@@ -5,7 +5,7 @@ import frc.lib.subsystem.SelfChecked;
 
 public interface ModuleIO extends SelfChecked {
   /** Returns the velocity of the drive wheel in m/s. */
-  public double getDriveVelocity();
+  public double getVelocity();
 
   /**
    * Sets the targets of the drive motor.
@@ -21,7 +21,7 @@ public interface ModuleIO extends SelfChecked {
   public void setAngle(Rotation2d angle);
 
   /**
-   * Returns the drive motor position.
+   * Returns the drive motor position (distance traveled).
   */
-  public double getDrivePosition();
+  public double getPosition();
 }

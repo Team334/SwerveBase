@@ -48,7 +48,7 @@ public class SimModule implements ModuleIO {
       outVolts = _driveFF.calculate(velocity);
     } else {  
       outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
-      outVolts += _drivePID.calculate(getDriveVelocity(), velocity);
+      outVolts += _drivePID.calculate(getVelocity(), velocity);
     }
 
     _driveMotor.setInputVoltage(outVolts);
@@ -58,7 +58,7 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public double getDriveVelocity() {
+  public double getVelocity() {
     return _driveMotor.getAngularVelocityRPM() / 60 * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
@@ -77,7 +77,7 @@ public class SimModule implements ModuleIO {
   }
 
   @Override
-  public double getDrivePosition() {
+  public double getPosition() {
     return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 }

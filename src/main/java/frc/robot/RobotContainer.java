@@ -25,7 +25,7 @@ import monologue.Logged;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer implements Logged {
-  private final Swerve _swerve = Swerve.create();
+  private final Swerve _swerve = Swerve.none();
 
   private final CommandPS5Controller _driverController = new CommandPS5Controller(Ports.DRIVER_CONTROLLER);
   

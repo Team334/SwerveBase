@@ -46,7 +46,7 @@ public class SwerveModule implements SelfChecked {
 
   /** Get the measured state of this module. */
   public SwerveModuleState getModuleState() {
-    return new SwerveModuleState(_io.getDriveVelocity(), _io.getAngle());
+    return new SwerveModuleState(_io.getVelocity(), _io.getAngle());
   }
 
   /**
@@ -55,7 +55,7 @@ public class SwerveModule implements SelfChecked {
    * or enclosed in a lock shared by the odom thread.
    */
   public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(_io.getDrivePosition(), _io.getAngle());
+    return new SwerveModulePosition(_io.getPosition(), _io.getAngle());
   }
 
   /** Set the desired target state for this module. */

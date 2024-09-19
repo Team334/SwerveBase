@@ -42,6 +42,7 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.swerve.SwerveModule.ModuleControlMode;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
 import frc.robot.subsystems.swerve.gyros.NavXGyro;
+import frc.robot.subsystems.swerve.gyros.NoGyro;
 import frc.robot.subsystems.swerve.gyros.SimGyro;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
@@ -135,6 +136,19 @@ public class Swerve extends AdvancedSubsystem {
     }
   }
 
+  /**
+   * Creates a dummy Swerve subsystem with dummy modules that don't do anything.
+   * (use this instead of commenting out all swerve code when swerve isn't on bot)
+   */
+  public static Swerve none() {
+    return new Swerve(
+      new NoModule(),
+      new NoModule(),
+      new NoModule(),
+      new NoModule(),
+      new NoGyro()
+    );
+  }
 
   /** 
    * An odometry thread that updates module status signals at a specified frequency and feeds the signals into a pose estimator.
