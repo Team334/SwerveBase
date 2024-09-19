@@ -321,7 +321,8 @@ public class Swerve extends AdvancedSubsystem {
         new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
       });
-    }).withName("Brake");
+    }).beforeStarting(() -> _inputChassisSpeeds = new ChassisSpeeds())
+      .withName("Brake");
   }
 
   /** Toggles {@link #isFieldOriented} by braking the swerve and changing the drive orientation. */
