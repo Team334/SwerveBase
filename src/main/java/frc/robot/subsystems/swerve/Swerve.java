@@ -292,7 +292,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /**
    * Creates a new Command that drives the drive. The driving configuration is set with the {@link #shouldLimitAccel},
-   * {@link #isFieldOriented}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
+   * {@link #isFieldOriented}, {@link #isOpenLoop}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second.
    * @param velY The y velocity in meters per second.
@@ -334,7 +334,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /** 
    * Drives the swerve drive. The driving configuration is set with the {@link #shouldLimitAccel}, 
-   * {@link #isFieldOriented}, {@link #moduleControlMode}, and {@link #allowTurnInPlace} members.
+   * {@link #isFieldOriented}, {@link #isOpenLoop}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second. 
    * @param velY The y velocity in meters per second.
