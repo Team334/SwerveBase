@@ -99,7 +99,7 @@ public final class Constants {
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
     // feedforward (meters)
-    public static final double DRIVE_KS = 0.1;
+    public static final double DRIVE_KS = 0.0;
     public static final double DRIVE_KV = 2.38;
     public static final double DRIVE_KA = 0.01;
 

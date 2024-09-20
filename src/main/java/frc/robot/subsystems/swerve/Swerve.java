@@ -100,7 +100,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /** Whether the velocity of the modules is controlled open-loop (FF only) or closed-loop (FF + PID). */
   @Log.NT(key = "Is Open Loop")
-  public boolean isOpenLoop = false;
+  public boolean isOpenLoop = true;
 
   /** Whether to allow the modules in the drive to turn in place. */
   @Log.NT(key = "Allow Turn In Place")
@@ -112,7 +112,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /** Whether the acceleration should be limited when using requesting to drive the chassis. */
   @Log.NT(key = "Should Limit Accel")
-  public boolean shouldLimitAccel = true;
+  public boolean shouldLimitAccel = false;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
