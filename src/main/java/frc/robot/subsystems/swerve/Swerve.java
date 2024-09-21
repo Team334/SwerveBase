@@ -112,7 +112,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /** Whether the acceleration should be limited when using requesting to drive the chassis. */
   @Log.NT(key = "Should Limit Accel")
-  public boolean shouldLimitAccel = false;
+  public boolean shouldLimitAccel = true;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -329,7 +329,7 @@ public class Swerve extends AdvancedSubsystem {
   public Command toggleOriented() {
     return brake().withTimeout(0.5)
                   .andThen(() -> isFieldOriented = !isFieldOriented)
-                  .withName("Toggle Oriented");
+                  .withName("Toggle Orient");
   }
 
   /** 
