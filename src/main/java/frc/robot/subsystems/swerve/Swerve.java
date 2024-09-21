@@ -306,7 +306,7 @@ public class Swerve extends AdvancedSubsystem {
         velOmega.get()
       );
     }).beforeStarting(() -> resetAccelLimiters()) // reset the accel limiters since the command changed velocity
-      .withName("Teleop Drive");
+      .withName("Drive");
   }
 
   /**
@@ -329,7 +329,7 @@ public class Swerve extends AdvancedSubsystem {
   public Command toggleOriented() {
     return brake().withTimeout(0.5)
                   .andThen(() -> isFieldOriented = !isFieldOriented)
-                  .withName("Toggle Field Oriented");
+                  .withName("Toggle Oriented");
   }
 
   /** 

@@ -9,12 +9,12 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
 import frc.lib.InputStream;
 import frc.lib.PrintAndLog;
 import frc.robot.Constants.Ports;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.commands.Autos;
 import frc.robot.subsystems.swerve.Swerve;
 import monologue.Logged;
 
@@ -63,7 +63,6 @@ public class RobotContainer implements Logged {
    * @return The command to run in autonomous.
    */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    return new PrintCommand("AUTON!!!");
+    return Autos.none();
   }
 }
