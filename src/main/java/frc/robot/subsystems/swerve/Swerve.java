@@ -194,6 +194,7 @@ public class Swerve extends AdvancedSubsystem {
 
     private void update() {
       _odomUpdateLock.lock();
+      
       _attemptedOdomUpdates ++;
 
       boolean willOdomUpdateFail = false;
@@ -230,6 +231,7 @@ public class Swerve extends AdvancedSubsystem {
       // all devices refreshed, so update odom with new device data
       _cachedEstimatedPose = _poseEstimator.update(getRawHeading(), getModulePositions());
       _cachedSimOdomPose = _simOdometry.update(getRawHeading(), getModulePositions());
+
       _headingBuffer.addSample(Timer.getFPGATimestamp(), getHeading());
 
       log("Robot Pose", getPose()); // log the pose at a higher frequency (also with less latency)
@@ -522,7 +524,7 @@ public class Swerve extends AdvancedSubsystem {
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
     
-    _odomThread.update(); // note locks won't have any effect since this is synchronized
+    _odomThread.update(); // note that locks won't have any effect since this is synchronized
     log("Sim Odom Pose", _cachedSimOdomPose);
 
     _visionSim.update(_cachedSimOdomPose);

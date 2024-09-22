@@ -22,11 +22,11 @@
       ],
       "listFields": [],
       "options": {
-        "maxSpeed": 5,
+        "maxSpeed": 5.03,
         "rotationUnits": "radians",
-        "arrangement": "0,1,2,3",
-        "sizeLeftRight": 0.65,
-        "sizeFrontBack": 0.65,
+        "arrangement": "0,1,3,2",
+        "sizeLeftRight": 0.584,
+        "sizeFrontBack": 0.584,
         "forwardDirection": "up"
       },
       "configHidden": false,
@@ -50,58 +50,13 @@
         "unitDistance": "meters",
         "unitRotation": "radians",
         "origin": "right",
-        "size": 0.75,
+        "size": 0.584,
         "allianceBumpers": "auto",
         "allianceOrigin": "blue",
         "orientation": "blue left, red right"
       },
       "configHidden": false,
       "title": "Odometry"
-    },
-    {
-      "type": 6,
-      "fields": [],
-      "listFields": [
-        [
-          {
-            "type": "Green Ghost",
-            "key": "NT:/Robot/_robotContainer/_swerve/Accepted Estimates",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose3d[]"
-          },
-          {
-            "type": "Yellow Ghost",
-            "key": "NT:/Robot/_robotContainer/_swerve/Rejected Estimates",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose3d[]"
-          },
-          {
-            "type": "Vision Target",
-            "key": "NT:/Robot/_robotContainer/_swerve/Detected Targets",
-            "sourceTypeIndex": 2,
-            "sourceType": "Pose3d[]"
-          }
-        ],
-        [
-          {
-            "type": "Robot",
-            "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
-            "sourceTypeIndex": 1,
-            "sourceType": "Pose2d"
-          }
-        ]
-      ],
-      "options": {
-        "field": "2024 Field",
-        "alliance": "blue",
-        "robot": "Crab Bot",
-        "unitDistance": "meters",
-        "unitRotation": "radians",
-        "cameraIndex": -2,
-        "fov": 50
-      },
-      "configHidden": false,
-      "title": "3D Field"
     }
   ]
 }
