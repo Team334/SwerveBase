@@ -17,7 +17,6 @@ public class PrintAndLog extends InstantCommand {
   public PrintAndLog(String message) {
     // Use addRequirements() here to declare subsystem dependencies.
     super(() -> {
-      System.out.println(message);
       DataLogManager.log(message);
     });
   }

@@ -305,8 +305,11 @@ public class Swerve extends AdvancedSubsystem {
         velY.get(),
         velOmega.get()
       );
-    }).beforeStarting(() -> resetAccelLimiters()) // reset the accel limiters since the command changed velocity
-      .withName("Drive");
+    }).beforeStarting(() -> {
+      // reset the accel limiters since the command changed velocity
+      resetAccelLimiters();
+      allowTurnInPlace = false;
+    }).withName("Drive");
   }
 
   /**
@@ -321,7 +324,10 @@ public class Swerve extends AdvancedSubsystem {
         new SwerveModuleState(0, Rotation2d.fromDegrees(45)),
         new SwerveModuleState(0, Rotation2d.fromDegrees(-45))
       });
-    }).beforeStarting(() -> _inputChassisSpeeds = new ChassisSpeeds())
+    }).beforeStarting(() -> {
+      _inputChassisSpeeds = new ChassisSpeeds();
+      allowTurnInPlace = true;
+    })
       .withName("Brake");
   }
 

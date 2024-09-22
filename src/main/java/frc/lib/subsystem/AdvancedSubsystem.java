@@ -45,7 +45,7 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
           alert(getName() + ": Self check finished.", AlertType.INFO);
         }
       })
-    );
+    ).withName(getName() + " Self Check");
 
     selfCheck.addRequirements(this);
 
