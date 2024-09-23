@@ -95,6 +95,8 @@ public class Swerve extends AdvancedSubsystem {
   private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
 
+  private final double DISCRETIZE_TIMESTEP = RobotBase.isReal() ? Robot.kDefaultPeriod : 0.015;
+
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
 
@@ -370,7 +372,7 @@ public class Swerve extends AdvancedSubsystem {
       );
     }
 
-    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, Robot.kDefaultPeriod);
+    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, DISCRETIZE_TIMESTEP);
 
     setModuleStates(_kinematics.toSwerveModuleStates(desiredChassisSpeeds));
   }
