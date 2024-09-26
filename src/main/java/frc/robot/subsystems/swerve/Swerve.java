@@ -95,6 +95,11 @@ public class Swerve extends AdvancedSubsystem {
   private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
 
+  /**
+   * TODO: this doesn't really make sense, since in sim the average timestep is above 20ms, and decreasing 
+   * the discretize timestep helped fix the problem which is doesn't make sense (the opposite should've helped),
+   * so this might actually be a band-aid fix for something else and I should def test in real life with a timestep of 20ms
+   */
   private final double DISCRETIZE_TIMESTEP = RobotBase.isReal() ? Robot.kDefaultPeriod : 0.015;
 
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
@@ -290,7 +295,7 @@ public class Swerve extends AdvancedSubsystem {
     } else {
       _visionSim = null;
 
-      _odomThread.start(); // use threading on rio only  
+      _odomThread.start(); // use threading on rio only
     }
   }
 
@@ -525,7 +530,7 @@ public class Swerve extends AdvancedSubsystem {
   @Override
   public void simulationPeriodic() {
     _simYaw = _simYaw.plus(Rotation2d.fromRadians(getChassisSpeeds().omegaRadiansPerSecond * Robot.kDefaultPeriod));
-    
+
     _odomThread.update(); // note that locks won't have any effect since this is synchronized
     log("Sim Odom Pose", _cachedSimOdomPose);
 
