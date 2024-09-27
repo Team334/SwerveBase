@@ -2,33 +2,47 @@ package frc.lib.subsystem;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.Alert;
-import frc.lib.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.lib.FaultsTable;
+import frc.lib.FaultsTable.Fault;
+import frc.lib.FaultsTable.FaultType;
 import monologue.Logged;
 
 public abstract class AdvancedSubsystem extends SubsystemBase implements Logged, SelfChecked {
-  private Set<Alert> _alerts = new HashSet<Alert>();
+  // faults and the table containing them
+  private Set<Fault> _faults = new HashSet<Fault>();
+  private FaultsTable _faultsTable = new FaultsTable(NetworkTableInstance.getDefault().getTable("Self Check"), getName() + " Faults");
+
   private boolean _hasErrors = false;
 
-  /** Clears this subsystem's alerts. */
-  protected void clearAlerts() {
-    _alerts.forEach(a -> a.remove());
-    _alerts.clear();
+  public AdvancedSubsystem() {
+    RobotModeTriggers.test().onFalse(runOnce(this::clearFaults));
   }
 
-  /** Alerts a new message under this subsystem. */
-  protected void alert(String message, AlertType alertType) {
-    Alert alert = new Alert(getName() + " Alerts", message, alertType);
-    alert.set(true);
-    _alerts.add(alert);
+  /** Clears this subsystem's faults. */
+  protected void clearFaults() {
+    _faults.clear();
+    _faultsTable.set(_faults);
 
-    if (alertType == AlertType.ERROR) _hasErrors = true; 
+    _hasErrors = false;
   }
 
-  /** Returns whether this subsystem has alerted errors. */
+  /** Adds a new fault under this subsystem. */
+  protected void addFault(String message, FaultType faultType) {
+    Fault fault = new Fault(getName() + " Fault", message, faultType);
+
+    _faults.add(fault);
+    _faultsTable.set(_faults);
+
+    _hasErrors = faultType == FaultType.ERROR;
+  }
+
+  /** Returns whether this subsystem has errors (has fault type of error). */
   public boolean hasErrors() {
     return _hasErrors;
   }
@@ -36,15 +50,8 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   /** Returns a full Command that self checks this Subsystem for pre-match. */
   public Command fullSelfCheck() {
     Command selfCheck = Commands.sequence(
-      Commands.runOnce(this::clearAlerts),
-      selfCheck(this::alert, this::hasErrors).until(this::hasErrors),
-      Commands.runOnce(() -> {
-        if (_hasErrors) { 
-          alert(getName() + ": Self check failed, check errors!", AlertType.ERROR);
-        } else {
-          alert(getName() + ": Self check finished.", AlertType.INFO);
-        }
-      })
+      Commands.runOnce(this::clearFaults), // clear all faults and hasError
+      selfCheck(this::addFault, this::hasErrors).until(this::hasErrors) // self check this subsystem
     ).withName(getName() + " Self Check");
 
     selfCheck.addRequirements(this);

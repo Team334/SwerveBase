@@ -33,7 +33,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.InputStream;
-import frc.lib.Alert.AlertType;
+import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import frc.robot.Robot;
 import frc.robot.Constants.FieldConstants;
@@ -591,13 +591,13 @@ public class Swerve extends AdvancedSubsystem {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
+  public Command selfCheck(BiConsumer<String, FaultType> faultAdder, BooleanSupplier hasError) {
     return sequentialUntil(
       hasError,
-      _frontLeft.selfCheck(alerter, hasError),
-      _frontRight.selfCheck(alerter, hasError),
-      _backRight.selfCheck(alerter, hasError),
-      _backLeft.selfCheck(alerter, hasError)
+      _frontLeft.selfCheck(faultAdder, hasError),
+      _frontRight.selfCheck(faultAdder, hasError),
+      _backRight.selfCheck(faultAdder, hasError),
+      _backLeft.selfCheck(faultAdder, hasError)
       // TODO: all other checks
     );
   }

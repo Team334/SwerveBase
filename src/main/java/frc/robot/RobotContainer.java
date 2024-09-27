@@ -47,7 +47,7 @@ public class RobotContainer implements Logged {
     configureBindings();
 
     // add self check command
-    SmartDashboard.putData("Robot Self Check", Commands.sequence(
+    SmartDashboard.putData("Run Self Check", Commands.sequence(
       new PrintAndLog("Robot self check started."),
       _swerve.fullSelfCheck(),
       new PrintAndLog("Robot self check finished.")

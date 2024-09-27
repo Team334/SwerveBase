@@ -17,7 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
-import frc.lib.Alert.AlertType;
+import frc.lib.FaultsTable.FaultType;
 import frc.robot.Robot;
 import frc.robot.Constants.SwerveConstants;
 
@@ -115,35 +115,28 @@ public class RealModule implements ModuleIO {
   }
   
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
+  public Command selfCheck(BiConsumer<String, FaultType> faultAdder, BooleanSupplier hasError) {
     return sequentialUntil(
       hasError,
       runOnce(() -> {
         // check all crucial drive motor faults
-        if (_driveMotorConfigError) alerter.accept(_name + ": Drive motor failed config, check total faults.", AlertType.ERROR);
-        if (_driveMotor.getFault_Hardware().getValue()) alerter.accept(_name + ": Drive motor hardware fault, switch device.", AlertType.ERROR);
-        if (_driveMotor.getFault_BootDuringEnable().getValue()) alerter.accept(_name + ": Drive motor boot during enable, check robot wiring.", AlertType.ERROR);
+        if (_driveMotorConfigError) faultAdder.accept(_name + ": Drive motor failed config, check total faults.", FaultType.ERROR);
+        if (_driveMotor.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Drive motor hardware fault, switch device.", FaultType.ERROR);
+        if (_driveMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Drive motor boot during enable, check robot wiring.", FaultType.ERROR);
       }),
 
       runOnce(() -> {
         // check all crucial turn motor faults
-        if (_turnMotorConfigError) alerter.accept(_name + ": Turn motor failed config, check total faults.", AlertType.ERROR);
-        if (_turnMotor.getFault_Hardware().getValue()) alerter.accept(_name + ": Turn motor hardware fault, switch device.", AlertType.ERROR);
-        if (_turnMotor.getFault_BootDuringEnable().getValue()) alerter.accept(_name + ": Turn motor boot during enable, check robot wiring.", AlertType.ERROR);
+        if (_turnMotorConfigError) faultAdder.accept(_name + ": Turn motor failed config, check total faults.", FaultType.ERROR);
+        if (_turnMotor.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Turn motor hardware fault, switch device.", FaultType.ERROR);
+        if (_turnMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn motor boot during enable, check robot wiring.", FaultType.ERROR);
       }),
 
       runOnce(() -> {
         // check all crucial turn encoder faults
-        if (_turnEncoder.getFault_Hardware().getValue()) alerter.accept(_name + ": Turn encoder hardware fault, switch device.", AlertType.ERROR);
-        if (_turnEncoder.getFault_BootDuringEnable().getValue()) alerter.accept(_name + ": Turn encoder boot during enable, check robot wiring.", AlertType.ERROR);
-        if (_turnEncoder.getFault_BadMagnet().getValue()) alerter.accept(_name + ": Turn encoder bad magnet.", AlertType.ERROR);
-      }),
-
-      runOnce(() -> {
-        alerter.accept(_name + ": IO configuration was successful!", AlertType.INFO);
-        alerter.accept(_name + ": Drive motor looks good!", AlertType.INFO);
-        alerter.accept(_name + ": Turn motor looks good!", AlertType.INFO);
-        alerter.accept(_name + ": Turn encoder looks good!", AlertType.INFO);
+        if (_turnEncoder.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Turn encoder hardware fault, switch device.", FaultType.ERROR);
+        if (_turnEncoder.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn encoder boot during enable, check robot wiring.", FaultType.ERROR);
+        if (_turnEncoder.getFault_BadMagnet().getValue()) faultAdder.accept(_name + ": Turn encoder bad magnet.", FaultType.ERROR);
       })
     );
   }

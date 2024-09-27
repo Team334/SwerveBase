@@ -1,8 +1,5 @@
 package frc.robot.subsystems.swerve;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-import static edu.wpi.first.wpilibj2.command.Commands.run;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
 import java.util.function.BiConsumer;
@@ -12,10 +9,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.InputStream;
-import frc.lib.Alert.AlertType;
+import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.SelfChecked;
-import frc.robot.Constants.SwerveConstants;
 
 public class SwerveModule implements SelfChecked {
   private final String _name;
@@ -24,9 +19,6 @@ public class SwerveModule implements SelfChecked {
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
   private boolean _isOpenLoop = false; 
-
-  private InputStream _velFollowCheck = InputStream.of(() -> SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
-  private InputStream _rotFollowCheck = InputStream.of(() -> 360);
 
   public SwerveModule(String name, ModuleIO io) {
     _io = io;
@@ -96,18 +88,10 @@ public class SwerveModule implements SelfChecked {
   }
 
   @Override
-  public Command selfCheck(BiConsumer<String, AlertType> alerter, BooleanSupplier hasError) {
+  public Command selfCheck(BiConsumer<String, FaultType> faultAdder, BooleanSupplier hasError) {
     return sequentialUntil(
       hasError,
-      _io.selfCheck(alerter, hasError),
-
-      run(() -> {
-        SwerveModuleState desiredState = new SwerveModuleState(_velFollowCheck.get(), Rotation2d.fromDegrees(_rotFollowCheck.get()));
-        setModuleState(desiredState, true, true);
-      }).beforeStarting(() -> {
-        _velFollowCheck = _velFollowCheck.rateLimit(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
-        _rotFollowCheck = _rotFollowCheck.rateLimit(30);
-      }).withTimeout(3)
+      _io.selfCheck(faultAdder, hasError)
     );
   }
 }
