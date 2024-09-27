@@ -34,6 +34,7 @@ public class RealModule implements ModuleIO {
 
   private boolean _driveMotorConfigError;
   private boolean _turnMotorConfigError;
+  
 
   private double _oldVelocity = 0;
 

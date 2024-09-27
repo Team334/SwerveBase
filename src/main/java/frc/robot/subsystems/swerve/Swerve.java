@@ -163,7 +163,7 @@ public class Swerve extends AdvancedSubsystem {
     private Notifier _notifier = new Notifier(this::update);
     private final double _frequency;
 
-    private final BaseStatusSignal[] _signals = new BaseStatusSignal[2 * 4]; // two status signals per module
+    private final BaseStatusSignal[] _signals = new BaseStatusSignal[3 * 4]; // three status signals per module
 
     public OdometryThread(double frequency) {
       _frequency = frequency;
@@ -173,8 +173,10 @@ public class Swerve extends AdvancedSubsystem {
 
       for (int i = 0; i < _modules.size(); i++) {
         BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getOdomSignals();
-        _signals[(i*2) + 0] = moduleSignals[0];
-        _signals[(i*2) + 1] = moduleSignals[1];
+        
+        _signals[(i*3) + 0] = moduleSignals[0];
+        _signals[(i*3) + 1] = moduleSignals[1];
+        _signals[(i*3) + 2] = moduleSignals[2];
       }
 
       BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
