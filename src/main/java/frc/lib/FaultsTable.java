@@ -18,12 +18,8 @@ public class FaultsTable {
   private final StringArrayPublisher infos;
 
   /** An individual fault, containing necessary information. */
-  public static record Fault(String name, String description, FaultType type) {
-    @Override
-    public String toString() {
-      return name + ": " + description;
-    }
-  }
+  public static record Fault(String description, FaultType type) {}
+
 
   /**
    * The type of fault, used for detecting whether the fallible is in a failure
@@ -56,7 +52,7 @@ public class FaultsTable {
   private String[] filteredStrings(Set<Fault> faults, FaultType type) {
     return faults.stream()
         .filter(a -> a.type() == type)
-        .map(Fault::toString)
+        .map(Fault::description)
         .toArray(String[]::new);
   }
 }

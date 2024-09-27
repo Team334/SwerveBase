@@ -33,8 +33,8 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   }
 
   /** Adds a new fault under this subsystem. */
-  protected final void addFault(String message, FaultType faultType) {
-    Fault fault = new Fault(getName() + " Fault", message, faultType);
+  protected final void addFault(String description, FaultType faultType) {
+    Fault fault = new Fault(description, faultType);
 
     _faults.add(fault);
     _faultsTable.set(_faults);

@@ -106,12 +106,11 @@ public final class FaultLogger {
   /**
    * Reports a fault.
    *
-   * @param name The name of the fault.
    * @param description The description of the fault.
    * @param type The type of the fault.
    */
-  public static void report(String name, String description, FaultType type) {
-    report(new Fault(name, description, type));
+  public static void report(String description, FaultType type) {
+    report(new Fault(description, type));
   }
 
   /**
@@ -128,12 +127,11 @@ public final class FaultLogger {
    *
    * @param condition Whether a failure is occuring.
    * @param description The failure's description.
-   * @param type The type of failure.
    */
-  public static void register(BooleanSupplier condition, String name, String description, FaultType type) {
+  public static void register(BooleanSupplier condition, String description, FaultType type) {
     faultReporters.add(() -> {
       if (condition.getAsBoolean()) {
-        report(name, description, type);
+        report(description, type);
       }
     });
   }
