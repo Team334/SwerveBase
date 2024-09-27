@@ -18,7 +18,7 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   private Set<Fault> _faults = new HashSet<Fault>();
   private FaultsTable _faultsTable = new FaultsTable(NetworkTableInstance.getDefault().getTable("Self Check"), getName() + " Faults");
 
-  private boolean _hasErrors = false;
+  private boolean _hasError = false;
 
   public AdvancedSubsystem() {
     RobotModeTriggers.test().onFalse(runOnce(this::clearFaults));
@@ -29,7 +29,7 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
     _faults.clear();
     _faultsTable.set(_faults);
 
-    _hasErrors = false;
+    _hasError = false;
   }
 
   /** Adds a new fault under this subsystem. */
@@ -39,22 +39,20 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
     _faults.add(fault);
     _faultsTable.set(_faults);
 
-    _hasErrors = faultType == FaultType.ERROR;
+    _hasError = faultType == FaultType.ERROR;
   }
 
   /** Returns whether this subsystem has errors (has fault type of error). */
-  public final boolean hasErrors() {
-    return _hasErrors;
+  public final boolean hasError() {
+    return _hasError;
   }
 
   /** Returns a full Command that self checks this Subsystem for pre-match. */
   public final Command fullSelfCheck() {    
     Command selfCheck = Commands.sequence(
-      Commands.runOnce(this::clearFaults), // clear all faults and hasError (also adds this subsystem as a requirement)
-      selfCheck(this::addFault, this::hasErrors) // self check this subsystem
+      runOnce(this::clearFaults), // clear all faults and hasError (also adds this subsystem as a requirement)
+      selfCheck(this::addFault, this::hasError).until(this::hasError) // self check this subsystem
     ).withName(getName() + " Self Check");
-
-    selfCheck.addRequirements(this);
 
     return selfCheck;
   }

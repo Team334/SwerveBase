@@ -48,8 +48,6 @@ public class RobotContainer implements Logged {
     // Configure the trigger bindings
     configureBindings();
 
-    SmartDashboard.putData("Swerve Self-Check", _swerve.fullSelfCheck());
-
     // add self check command
     SmartDashboard.putData(
       "Run Self-Check",

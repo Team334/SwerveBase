@@ -19,7 +19,7 @@ public interface SelfChecked {
   };
 
   /**
-   * Creates a new sequential command group that ends and prevents any other commands in the group
+   * Creates a new sequential command group that prevents any other commands in the group
    * from running when a given condition is met.
    * 
    * This should be used to create a sequential command group of individual instant self check commands for robot self checking.
@@ -31,6 +31,7 @@ public interface SelfChecked {
     for (int i = 1; i < commands.length; ++i) {
       commands[i] = commands[i].unless(condition);
     }
-    return Commands.sequence(commands).until(condition);
+
+    return Commands.sequence(commands);
   }
 }
