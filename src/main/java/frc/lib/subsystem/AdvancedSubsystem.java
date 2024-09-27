@@ -25,7 +25,7 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   }
 
   /** Clears this subsystem's faults. */
-  protected void clearFaults() {
+  protected final void clearFaults() {
     _faults.clear();
     _faultsTable.set(_faults);
 
@@ -33,7 +33,7 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   }
 
   /** Adds a new fault under this subsystem. */
-  protected void addFault(String message, FaultType faultType) {
+  protected final void addFault(String message, FaultType faultType) {
     Fault fault = new Fault(getName() + " Fault", message, faultType);
 
     _faults.add(fault);
@@ -43,16 +43,18 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   }
 
   /** Returns whether this subsystem has errors (has fault type of error). */
-  public boolean hasErrors() {
+  public final boolean hasErrors() {
     return _hasErrors;
   }
 
   /** Returns a full Command that self checks this Subsystem for pre-match. */
-  public Command fullSelfCheck() {    
+  public final Command fullSelfCheck() {    
     Command selfCheck = Commands.sequence(
-      runOnce(this::clearFaults), // clear all faults and hasError (also adds this subsystem as a requirement)
+      Commands.runOnce(this::clearFaults), // clear all faults and hasError (also adds this subsystem as a requirement)
       selfCheck(this::addFault, this::hasErrors) // self check this subsystem
     ).withName(getName() + " Self Check");
+
+    selfCheck.addRequirements(this);
 
     return selfCheck;
   }
