@@ -48,13 +48,11 @@ public abstract class AdvancedSubsystem extends SubsystemBase implements Logged,
   }
 
   /** Returns a full Command that self checks this Subsystem for pre-match. */
-  public Command fullSelfCheck() {
+  public Command fullSelfCheck() {    
     Command selfCheck = Commands.sequence(
-      Commands.runOnce(this::clearFaults), // clear all faults and hasError
-      selfCheck(this::addFault, this::hasErrors).until(this::hasErrors) // self check this subsystem
+      runOnce(this::clearFaults), // clear all faults and hasError (also adds this subsystem as a requirement)
+      selfCheck(this::addFault, this::hasErrors) // self check this subsystem
     ).withName(getName() + " Self Check");
-
-    selfCheck.addRequirements(this);
 
     return selfCheck;
   }

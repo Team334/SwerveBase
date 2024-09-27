@@ -3,6 +3,7 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Robot Self Check": "Command",
+      "/SmartDashboard/Run Self Check": "Command",
       "/SmartDashboard/Sim Vision Field": "Field2d",
       "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d"
     }
