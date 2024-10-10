@@ -1,62 +1,128 @@
 {
-  "version": "3.0.1",
-  "layout": [
+  "hubs": [
     {
-      "type": 9,
-      "fields": [
-        {
-          "key": "NT:/Robot/_robotContainer/_swerve/Module States",
-          "sourceTypeIndex": 1,
-          "sourceType": "SwerveModuleState[]"
+      "x": -7,
+      "y": -7,
+      "width": 1538,
+      "height": 833,
+      "state": {
+        "sidebar": {
+          "width": 300,
+          "expanded": [
+            "/Robot",
+            "/Robot/_robotContainer/_swerve",
+            "/Self Check",
+            "/Self Check/Swerve Faults",
+            "/SmartDashboard",
+            "/SmartDashboard/VisionSystemSim-main",
+            "/SmartDashboard/VisionSystemSim-main/Sim Field",
+            "/SmartDashboard/VisionSystemSim-main/Sim Field/Robot",
+            "/SmartDashboard/VisionSystemSim-main/Sim Field/visibleTargetPoses",
+            "/Shuffleboard",
+            "/Shuffleboard/.metadata",
+            "/Shuffleboard/.recording"
+          ]
         },
-        {
-          "key": "NT:/Robot/_robotContainer/_swerve/Desired Module States",
-          "sourceTypeIndex": 1,
-          "sourceType": "SwerveModuleState[]"
-        },
-        {
-          "key": "NT:/Robot/_robotContainer/_swerve/Robot Heading",
-          "sourceTypeIndex": 1,
-          "sourceType": "Rotation2d"
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "path": "../docs/INDEX.md"
+            },
+            {
+              "type": 6,
+              "uuid": "89jnsuq1p6o84xwyag4pc21xc7czmep9",
+              "fields": [],
+              "listFields": [
+                [],
+                [
+                  {
+                    "type": "Robot",
+                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
+                    "sourceTypeIndex": 1,
+                    "sourceType": "Pose2d"
+                  }
+                ]
+              ],
+              "options": {
+                "field": "2024 Field",
+                "alliance": "blue",
+                "robot": "Crab Bot",
+                "unitDistance": "meters",
+                "unitRotation": "radians"
+              },
+              "configHidden": false,
+              "visualizer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  -4.799376530771352,
+                  5.718523670970259,
+                  11.13476517989509
+                ],
+                "cameraTarget": [
+                  0,
+                  0.5,
+                  0
+                ]
+              },
+              "title": "3D Field"
+            },
+            {
+              "type": 5,
+              "uuid": "8q6gr13ljkyyxdsjv34sbq4jx3unwy9f",
+              "fields": [],
+              "listFields": [
+                [
+                  {
+                    "type": "Robot",
+                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
+                    "sourceTypeIndex": 1,
+                    "sourceType": "Pose2d"
+                  }
+                ]
+              ],
+              "options": {
+                "game": "2024 Field",
+                "unitDistance": "meters",
+                "unitRotation": "radians",
+                "origin": "right",
+                "size": 0.75,
+                "allianceBumpers": "auto",
+                "allianceOrigin": "blue",
+                "orientation": "blue left, red right"
+              },
+              "configHidden": false,
+              "visualizer": null,
+              "title": "Odometry"
+            },
+            {
+              "type": 9,
+              "uuid": "u1d1w5ecdxe7ns2qconwvna3t0guvzry",
+              "fields": [
+                null,
+                null,
+                null
+              ],
+              "listFields": [],
+              "options": {
+                "maxSpeed": 4.5,
+                "rotationUnits": "radians",
+                "arrangement": "0,1,2,3",
+                "sizeLeftRight": 0.65,
+                "sizeFrontBack": 0.65,
+                "forwardDirection": "up"
+              },
+              "configHidden": false,
+              "visualizer": null,
+              "title": "Swerve"
+            }
+          ]
         }
-      ],
-      "listFields": [],
-      "options": {
-        "maxSpeed": 5.03,
-        "rotationUnits": "radians",
-        "arrangement": "0,1,3,2",
-        "sizeLeftRight": 0.584,
-        "sizeFrontBack": 0.584,
-        "forwardDirection": "up"
-      },
-      "configHidden": false,
-      "title": "Swerve"
-    },
-    {
-      "type": 5,
-      "fields": [],
-      "listFields": [
-        [
-          {
-            "type": "Robot",
-            "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
-            "sourceTypeIndex": 1,
-            "sourceType": "Pose2d"
-          }
-        ]
-      ],
-      "options": {
-        "game": "2024 Field",
-        "unitDistance": "meters",
-        "unitRotation": "radians",
-        "origin": "right",
-        "size": 0.584,
-        "allianceBumpers": "auto",
-        "allianceOrigin": "blue",
-        "orientation": "blue left, red right"
-      },
-      "configHidden": false,
-      "title": "Odometry"
+      }
     }
-  ]
+  ],
+  "satellites": [],
+  "version": "3.2.1"
 }
