@@ -1,26 +1,23 @@
 {
   "hubs": [
     {
-      "x": -7,
-      "y": -7,
-      "width": 1538,
-      "height": 833,
+      "x": -8,
+      "y": -8,
+      "width": 1552,
+      "height": 840,
       "state": {
         "sidebar": {
           "width": 300,
           "expanded": [
             "/Robot",
-            "/Robot/_robotContainer/_swerve",
-            "/Self Check",
             "/Self Check/Swerve Faults",
-            "/SmartDashboard",
             "/SmartDashboard/VisionSystemSim-main",
             "/SmartDashboard/VisionSystemSim-main/Sim Field",
             "/SmartDashboard/VisionSystemSim-main/Sim Field/Robot",
             "/SmartDashboard/VisionSystemSim-main/Sim Field/visibleTargetPoses",
-            "/Shuffleboard",
             "/Shuffleboard/.metadata",
-            "/Shuffleboard/.recording"
+            "/Shuffleboard/.recording",
+            "/Robot/_robotContainer"
           ]
         },
         "tabs": {
@@ -54,12 +51,12 @@
               },
               "configHidden": false,
               "visualizer": {
-                "cameraIndex": -1,
+                "cameraIndex": -2,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -4.799376530771352,
-                  5.718523670970259,
-                  11.13476517989509
+                  1.9666421737542361,
+                  1.117763365924211,
+                  -1.0003434330934546
                 ],
                 "cameraTarget": [
                   0,
@@ -88,7 +85,7 @@
                 "unitDistance": "meters",
                 "unitRotation": "radians",
                 "origin": "right",
-                "size": 0.75,
+                "size": 0.584,
                 "allianceBumpers": "auto",
                 "allianceOrigin": "blue",
                 "orientation": "blue left, red right"
@@ -101,17 +98,29 @@
               "type": 9,
               "uuid": "u1d1w5ecdxe7ns2qconwvna3t0guvzry",
               "fields": [
-                null,
-                null,
-                null
+                {
+                  "key": "NT:/Robot/_robotContainer/_swerve/Module States",
+                  "sourceTypeIndex": 1,
+                  "sourceType": "SwerveModuleState[]"
+                },
+                {
+                  "key": "NT:/Robot/_robotContainer/_swerve/Desired Module States",
+                  "sourceTypeIndex": 1,
+                  "sourceType": "SwerveModuleState[]"
+                },
+                {
+                  "key": "NT:/Robot/_robotContainer/_swerve/Robot Heading",
+                  "sourceTypeIndex": 1,
+                  "sourceType": "Rotation2d"
+                }
               ],
               "listFields": [],
               "options": {
-                "maxSpeed": 4.5,
+                "maxSpeed": 5.03,
                 "rotationUnits": "radians",
-                "arrangement": "0,1,2,3",
-                "sizeLeftRight": 0.65,
-                "sizeFrontBack": 0.65,
+                "arrangement": "0,1,3,2",
+                "sizeLeftRight": 0.584,
+                "sizeFrontBack": 0.584,
                 "forwardDirection": "up"
               },
               "configHidden": false,
