@@ -44,6 +44,7 @@ public class Robot extends TimedRobot implements Logged {
     Monologue.setupMonologue(this, "Robot", DriverStation.isFMSAttached(), true);
 
     DriverStation.startDataLog(DataLogManager.getLog());
+    DriverStation.silenceJoystickConnectionWarning(RobotBase.isSimulation());
 
     if (RobotBase.isSimulation()) return;
     
