@@ -172,7 +172,7 @@ public class Swerve extends AdvancedSubsystem {
       if (RobotBase.isSimulation()) return;
 
       for (int i = 0; i < _modules.size(); i++) {
-        BaseStatusSignal[] moduleSignals = ((RealModule) _modules.get(i).getIO()).getOdomSignals();
+        BaseStatusSignal[] moduleSignals = _modules.get(i).getOdomSignals();
         
         _signals[(i*3) + 0] = moduleSignals[0];
         _signals[(i*3) + 1] = moduleSignals[1];
@@ -338,8 +338,7 @@ public class Swerve extends AdvancedSubsystem {
     }).beforeStarting(() -> {
       _inputChassisSpeeds = new ChassisSpeeds();
       allowTurnInPlace = true;
-    })
-      .withName("Brake");
+    }).withName("Brake");
   }
 
   /** Toggles {@link #isFieldOriented} by braking the swerve and changing the drive orientation. */
@@ -505,9 +504,9 @@ public class Swerve extends AdvancedSubsystem {
     if (_acceptedEstimates.size() == 0) return;
     _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
 
-    // _odomLock.writeLock().lock();
-    // _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose(), e.timestamp(), e.stdDevs()));
-    // _odomLock.writeLock().unlock();
+    // _odomUpdateLock.lock();
+    // _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose().toPose2d(), e.timestamp(), e.stdDevs()));
+    // _odomUpdateLock.unlock();
   }
 
   @Override
@@ -523,7 +522,7 @@ public class Swerve extends AdvancedSubsystem {
     double odomUpdateSuccessPercentage = -1;
 
     if (_attemptedOdomUpdates != 0) {
-      odomUpdateSuccessPercentage = (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0;
+      odomUpdateSuccessPercentage = (double) (_attemptedOdomUpdates - _failedOdomUpdates) / _attemptedOdomUpdates * 100.0;
     }
 
     log("Odometry Update Success %", odomUpdateSuccessPercentage);
@@ -547,16 +546,19 @@ public class Swerve extends AdvancedSubsystem {
   /** Resets the pose of the pose estimator. */
   public void resetPose(Pose2d newPose) {
     _odomUpdateLock.lock();
+    
     _poseEstimator.resetPosition(
       getRawHeading(),
       getModulePositions(),
       newPose
     );
+    
     _simOdometry.resetPosition(
       getRawHeading(),
       getModulePositions(),
       newPose
     );
+
     _odomUpdateLock.unlock();
   }
 

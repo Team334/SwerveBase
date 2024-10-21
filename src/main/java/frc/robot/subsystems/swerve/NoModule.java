@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 
 /** Dummy module that does nothing. */
@@ -29,4 +31,8 @@ public class NoModule implements ModuleIO {
     return 0;
   }
   
+  @Override
+  public BaseStatusSignal[] getOdomSignals() {
+    return new BaseStatusSignal[]{};
+  }
 }

@@ -5,6 +5,8 @@ import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -31,8 +33,18 @@ public class SwerveModule implements SelfChecked {
     return _name;
   }
 
-  public ModuleIO getIO() {
-    return _io;
+  /**
+   * Returns the CTRE status signals to be refreshed periodically in the odom thread. In sim this returns
+   * and empty array.
+   * 
+   * <pre>
+   * array[0] - Drive Velocity
+   * array[1] - Turn Angle
+   * array[2] - Drive Position
+   * </pre>
+   */
+  public BaseStatusSignal[] getOdomSignals() {
+    return _io.getOdomSignals();
   }
 
   /** Returns the last desired set state for this module. */

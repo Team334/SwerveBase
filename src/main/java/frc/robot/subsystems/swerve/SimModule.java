@@ -1,5 +1,7 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -79,5 +81,10 @@ public class SimModule implements ModuleIO {
   @Override
   public double getPosition() {
     return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+  }
+
+  @Override
+  public BaseStatusSignal[] getOdomSignals() {
+    return new BaseStatusSignal[]{};
   }
 }

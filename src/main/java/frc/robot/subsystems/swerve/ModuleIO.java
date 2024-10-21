@@ -1,5 +1,7 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.BaseStatusSignal;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.lib.subsystem.SelfChecked;
 
@@ -24,4 +26,16 @@ public interface ModuleIO extends SelfChecked {
    * Returns the drive motor position (distance traveled).
   */
   public double getPosition();
+
+  /**
+   * Returns the CTRE status signals to be refreshed periodically in the odom thread. In sim this returns
+   * and empty array.
+   * 
+   * <pre>
+   * array[0] - Drive Velocity
+   * array[1] - Turn Angle
+   * array[2] - Drive Position
+   * </pre>
+   */
+  public BaseStatusSignal[] getOdomSignals();
 }

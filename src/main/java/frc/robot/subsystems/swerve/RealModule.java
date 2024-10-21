@@ -98,15 +98,7 @@ public class RealModule implements ModuleIO {
     return _drivePosition.getValue();
   }
 
-  /**
-   * Returns the CTRE StatusSignals to be refreshed periodically in the odom thread. 
-   * 
-   * <pre>
-   * array[0] - Drive Velocity
-   * array[1] - Turn Angle
-   * array[2] - Drive Position
-   * </pre>
-   */
+  @Override
   public BaseStatusSignal[] getOdomSignals() {
     return new BaseStatusSignal[] {
       _driveVelocity,
