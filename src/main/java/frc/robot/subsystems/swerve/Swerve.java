@@ -10,6 +10,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
+import static edu.wpi.first.wpilibj2.command.Commands.*; 
 
 import java.util.ArrayList;
 import java.util.List;
@@ -305,20 +306,13 @@ public class Swerve extends AdvancedSubsystem {
     // motor logging handled by signal logger
     _translationCharacterization = new SysIdRoutine(
       new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(4), Seconds.of(4)),
-      new SysIdRoutine.Mechanism(volts -> {
-        _modules.forEach(m -> m.setDriveVoltage(volts.in(Volts)));
-      }, null, this)
+      new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setDriveVoltage(volts.in(Volts))), null, this)
     );
 
     // motor logging handled by signal logger
     _turnCharacterization = new SysIdRoutine(
       new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(7), Seconds.of(4)),
-      new SysIdRoutine.Mechanism(volts -> {
-        _modules.forEach(m -> {
-          m.setDriveVoltage(0);
-          m.setTurnVoltage(volts.in(Volts));
-        });
-      }, null, this)
+      new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setTurnVoltage(volts.in(Volts))), null, this)
     );
 
     displayRoutines();
@@ -337,16 +331,42 @@ public class Swerve extends AdvancedSubsystem {
     }
   }
 
-  private void displayRoutines() {
-    SmartDashboard.putData("Swerve Translation Quasi-Static Forward", _translationCharacterization.quasistatic(Direction.kForward));
-    SmartDashboard.putData("Swerve Translation Quasi-Static Reverse", _translationCharacterization.quasistatic(Direction.kReverse));
-    SmartDashboard.putData("Swerve Translation Dynamic Forward", _translationCharacterization.dynamic(Direction.kForward));
-    SmartDashboard.putData("Swerve Translation Dynamic Reverse", _translationCharacterization.dynamic(Direction.kReverse));
+  // wraps around any drive sysid routine
+  private Command buildRoutine(Command routine) {
+    return sequence(
+      runOnce(() -> _characterizing = true),
+      run(() -> _modules.forEach(m -> m.setDriveVoltage(0))).withTimeout(1),
+      routine
+    ).finallyDo(() -> _characterizing = false);
+  }
 
-    SmartDashboard.putData("Swerve Turn Quasi-Static Forward", _turnCharacterization.quasistatic(Direction.kForward));
-    SmartDashboard.putData("Swerve Turn Quasi-Static Reverse", _turnCharacterization.quasistatic(Direction.kReverse));
-    SmartDashboard.putData("Swerve Turn Dynamic Forward", _turnCharacterization.dynamic(Direction.kForward));
-    SmartDashboard.putData("Swerve Turn Dynamic Reverse", _turnCharacterization.dynamic(Direction.kReverse));
+  // display the sysid routines on smart dashboard
+  private void displayRoutines() {
+    SmartDashboard.putData("Swerve Translation Quasi-Static Forward", buildRoutine(
+      _translationCharacterization.quasistatic(Direction.kForward)
+    ));
+    SmartDashboard.putData("Swerve Translation Quasi-Static Reverse", buildRoutine(
+      _translationCharacterization.quasistatic(Direction.kReverse)
+    ));
+    SmartDashboard.putData("Swerve Translation Dynamic Forward", buildRoutine(
+      _translationCharacterization.dynamic(Direction.kForward)
+    ));
+    SmartDashboard.putData("Swerve Translation Dynamic Reverse", buildRoutine(
+      _translationCharacterization.dynamic(Direction.kReverse)
+    ));
+
+    SmartDashboard.putData("Swerve Turn Quasi-Static Forward", buildRoutine(
+      _turnCharacterization.quasistatic(Direction.kForward)
+    ));
+    SmartDashboard.putData("Swerve Turn Quasi-Static Reverse", buildRoutine(
+      _turnCharacterization.quasistatic(Direction.kReverse)
+    ));
+    SmartDashboard.putData("Swerve Turn Dynamic Forward", buildRoutine(
+      _turnCharacterization.dynamic(Direction.kForward)
+    ));
+    SmartDashboard.putData("Swerve Turn Dynamic Reverse", buildRoutine(
+      _turnCharacterization.dynamic(Direction.kReverse)
+    ));
   }
 
   /**
