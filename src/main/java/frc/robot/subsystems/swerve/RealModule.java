@@ -13,7 +13,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.CTREUtil;
@@ -30,6 +29,12 @@ public class RealModule implements ModuleIO {
   private final StatusSignal<Double> _driveVelocity;
   private final StatusSignal<Double> _turnAngle;
   private final StatusSignal<Double> _drivePosition;
+
+  private final VelocityVoltage _driveVelocitySetter = new VelocityVoltage(0);
+  private final PositionVoltage _turnPositionSetter = new PositionVoltage(0);
+
+  private final VoltageOut _driveVoltageSetter = new VoltageOut(0);
+  private final VoltageOut _turnVoltageSetter = new VoltageOut(0);
 
   private String _name;
 
@@ -57,6 +62,9 @@ public class RealModule implements ModuleIO {
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, null);
     _turnMotorConfigError = CTREUtil.configure(_turnMotor, null);
 
+    _driveVelocitySetter.withSlot(0);
+    _turnPositionSetter.withSlot(0);
+
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);
   }
@@ -68,9 +76,13 @@ public class RealModule implements ModuleIO {
 
   @Override
   public void setVelocity(double velocity, boolean isOpenLoop) {
-    VelocityVoltage control = new VelocityVoltage(velocity).withAcceleration((velocity - _oldVelocity) / Robot.kDefaultPeriod);
-    control.Slot = isOpenLoop ? 0 : 1;
-    _driveMotor.setControl(control);
+    _driveVelocitySetter.withVelocity(velocity).withSlot(0);
+
+    if (!isOpenLoop) {
+      _driveVelocitySetter.withAcceleration((velocity - _oldVelocity) / Robot.kDefaultPeriod).withSlot(1);
+    }
+
+    _driveMotor.setControl(_driveVelocitySetter);
 
     _oldVelocity = velocity;
   }
@@ -83,8 +95,7 @@ public class RealModule implements ModuleIO {
 
   @Override
   public void setAngle(Rotation2d angle) {
-    PositionVoltage control = new PositionVoltage(angle.getDegrees());
-    _turnMotor.setControl(control);
+    _turnMotor.setControl(_turnPositionSetter.withPosition(angle.getDegrees()));
   }
 
   @Override
@@ -110,16 +121,12 @@ public class RealModule implements ModuleIO {
   
   @Override
   public void setDriveVoltage(double volts) {
-    VoltageOut control = new VoltageOut(volts);
-
-    _driveMotor.setControl(control);
+    _driveMotor.setControl(_driveVoltageSetter.withOutput(volts));
   }
 
   @Override
   public void setTurnVoltage(double volts) {
-    VoltageOut control = new VoltageOut(volts);
-
-    _turnMotor.setControl(control);
+    _turnMotor.setControl(_turnVoltageSetter.withOutput(volts));
   }
 
   @Override
