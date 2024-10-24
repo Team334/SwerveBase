@@ -116,6 +116,9 @@ public class Swerve extends AdvancedSubsystem {
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
 
+  @Log.NT(key = "Characterizing")
+  private boolean _characterizing = false;
+
   /** Whether the velocity of the modules is controlled open-loop (FF only) or closed-loop (FF + PID). */
   @Log.NT(key = "Is Open Loop")
   public boolean isOpenLoop = true;
@@ -558,8 +561,10 @@ public class Swerve extends AdvancedSubsystem {
   public void periodic() {
     super.periodic();
 
-    for (SwerveModule module : _modules) {
-      module.periodic();
+    if (!_characterizing) {
+      for (SwerveModule module : _modules) {
+        module.periodic();
+      }
     }
 
     updateVisionPoseEstimates();

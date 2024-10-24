@@ -20,7 +20,7 @@ public class SwerveModule implements SelfChecked {
 
   private SwerveModuleState _desiredState = new SwerveModuleState();
 
-  private boolean _isOpenLoop = false; 
+  private boolean _isOpenLoop = false;
 
   public SwerveModule(String name, ModuleIO io) {
     _io = io;
@@ -84,7 +84,7 @@ public class SwerveModule implements SelfChecked {
   }
 
   /** Updates this module periodically so it can reach the target state. */
-  public void periodic() {    
+  public void periodic() {
     setDrive(_desiredState.speedMetersPerSecond);
     setAngle(_desiredState.angle);
   }
@@ -99,14 +99,16 @@ public class SwerveModule implements SelfChecked {
     _io.setAngle(angle);
   }
 
-  /** Sets the voltage of the drive motor. (ONLY NECESSARY FOR SYSID) */
+  /** Sets the voltage of the drive motor, while keeping the turn motor at 0 degrees. (ONLY NECESSARY FOR SYSID) */
   public void setDriveVoltage(double volts) {
     _io.setDriveVoltage(volts);
+    _io.setAngle(new Rotation2d());
   }
 
-  /** Sets the voltage of the turn motor. (ONLY NECESSARY FOR SYSID) */
+  /** Sets the voltage of the turn motor, while keeping the drive motor at zero volts. (ONLY NECESSARY FOR SYSID) */
   public void setTurnVoltage(double volts) {
     _io.setTurnVoltage(volts);
+    _io.setDriveVoltage(0);
   }
 
   @Override
