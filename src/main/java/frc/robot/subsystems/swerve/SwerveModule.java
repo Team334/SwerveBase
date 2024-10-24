@@ -99,6 +99,16 @@ public class SwerveModule implements SelfChecked {
     _io.setAngle(angle);
   }
 
+  /** Sets the voltage of the drive motor. (ONLY NECESSARY FOR SYSID) */
+  public void setDriveVoltage(double volts) {
+    _io.setDriveVoltage(volts);
+  }
+
+  /** Sets the voltage of the turn motor. (ONLY NECESSARY FOR SYSID) */
+  public void setTurnVoltage(double volts) {
+    _io.setTurnVoltage(volts);
+  }
+
   @Override
   public Command selfCheck(BiConsumer<String, FaultType> faultAdder, BooleanSupplier hasError) {
     return sequentialUntil(

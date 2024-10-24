@@ -10,6 +10,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -107,6 +108,20 @@ public class RealModule implements ModuleIO {
     };
   }
   
+  @Override
+  public void setDriveVoltage(double volts) {
+    VoltageOut control = new VoltageOut(volts);
+
+    _driveMotor.setControl(control);
+  }
+
+  @Override
+  public void setTurnVoltage(double volts) {
+    VoltageOut control = new VoltageOut(volts);
+
+    _turnMotor.setControl(control);
+  }
+
   @Override
   public Command selfCheck(BiConsumer<String, FaultType> faultAdder, BooleanSupplier hasError) {
     return sequentialUntil(

@@ -6,6 +6,8 @@ package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
 
@@ -31,7 +33,10 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.lib.InputStream;
 import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.AdvancedSubsystem;
@@ -94,6 +99,12 @@ public class Swerve extends AdvancedSubsystem {
   private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
+
+  // Drive motor characterization
+  private final SysIdRoutine _translationCharacterization;
+
+  // Turn motor characterization
+  private final SysIdRoutine _turnCharacterization;
 
   /**
    * TODO: this doesn't really make sense, since in sim the average timestep is above 20ms, and decreasing 
@@ -286,6 +297,28 @@ public class Swerve extends AdvancedSubsystem {
 
     _cachedEstimatedPose = _poseEstimator.getEstimatedPosition();
     _cachedSimOdomPose = _simOdometry.getPoseMeters();
+    
+
+    // motor logging handled by signal logger
+    _translationCharacterization = new SysIdRoutine(
+      new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(4), Seconds.of(4)),
+      new SysIdRoutine.Mechanism(volts -> {
+        _modules.forEach(m -> m.setDriveVoltage(volts.in(Volts)));
+      }, null, this)
+    );
+
+    // motor logging handled by signal logger
+    _turnCharacterization = new SysIdRoutine(
+      new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(7), Seconds.of(4)),
+      new SysIdRoutine.Mechanism(volts -> {
+        _modules.forEach(m -> {
+          m.setDriveVoltage(0);
+          m.setTurnVoltage(volts.in(Volts));
+        });
+      }, null, this)
+    );
+
+    displayRoutines();
 
     _odomThread = new OdometryThread(SwerveConstants.ODOM_FREQUENCY);
 
@@ -299,6 +332,18 @@ public class Swerve extends AdvancedSubsystem {
 
       _odomThread.start(); // use threading on rio only
     }
+  }
+
+  private void displayRoutines() {
+    SmartDashboard.putData("Swerve Translation Quasi-Static Forward", _translationCharacterization.quasistatic(Direction.kForward));
+    SmartDashboard.putData("Swerve Translation Quasi-Static Reverse", _translationCharacterization.quasistatic(Direction.kReverse));
+    SmartDashboard.putData("Swerve Translation Dynamic Forward", _translationCharacterization.dynamic(Direction.kForward));
+    SmartDashboard.putData("Swerve Translation Dynamic Reverse", _translationCharacterization.dynamic(Direction.kReverse));
+
+    SmartDashboard.putData("Swerve Turn Quasi-Static Forward", _turnCharacterization.quasistatic(Direction.kForward));
+    SmartDashboard.putData("Swerve Turn Quasi-Static Reverse", _turnCharacterization.quasistatic(Direction.kReverse));
+    SmartDashboard.putData("Swerve Turn Dynamic Forward", _turnCharacterization.dynamic(Direction.kForward));
+    SmartDashboard.putData("Swerve Turn Dynamic Reverse", _turnCharacterization.dynamic(Direction.kReverse));
   }
 
   /**

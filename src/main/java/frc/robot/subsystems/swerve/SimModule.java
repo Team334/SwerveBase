@@ -87,4 +87,10 @@ public class SimModule implements ModuleIO {
   public BaseStatusSignal[] getOdomSignals() {
     return new BaseStatusSignal[]{};
   }
+
+  @Override
+  public void setDriveVoltage(double volts) {}
+
+  @Override
+  public void setTurnVoltage(double volts) {}
 }

@@ -38,4 +38,10 @@ public interface ModuleIO extends SelfChecked {
    * </pre>
    */
   public BaseStatusSignal[] getOdomSignals();
+
+  /** Sets the voltage of the drive motor. (ONLY NECESSARY FOR SYSID) */
+  public void setDriveVoltage(double volts);
+
+  /** Sets the voltage of the turn motor. (ONLY NECESSARY FOR SYSID) */
+  public void setTurnVoltage(double volts);
 }
