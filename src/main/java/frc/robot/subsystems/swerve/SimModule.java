@@ -20,11 +20,11 @@ public class SimModule implements ModuleIO {
   private final DCMotorSim _driveMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
-      SwerveModuleConstants.DRIVE_KV.times(Radians.per(Meters).of(
+      SwerveModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
         SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI)
       )).magnitude(),
 
-      SwerveModuleConstants.DRIVE_KA.times(Radians.per(Meters).of(
+      SwerveModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
         SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI) 
       )).magnitude()
     ),

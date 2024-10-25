@@ -337,7 +337,8 @@ public class Swerve extends AdvancedSubsystem {
       runOnce(() -> _characterizing = true),
       run(() -> _modules.forEach(m -> m.setDriveVoltage(0))).withTimeout(1),
       routine
-    ).finallyDo(() -> _characterizing = false);
+    ).finallyDo(() -> _characterizing = false)
+     .withName("SysId Routine");
   }
 
   // display the sysid routines on smart dashboard
