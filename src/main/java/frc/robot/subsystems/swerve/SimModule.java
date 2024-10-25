@@ -20,35 +20,35 @@ public class SimModule implements ModuleIO {
   private final DCMotorSim _driveMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
-      SwerveModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-        SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI)
+      ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI)
       )).magnitude(),
 
-      SwerveModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-        SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI) 
+      ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI) 
       )).magnitude()
     ),
     DCMotor.getFalcon500(1),
-    SwerveModuleConstants.DRIVE_GEARING
+    ModuleConstants.DRIVE_GEARING
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
-      SwerveModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-      SwerveModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
+      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
     ),
     DCMotor.getFalcon500(1),
-    SwerveModuleConstants.TURN_GEARING
+    ModuleConstants.TURN_GEARING
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
     0,
-    SwerveModuleConstants.DRIVE_KV.magnitude(),
-    SwerveModuleConstants.DRIVE_KA.magnitude()
+    ModuleConstants.DRIVE_KV.magnitude(),
+    ModuleConstants.DRIVE_KA.magnitude()
   );
 
-  private final PIDController _drivePID = new PIDController(SwerveModuleConstants.DRIVE_KP.magnitude(), 0, 0);
-  private final PIDController _turnPID = new PIDController(SwerveModuleConstants.TURN_KP.magnitude(), 0, 0);
+  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.magnitude(), 0, 0);
+  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.magnitude(), 0, 0);
 
   private double _oldVelocity = 0;
 
@@ -75,7 +75,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getVelocity() {
-    return _driveMotor.getAngularVelocityRPM() / 60 * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
 
@@ -94,7 +94,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getPosition() {
-    return _driveMotor.getAngularPositionRotations() * SwerveModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
   }
 
   @Override

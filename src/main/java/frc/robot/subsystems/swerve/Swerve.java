@@ -9,7 +9,7 @@ import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
-import static frc.robot.Constants.SwerveModuleConstants.*; // for neatness on can ids
+import static frc.robot.Constants.ModuleConstants.*; // for neatness on can ids
 import static edu.wpi.first.wpilibj2.command.Commands.*; 
 
 import java.util.ArrayList;

@@ -83,7 +83,7 @@ public final class Constants {
     };
   }
 
-  public static class SwerveModuleConstants {
+  public static class ModuleConstants {
     public static final int FRONT_LEFT_DRIVE_ID = 0;
     public static final int FRONT_LEFT_TURN_ID = 0;
     public static final int FRONT_LEFT_ENCODER_ID = 0; 
