@@ -101,10 +101,10 @@ public class Swerve extends AdvancedSubsystem {
   private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
 
-  // Drive motor characterization
-  private final SysIdRoutine _translationCharacterization;
+  // drive motor characterization
+  private final SysIdRoutine _driveCharacterization;
 
-  // Turn motor characterization
+  // turn motor characterization
   private final SysIdRoutine _turnCharacterization;
 
   /**
@@ -304,7 +304,7 @@ public class Swerve extends AdvancedSubsystem {
     
 
     // motor logging handled by signal logger
-    _translationCharacterization = new SysIdRoutine(
+    _driveCharacterization = new SysIdRoutine(
       new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(4), Seconds.of(4)),
       new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setDriveVoltage(volts.in(Volts))), null, this)
     );
@@ -331,7 +331,7 @@ public class Swerve extends AdvancedSubsystem {
     }
   }
 
-  // wraps around any drive sysid routine
+  // wraps around drive sysid routines
   private Command buildRoutine(Command routine) {
     return sequence(
       runOnce(() -> _characterizing = true),
@@ -342,17 +342,17 @@ public class Swerve extends AdvancedSubsystem {
 
   // display the sysid routines on smart dashboard
   private void displayRoutines() {
-    SmartDashboard.putData("Swerve Translation Quasi-Static Forward", buildRoutine(
-      _translationCharacterization.quasistatic(Direction.kForward)
+    SmartDashboard.putData("Swerve Drive Quasi-Static Forward", buildRoutine(
+      _driveCharacterization.quasistatic(Direction.kForward)
     ));
-    SmartDashboard.putData("Swerve Translation Quasi-Static Reverse", buildRoutine(
-      _translationCharacterization.quasistatic(Direction.kReverse)
+    SmartDashboard.putData("Swerve Drive Quasi-Static Reverse", buildRoutine(
+      _driveCharacterization.quasistatic(Direction.kReverse)
     ));
-    SmartDashboard.putData("Swerve Translation Dynamic Forward", buildRoutine(
-      _translationCharacterization.dynamic(Direction.kForward)
+    SmartDashboard.putData("Swerve Drive Dynamic Forward", buildRoutine(
+      _driveCharacterization.dynamic(Direction.kForward)
     ));
-    SmartDashboard.putData("Swerve Translation Dynamic Reverse", buildRoutine(
-      _translationCharacterization.dynamic(Direction.kReverse)
+    SmartDashboard.putData("Swerve Drive Dynamic Reverse", buildRoutine(
+      _driveCharacterization.dynamic(Direction.kReverse)
     ));
 
     SmartDashboard.putData("Swerve Turn Quasi-Static Forward", buildRoutine(
