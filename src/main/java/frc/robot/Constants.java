@@ -7,7 +7,9 @@ package frc.robot;
 import edu.wpi.first.units.Angle;
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Per;
 import edu.wpi.first.units.Velocity;
+import edu.wpi.first.units.Voltage;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimatorConstants;
 
 import static edu.wpi.first.units.Units.*;
@@ -98,22 +100,22 @@ public final class Constants {
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
-    // feedforward (meters)
-    public static final double DRIVE_KS = 0.0;
-    public static final double DRIVE_KV = 2.38;
-    public static final double DRIVE_KA = 0.01;
+    // feedforward
+    public static final Measure<Voltage> DRIVE_KS = Volts.of(0);
+    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KV = VoltsPerMeterPerSecond.of(2.38);
+    public static final Measure<Per<Voltage, Velocity<Velocity<Distance>>>> DRIVE_KA = VoltsPerMeterPerSecondSquared.of(0.01);
 
-    public static final double DRIVE_KP = 0;
+    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KP = VoltsPerMeterPerSecond.of(0);
 
     public static final double DRIVE_GEARING = 6.75;
 
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
-    // turn feedforward is only needed for sim (radians)
-    public static final double TURN_KV = 1.58;
-    public static final double TURN_KA = 0.001;
+    // turn feedforward is only needed for sim
+    public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(0.027);
+    public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(0.00002);
 
-    public static final double TURN_KP = 1.5;
+    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(1.5);
 
     public static final double TURN_GEARING = 150/7;
   }

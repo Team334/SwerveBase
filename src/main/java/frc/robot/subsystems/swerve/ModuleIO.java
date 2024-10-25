@@ -11,6 +11,7 @@ public interface ModuleIO extends SelfChecked {
 
   /**
    * Sets the targets of the drive motor.
+   * 
    * @param velocity The target velocity in m/s.
    * @param isOpenLoop Whether the target velocity is to be meet through open loop control or not.
    */
