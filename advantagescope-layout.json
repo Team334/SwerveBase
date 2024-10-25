@@ -3,8 +3,8 @@
     {
       "x": -8,
       "y": -8,
-      "width": 1552,
-      "height": 840,
+      "width": 1536,
+      "height": 824,
       "state": {
         "sidebar": {
           "width": 300,
@@ -26,73 +26,6 @@
             {
               "type": 0,
               "path": "../docs/INDEX.md"
-            },
-            {
-              "type": 6,
-              "uuid": "89jnsuq1p6o84xwyag4pc21xc7czmep9",
-              "fields": [],
-              "listFields": [
-                [],
-                [
-                  {
-                    "type": "Robot",
-                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
-                    "sourceTypeIndex": 1,
-                    "sourceType": "Pose2d"
-                  }
-                ]
-              ],
-              "options": {
-                "field": "2024 Field",
-                "alliance": "blue",
-                "robot": "Crab Bot",
-                "unitDistance": "meters",
-                "unitRotation": "radians"
-              },
-              "configHidden": false,
-              "visualizer": {
-                "cameraIndex": -2,
-                "orbitFov": 50,
-                "cameraPosition": [
-                  1.9666421737542361,
-                  1.117763365924211,
-                  -1.0003434330934546
-                ],
-                "cameraTarget": [
-                  0,
-                  0.5,
-                  0
-                ]
-              },
-              "title": "3D Field"
-            },
-            {
-              "type": 5,
-              "uuid": "8q6gr13ljkyyxdsjv34sbq4jx3unwy9f",
-              "fields": [],
-              "listFields": [
-                [
-                  {
-                    "type": "Robot",
-                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
-                    "sourceTypeIndex": 1,
-                    "sourceType": "Pose2d"
-                  }
-                ]
-              ],
-              "options": {
-                "game": "2024 Field",
-                "unitDistance": "meters",
-                "unitRotation": "radians",
-                "origin": "right",
-                "size": 0.584,
-                "allianceBumpers": "auto",
-                "allianceOrigin": "blue",
-                "orientation": "blue left, red right"
-              },
-              "configHidden": false,
-              "visualizer": null,
-              "title": "Odometry"
             },
             {
               "type": 9,
@@ -126,6 +59,73 @@
               "configHidden": false,
               "visualizer": null,
               "title": "Swerve"
+            },
+            {
+              "type": 5,
+              "uuid": "8q6gr13ljkyyxdsjv34sbq4jx3unwy9f",
+              "fields": [],
+              "listFields": [
+                [
+                  {
+                    "type": "Robot",
+                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
+                    "sourceTypeIndex": 1,
+                    "sourceType": "Pose2d"
+                  }
+                ]
+              ],
+              "options": {
+                "game": "2024 Field",
+                "unitDistance": "meters",
+                "unitRotation": "radians",
+                "origin": "right",
+                "size": 0.584,
+                "allianceBumpers": "auto",
+                "allianceOrigin": "blue",
+                "orientation": "blue left, red right"
+              },
+              "configHidden": false,
+              "visualizer": null,
+              "title": "Odometry"
+            },
+            {
+              "type": 6,
+              "uuid": "89jnsuq1p6o84xwyag4pc21xc7czmep9",
+              "fields": [],
+              "listFields": [
+                [],
+                [
+                  {
+                    "type": "Robot",
+                    "key": "NT:/Robot/_robotContainer/_swerve/Robot Pose",
+                    "sourceTypeIndex": 1,
+                    "sourceType": "Pose2d"
+                  }
+                ]
+              ],
+              "options": {
+                "field": "2024 Field",
+                "alliance": "blue",
+                "robot": "Crab Bot",
+                "unitDistance": "meters",
+                "unitRotation": "radians"
+              },
+              "configHidden": false,
+              "visualizer": {
+                "cameraIndex": -2,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  2.1079880695758235,
+                  0.8134499396277007,
+                  -0.8415078335187315
+                ],
+                "cameraTarget": [
+                  0,
+                  0.5,
+                  0
+                ]
+              },
+              "title": "3D Field"
             }
           ]
         }
