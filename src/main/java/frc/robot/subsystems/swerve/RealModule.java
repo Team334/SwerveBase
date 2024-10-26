@@ -69,9 +69,9 @@ public class RealModule implements ModuleIO {
     FaultLogger.register(_turnMotor);
   }
 
-  /** Gives this io the name of its parent SwerveModule to use when displaying info. */
-  public void setName(String name) {
-    _name = name;
+  @Override
+  public void setName(String moduleName) {
+    _name = moduleName;
   }
 
   @Override

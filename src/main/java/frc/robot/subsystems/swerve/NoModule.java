@@ -11,6 +11,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 /** Dummy module that does nothing. */
 public class NoModule implements ModuleIO {
   @Override
+  public void setName(String moduleName) {}
+
+  @Override
   public double getVelocity() {
     return 0;
   }

@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.*;
 import frc.robot.Robot;
 
@@ -52,8 +53,15 @@ public class SimModule implements ModuleIO {
 
   private double _oldVelocity = 0;
 
+  private String _name = "";
+
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
+  }
+
+  @Override
+  public void setName(String moduleName) {
+    _name = moduleName;
   }
 
   @Override
@@ -102,9 +110,25 @@ public class SimModule implements ModuleIO {
     return new BaseStatusSignal[]{};
   }
 
+  // only used for testing sysid in sim
   @Override
-  public void setDriveVoltage(double volts) {}
+  public void setDriveVoltage(double volts) {
+    _driveMotor.setInputVoltage(volts);
+    _driveMotor.update(Robot.kDefaultPeriod);
 
+    SmartDashboard.putNumber(_name + " Drive Motor Voltage", volts);
+    SmartDashboard.putNumber(_name + " Drive Motor Position", getPosition());
+    SmartDashboard.putNumber(_name + " Drive Motor Velocity", getVelocity());
+  }
+
+  // only used for testing sysid in sim
   @Override
-  public void setTurnVoltage(double volts) {}
+  public void setTurnVoltage(double volts) {
+    _turnMotor.setInputVoltage(volts);
+    _turnMotor.update(Robot.kDefaultPeriod);
+
+    SmartDashboard.putNumber(_name + " Turn Motor Voltage", volts);
+    SmartDashboard.putNumber(_name + " Turn Motor Position", getAngle().getDegrees());
+    SmartDashboard.putNumber(_name + " Turn Motor Velocity", Math.toDegrees(_turnMotor.getAngularVelocityRadPerSec()));
+  }
 }

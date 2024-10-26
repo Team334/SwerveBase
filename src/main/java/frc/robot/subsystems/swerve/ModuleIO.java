@@ -6,6 +6,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.lib.subsystem.SelfChecked;
 
 public interface ModuleIO extends SelfChecked {
+  /** Give the distinct module name to the IO. */
+  public void setName(String moduleName);
+
   /** Returns the velocity of the drive wheel in m/s. */
   public double getVelocity();
 

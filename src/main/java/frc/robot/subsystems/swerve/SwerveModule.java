@@ -26,9 +26,10 @@ public class SwerveModule implements SelfChecked {
     _io = io;
     _name = name;
     
-    if (_io instanceof RealModule) ((RealModule) _io).setName(_name);
+    _io.setName(_name);
   }
 
+  /** The distinct name of this module based on where it is on the chassis. */
   public String getName() {
     return _name;
   }
