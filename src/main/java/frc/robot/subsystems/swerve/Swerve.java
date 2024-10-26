@@ -6,6 +6,8 @@ package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
@@ -99,7 +101,7 @@ public class Swerve extends AdvancedSubsystem {
 
   private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
   private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
-  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.magnitude());
+  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.in(RadiansPerSecond.per(Second)));
 
   // drive motor characterization
   private final SysIdRoutine _driveCharacterization;

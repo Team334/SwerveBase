@@ -1,7 +1,10 @@
 package frc.robot.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 
@@ -22,11 +25,11 @@ public class SimModule implements ModuleIO {
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
       ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI)
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
       )).magnitude(),
 
       ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude() / (2 * Math.PI) 
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI) 
       )).magnitude()
     ),
     DCMotor.getFalcon500(1),
@@ -48,8 +51,8 @@ public class SimModule implements ModuleIO {
     ModuleConstants.DRIVE_KA.magnitude()
   );
 
-  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.magnitude(), 0, 0);
-  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.magnitude(), 0, 0);
+  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerMeterPerSecond), 0, 0);
+  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Degree)), 0, 0);
 
   private double _oldVelocity = 0;
 
@@ -83,7 +86,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getVelocity() {
-    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters);
   }
 
 
@@ -102,7 +105,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getPosition() {
-    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.magnitude();
+    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters);
   }
 
   @Override
