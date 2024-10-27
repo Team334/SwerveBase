@@ -15,12 +15,18 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.*;
 import frc.robot.Robot;
 
 public class SimModule implements ModuleIO {
+  private static final String SIM_SYSID_LOG_PREFIX = null;
+
+  private String _name = "";
+
   private final DCMotorSim _driveMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
@@ -54,9 +60,16 @@ public class SimModule implements ModuleIO {
   private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerMeterPerSecond), 0, 0);
   private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Degree)), 0, 0);
 
-  private double _oldVelocity = 0;
+  // only used when testing sysid out in sim
+  private DoubleLogEntry _driveMotorVoltage;
+  private DoubleLogEntry _driveMotorVelocity;
+  private DoubleLogEntry _driveMotorPosition;
 
-  private String _name = "";
+  private DoubleLogEntry _turnMotorVoltage;
+  private DoubleLogEntry _turnMotorVelocity;
+  private DoubleLogEntry _turnMotorPosition;
+
+  private double _oldVelocity = 0;
 
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
@@ -65,6 +78,16 @@ public class SimModule implements ModuleIO {
   @Override
   public void setName(String moduleName) {
     _name = moduleName;
+
+    DataLog log = DataLogManager.getLog();
+
+    _driveMotorVoltage = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Voltage");
+    _driveMotorVelocity = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Velocity");
+    _driveMotorPosition = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Position");
+
+    _turnMotorVoltage = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Voltage");
+    _turnMotorVelocity = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Velocity");
+    _turnMotorPosition = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Position");
   }
 
   @Override
@@ -119,9 +142,9 @@ public class SimModule implements ModuleIO {
     _driveMotor.setInputVoltage(volts);
     _driveMotor.update(Robot.kDefaultPeriod);
 
-    SmartDashboard.putNumber(_name + " Drive Motor Voltage", volts);
-    SmartDashboard.putNumber(_name + " Drive Motor Position", getPosition());
-    SmartDashboard.putNumber(_name + " Drive Motor Velocity", getVelocity());
+    _driveMotorVoltage.append(volts);
+    _driveMotorVelocity.append(getVelocity());
+    _driveMotorPosition.append(getPosition());
   }
 
   // only used for testing sysid in sim
@@ -130,8 +153,8 @@ public class SimModule implements ModuleIO {
     _turnMotor.setInputVoltage(volts);
     _turnMotor.update(Robot.kDefaultPeriod);
 
-    SmartDashboard.putNumber(_name + " Turn Motor Voltage", volts);
-    SmartDashboard.putNumber(_name + " Turn Motor Position", getAngle().getDegrees());
-    SmartDashboard.putNumber(_name + " Turn Motor Velocity", Math.toDegrees(_turnMotor.getAngularVelocityRadPerSec()));
+    _turnMotorVoltage.append(volts);
+    _turnMotorVelocity.append(Math.toDegrees(_turnMotor.getAngularVelocityRadPerSec()));
+    _turnMotorPosition.append(getAngle().getDegrees());
   }
 }
