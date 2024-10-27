@@ -8,6 +8,8 @@ import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 
+import static frc.robot.Constants.SIM_SYSID_LOG_PREFIX;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -23,8 +25,6 @@ import frc.robot.Constants.*;
 import frc.robot.Robot;
 
 public class SimModule implements ModuleIO {
-  private static final String SIM_SYSID_LOG_PREFIX = null;
-
   private String _name = "";
 
   private final DCMotorSim _driveMotor = new DCMotorSim(
