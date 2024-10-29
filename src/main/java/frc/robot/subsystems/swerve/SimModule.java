@@ -24,6 +24,8 @@ import frc.robot.Robot;
 public class SimModule implements ModuleIO {
   private String _name = "";
 
+  private final String _sysIdLogPrefix = SIM_SYSID_LOG_PREFIX + "Swerve/";
+  
   private final DCMotorSim _driveMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
@@ -85,13 +87,13 @@ public class SimModule implements ModuleIO {
 
     DataLog log = DataLogManager.getLog();
 
-    _driveMotorVoltage = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Voltage");
-    _driveMotorVelocity = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Velocity");
-    _driveMotorPosition = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Drive Motor Position");
+    _driveMotorVoltage = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Drive Motor Voltage");
+    _driveMotorVelocity = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Drive Motor Velocity");
+    _driveMotorPosition = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Drive Motor Position");
 
-    _turnMotorVoltage = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Voltage");
-    _turnMotorVelocity = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Velocity");
-    _turnMotorPosition = new DoubleLogEntry(log, SIM_SYSID_LOG_PREFIX + _name + " Turn Motor Position");
+    _turnMotorVoltage = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Turn Motor Voltage");
+    _turnMotorVelocity = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Turn Motor Velocity");
+    _turnMotorPosition = new DoubleLogEntry(log, _sysIdLogPrefix + _name + " Turn Motor Position");
   }
 
   @Override
