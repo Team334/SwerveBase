@@ -1,10 +1,7 @@
 package frc.robot.subsystems.swerve;
 
-import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 
@@ -31,11 +28,11 @@ public class SimModule implements ModuleIO {
     LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
       ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI * ModuleConstants.DRIVE_GEARING)
       )).magnitude(),
 
       ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI) 
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI * ModuleConstants.DRIVE_GEARING) 
       )).magnitude()
     ),
     DCMotor.getFalcon500(1),
@@ -44,8 +41,8 @@ public class SimModule implements ModuleIO {
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
     LinearSystemId.createDCMotorSystem(
-      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond) * ModuleConstants.TURN_GEARING,
+      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared) * ModuleConstants.TURN_GEARING
     ),
     DCMotor.getFalcon500(1),
     ModuleConstants.TURN_GEARING
@@ -53,12 +50,12 @@ public class SimModule implements ModuleIO {
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
     0,
-    ModuleConstants.DRIVE_KV.magnitude(),
-    ModuleConstants.DRIVE_KA.magnitude()
+    0,
+    0
   );
 
-  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerMeterPerSecond), 0, 0);
-  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Degree)), 0, 0);
+  private final PIDController _drivePID = new PIDController(0, 0, 0);
+  private final PIDController _turnPID = new PIDController(0, 0, 0);
 
   // only used when testing sysid out in sim
   private DoubleLogEntry _driveMotorVoltage;
@@ -73,6 +70,13 @@ public class SimModule implements ModuleIO {
 
   public SimModule() {
     _turnPID.enableContinuousInput(-180, 180);
+
+    System.out.println(
+      ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI * ModuleConstants.DRIVE_GEARING) 
+      )).magnitude()
+    );
+
   }
 
   @Override
