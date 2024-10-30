@@ -117,7 +117,7 @@ public final class Constants {
     public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(.0066);
     public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(.0021);
 
-    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0);
+    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.1);
 
     public static final double TURN_GEARING = 150/7;
   }

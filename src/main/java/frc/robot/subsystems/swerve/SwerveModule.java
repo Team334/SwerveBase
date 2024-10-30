@@ -76,7 +76,6 @@ public class SwerveModule implements SelfChecked {
    */
   public void setModuleState(SwerveModuleState state, boolean isOpenLoop, boolean allowTurnInPlace) {
     _desiredState = SwerveModuleState.optimize(state, _io.getAngle());
-    _desiredState = state;
     // _desiredState.speedMetersPerSecond *= _desiredState.angle.minus(_io.getAngle()).getCos();
 
     if (_desiredState.speedMetersPerSecond == 0 && !allowTurnInPlace) {
