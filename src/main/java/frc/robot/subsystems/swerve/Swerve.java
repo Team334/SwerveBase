@@ -313,7 +313,7 @@ public class Swerve extends AdvancedSubsystem {
 
     // motor logging handled by signal logger
     _turnCharacterization = new SysIdRoutine(
-      new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(7), Seconds.of(4)),
+      new SysIdRoutine.Config(Volts.per(Seconds).of(0.6), Volts.of(7), Seconds.of(4)),
       new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setTurnVoltage(volts.in(Volts))), null, this)
     );
 
