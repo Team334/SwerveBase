@@ -3,13 +3,12 @@
     {
       "x": -8,
       "y": -8,
-      "width": 1536,
-      "height": 824,
+      "width": 1552,
+      "height": 840,
       "state": {
         "sidebar": {
-          "width": 300,
+          "width": 440,
           "expanded": [
-            "/Robot",
             "/Self Check/Swerve Faults",
             "/SmartDashboard/VisionSystemSim-main",
             "/SmartDashboard/VisionSystemSim-main/Sim Field",
@@ -17,11 +16,20 @@
             "/SmartDashboard/VisionSystemSim-main/Sim Field/visibleTargetPoses",
             "/Shuffleboard/.metadata",
             "/Shuffleboard/.recording",
-            "/Robot/_robotContainer"
+            "/Robot/_robotContainer",
+            "/Robot/_robotContainer/_swerve",
+            "/NT/Robot/_robotContainer",
+            "/NT/Robot/_robotContainer/_swerve",
+            "/SimSysId/Swerve",
+            "/Robot/_robotContainer/_swerve/Desired Module States/0",
+            "/NT/Robot",
+            "/NT/Robot/_robotContainer/_swerve/Desired Module States/0",
+            "/NT/Robot/_robotContainer/_swerve/Module States/0",
+            "/NT/Robot/_robotContainer/_swerve/Desired Module States"
           ]
         },
         "tabs": {
-          "selected": 1,
+          "selected": 4,
           "tabs": [
             {
               "type": 0,
@@ -115,9 +123,9 @@
                 "cameraIndex": -2,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  2.1079880695758235,
-                  0.8134499396277007,
-                  -0.8415078335187315
+                  -0.8666256622273967,
+                  0.7531938318450763,
+                  2.105909030581458
                 ],
                 "cameraTarget": [
                   0,
@@ -126,6 +134,27 @@
                 ]
               },
               "title": "3D Field"
+            },
+            {
+              "type": 8,
+              "uuid": "i8kbolwen4quwd25g6pl2mg1tys48rl4",
+              "fields": [],
+              "listFields": [],
+              "options": {
+                "ids": [
+                  0,
+                  1,
+                  2
+                ],
+                "layouts": [
+                  "Xbox Controller (Blue)",
+                  "None",
+                  "None"
+                ]
+              },
+              "configHidden": false,
+              "visualizer": null,
+              "title": "Joysticks"
             }
           ]
         }
