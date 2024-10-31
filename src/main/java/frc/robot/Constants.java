@@ -68,8 +68,8 @@ public final class Constants {
   public static class SwerveConstants {
     public static final double ODOM_FREQUENCY = 100;
 
-    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(5.03);
-    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(16);
+    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(4.98);
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(63.84);
     
     public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(0);
     public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.of(0).per(Second);
@@ -104,10 +104,10 @@ public final class Constants {
 
     // feedforward
     public static final Measure<Voltage> DRIVE_KS = Volts.of(0);
-    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KV = VoltsPerMeterPerSecond.of(2.386);
-    public static final Measure<Per<Voltage, Velocity<Velocity<Distance>>>> DRIVE_KA = VoltsPerMeterPerSecondSquared.of(0.75);
+    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KV = VoltsPerMeterPerSecond.of(2.4106);
+    public static final Measure<Per<Voltage, Velocity<Velocity<Distance>>>> DRIVE_KA = VoltsPerMeterPerSecondSquared.of(0.18796);
 
-    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KP = VoltsPerMeterPerSecond.of(5.2079);
+    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KP = VoltsPerMeterPerSecond.of(0.057644);
 
     public static final double DRIVE_GEARING = 6.75;
 
