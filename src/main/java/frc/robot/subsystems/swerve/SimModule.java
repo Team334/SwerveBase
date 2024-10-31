@@ -2,7 +2,12 @@ package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
+import static edu.wpi.first.units.Units.VoltsPerMeterPerSecondSquared;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 import static frc.robot.Constants.SIM_SYSID_LOG_PREFIX;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -11,6 +16,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -24,38 +30,36 @@ public class SimModule implements ModuleIO {
   private final String _sysIdLogPrefix = SIM_SYSID_LOG_PREFIX + "Swerve/";
   
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
-    //   // convert meters ff to radians ff
-    //   ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-    //     ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-    //   )).magnitude(),
+    LinearSystemId.createDCMotorSystem(
+      // convert meters ff to radians ff
+      ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
+      )).magnitude(),
 
-    //   ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-    //     ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-    //   )).magnitude()
-    // ),
+      ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
+      )).magnitude()
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.DRIVE_GEARING,
-    0.025
+    ModuleConstants.DRIVE_GEARING
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
-    //   ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-    //   ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
-    // ),
+    LinearSystemId.createDCMotorSystem(
+      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
+      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.TURN_GEARING,
-    0.004
+    ModuleConstants.TURN_GEARING
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
     0,
-    0,
-    0
+    ModuleConstants.DRIVE_KV.in(VoltsPerMeterPerSecond),
+    ModuleConstants.DRIVE_KA.in(VoltsPerMeterPerSecondSquared)
   );
 
-  private final PIDController _drivePID = new PIDController(0, 0, 0);
+  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerMeterPerSecond), 0, 0);
   private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Degree)), 0, 0);
 
   // only used when testing sysid out in sim

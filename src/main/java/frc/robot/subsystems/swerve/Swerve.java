@@ -307,13 +307,13 @@ public class Swerve extends AdvancedSubsystem {
 
     // motor logging handled by signal logger
     _driveCharacterization = new SysIdRoutine(
-      new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(4), Seconds.of(4)),
+      new SysIdRoutine.Config(Volts.per(Seconds).of(1.2), Volts.of(7), Seconds.of(4)),
       new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setDriveVoltage(volts.in(Volts))), null, this)
     );
 
     // motor logging handled by signal logger
     _turnCharacterization = new SysIdRoutine(
-      new SysIdRoutine.Config(Volts.per(Seconds).of(0.6), Volts.of(7), Seconds.of(4)),
+      new SysIdRoutine.Config(Volts.per(Seconds).of(1), Volts.of(7), Seconds.of(4)),
       new SysIdRoutine.Mechanism(volts -> _modules.forEach(m -> m.setTurnVoltage(volts.in(Volts))), null, this)
     );
 
@@ -337,7 +337,7 @@ public class Swerve extends AdvancedSubsystem {
   private Command buildRoutine(Command routine) {
     return sequence(
       runOnce(() -> _characterizing = true),
-      run(() -> _modules.forEach(m -> m.setDriveVoltage(0))).withTimeout(1),
+      run(() -> _modules.forEach(m -> m.setDriveVoltage(0))).withTimeout(2),
       routine,
       runOnce(() -> _characterizing = false)
     ).withName("SysId Routine");

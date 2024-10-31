@@ -107,17 +107,17 @@ public final class Constants {
     public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KV = VoltsPerMeterPerSecond.of(2.386);
     public static final Measure<Per<Voltage, Velocity<Velocity<Distance>>>> DRIVE_KA = VoltsPerMeterPerSecondSquared.of(0.75);
 
-    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KP = VoltsPerMeterPerSecond.of(0);
+    public static final Measure<Per<Voltage, Velocity<Distance>>> DRIVE_KP = VoltsPerMeterPerSecond.of(5.2079);
 
     public static final double DRIVE_GEARING = 6.75;
 
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
     // turn feedforward is only needed for sim
-    public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(.0066);
-    public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(.0021);
+    public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(0.0065451);
+    public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(0.000028);
 
-    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.1);
+    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.048795);
 
     public static final double TURN_GEARING = 150/7;
   }
