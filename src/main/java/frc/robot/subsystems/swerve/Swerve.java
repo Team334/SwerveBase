@@ -103,9 +103,9 @@ public class Swerve extends AdvancedSubsystem {
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
-  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
-  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond));
-  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.in(RadiansPerSecond.per(Second)));
+  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond) * 0.5);
+  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond) * 0.5);
+  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.in(RadiansPerSecond.per(Second)) * 0.5);
 
   // drive motor characterization
   private final SysIdRoutine _driveCharacterization;
@@ -143,7 +143,7 @@ public class Swerve extends AdvancedSubsystem {
   public boolean shouldLimitAccel = false;
 
   // select sim module type
-  private static boolean _usePerfectModules = true;
+  private static boolean _usePerfectModules = false;
 
   // choose the desired simulated module type
   private static ModuleIO getSimModule() {
@@ -259,7 +259,6 @@ public class Swerve extends AdvancedSubsystem {
       log("Module States", getModuleStates());
       log("Desired Module States", getDesiredModuleStates());
       log("Input Chassis Speeds", _inputChassisSpeeds);
-      log("FIELD BASED", ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading()));
       log("Chassis Speeds", getChassisSpeeds());
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());
