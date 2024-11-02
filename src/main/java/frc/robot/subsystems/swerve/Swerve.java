@@ -50,7 +50,11 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
 import frc.robot.subsystems.swerve.gyros.NavXGyro;
 import frc.robot.subsystems.swerve.gyros.NoGyro;
-import frc.robot.subsystems.swerve.gyros.SimGyro;
+import frc.robot.subsystems.swerve.modules.ModuleIO;
+import frc.robot.subsystems.swerve.modules.NoModule;
+import frc.robot.subsystems.swerve.modules.PerfectModule;
+import frc.robot.subsystems.swerve.modules.RealModule;
+import frc.robot.subsystems.swerve.modules.SimModule;
 import frc.robot.util.VisionPoseEstimator;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Annotations.Log;
@@ -114,7 +118,7 @@ public class Swerve extends AdvancedSubsystem {
    * the discretize timestep helped fix the problem which is doesn't make sense (the opposite should've helped),
    * so this might actually be a band-aid fix for something else and I should def test in real life with a timestep of 20ms
    */
-  private final double DISCRETIZE_TIMESTEP = RobotBase.isReal() ? Robot.kDefaultPeriod : 0.015;
+  private final double DISCRETIZE_TIMESTEP = RobotBase.isReal() ? Robot.kDefaultPeriod : 0.014;
 
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
@@ -138,6 +142,18 @@ public class Swerve extends AdvancedSubsystem {
   @Log.NT(key = "Should Limit Accel")
   public boolean shouldLimitAccel = false;
 
+  // select sim module type
+  private static boolean _usePerfectModules = true;
+
+  // choose the desired simulated module type
+  private static ModuleIO getSimModule() {
+    if (_usePerfectModules) {
+      return new PerfectModule();
+    }
+
+    return new SimModule();
+  }
+
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
     if (RobotBase.isReal()) {
@@ -150,11 +166,11 @@ public class Swerve extends AdvancedSubsystem {
       );
     } else {
       return new Swerve(
-        new SimModule(),
-        new SimModule(),
-        new SimModule(), 
-        new SimModule(),
-        new SimGyro()
+        getSimModule(),
+        getSimModule(),
+        getSimModule(),
+        getSimModule(),
+        new NoGyro()
       );
     }
   }
@@ -243,6 +259,7 @@ public class Swerve extends AdvancedSubsystem {
       log("Module States", getModuleStates());
       log("Desired Module States", getDesiredModuleStates());
       log("Input Chassis Speeds", _inputChassisSpeeds);
+      log("FIELD BASED", ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading()));
       log("Chassis Speeds", getChassisSpeeds());
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());

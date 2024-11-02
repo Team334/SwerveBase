@@ -13,6 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.SelfChecked;
+import frc.robot.subsystems.swerve.modules.ModuleIO;
 
 public class SwerveModule implements SelfChecked {
   private final String _name;

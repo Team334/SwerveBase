@@ -76,7 +76,7 @@ public final class Constants {
     );
 
     public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(4.98);
-    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(10);
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(63.84);
     
     public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(
       MAX_TRANSLATIONAL_SPEED.divide(DRIVE_RADIUS.in(Meters)).in(MetersPerSecond)

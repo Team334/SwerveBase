@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve;
+package frc.robot.subsystems.swerve.modules;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meters;
