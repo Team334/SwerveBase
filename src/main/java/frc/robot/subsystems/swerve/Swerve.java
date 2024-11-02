@@ -136,7 +136,7 @@ public class Swerve extends AdvancedSubsystem {
 
   /** Whether the acceleration should be limited when using requesting to drive the chassis. */
   @Log.NT(key = "Should Limit Accel")
-  public boolean shouldLimitAccel = true;
+  public boolean shouldLimitAccel = false;
 
   /** Creates a new Swerve subsystem based on whether the robot is real or sim. */
   public static Swerve create() {
@@ -369,6 +369,14 @@ public class Swerve extends AdvancedSubsystem {
     ));
     SmartDashboard.putData("Swerve Turn Dynamic Reverse", buildRoutine(
       _turnCharacterization.dynamic(Direction.kReverse)
+    ));
+
+    SmartDashboard.putData("Swerve Drive Motors Verify", buildRoutine(
+      run(() -> _modules.forEach(m -> m.setDriveVoltage(5))).withTimeout(5)
+    ));
+
+    SmartDashboard.putData("Swerve Turn Motors Verify", buildRoutine(
+      run(() -> _modules.forEach(m -> m.setTurnVoltage(5))).withTimeout(5)
     ));
   }
 

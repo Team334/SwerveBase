@@ -8,11 +8,13 @@
       "/SmartDashboard/Sim Vision Field": "Field2d",
       "/SmartDashboard/Swerve Drive Dynamic Forward": "Command",
       "/SmartDashboard/Swerve Drive Dynamic Reverse": "Command",
+      "/SmartDashboard/Swerve Drive Motors Verify": "Command",
       "/SmartDashboard/Swerve Drive Quasi-Static Forward": "Command",
       "/SmartDashboard/Swerve Drive Quasi-Static Reverse": "Command",
       "/SmartDashboard/Swerve Self-Check": "Command",
       "/SmartDashboard/Swerve Turn Dynamic Forward": "Command",
       "/SmartDashboard/Swerve Turn Dynamic Reverse": "Command",
+      "/SmartDashboard/Swerve Turn Motors Verify": "Command",
       "/SmartDashboard/Swerve Turn Quasi-Static Forward": "Command",
       "/SmartDashboard/Swerve Turn Quasi-Static Reverse": "Command",
       "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d"

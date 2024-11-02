@@ -68,15 +68,24 @@ public final class Constants {
   public static class SwerveConstants {
     public static final double ODOM_FREQUENCY = 100;
 
-    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(4.98);
-    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(63.84);
-    
-    public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(0);
-    public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.of(0).per(Second);
-
     public static final Measure<Distance> DRIVE_WIDTH = Meters.of(0.584);
     public static final Measure<Distance> DRIVE_LENGTH = Meters.of(0.584);
 
+    public static final Measure<Distance> DRIVE_RADIUS = Meters.of(
+      Math.sqrt(Math.pow(DRIVE_WIDTH.in(Meters), 2) + Math.pow(DRIVE_LENGTH.in(Meters), 2))
+    );
+
+    public static final Measure<Velocity<Distance>> MAX_TRANSLATIONAL_SPEED = MetersPerSecond.of(4.98);
+    public static final Measure<Velocity<Velocity<Distance>>> MAX_TRANSLATIONAL_ACCELERATION = MetersPerSecondPerSecond.of(10);
+    
+    public static final Measure<Velocity<Angle>> MAX_ANGULAR_SPEED = RadiansPerSecond.of(
+      MAX_TRANSLATIONAL_SPEED.divide(DRIVE_RADIUS.in(Meters)).in(MetersPerSecond)
+    );
+    
+    public static final Measure<Velocity<Velocity<Angle>>> MAX_ANGULAR_ACCELERATION = RadiansPerSecond.per(Second).of(
+      MAX_TRANSLATIONAL_ACCELERATION.divide(DRIVE_RADIUS.in(Meters)).in(MetersPerSecondPerSecond)
+    );
+    
     public static final Translation2d[] MODULE_POSITIONS = new Translation2d[]{
       new Translation2d(DRIVE_LENGTH.divide(2), DRIVE_WIDTH.divide(2)),
       new Translation2d(DRIVE_LENGTH.divide(2), DRIVE_WIDTH.divide(2).negate()),
@@ -117,7 +126,7 @@ public final class Constants {
     public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(0.0065451);
     public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(0.000028);
 
-    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.048795);
+    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.2);
 
     public static final double TURN_GEARING = 150/7;
   }
