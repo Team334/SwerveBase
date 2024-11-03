@@ -136,6 +136,7 @@ public class Swerve extends AdvancedSubsystem {
   public boolean shouldLimitAccel = false;
 
   // select sim module type
+  @Log.NT.Once(key = "Use Perfect Modules")
   private static boolean _usePerfectModules = false;
 
   // choose the desired simulated module type

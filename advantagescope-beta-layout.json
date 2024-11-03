@@ -7,14 +7,17 @@
       "height": 840,
       "state": {
         "sidebar": {
-          "width": 304,
+          "width": 353,
           "expanded": [
             "/Robot/_robotContainer",
-            "/Robot/_robotContainer/_swerve"
+            "/Robot/_robotContainer/_swerve",
+            "/Robot",
+            "/Robot/_robotContainer/_swerve/Desired Chassis Speeds",
+            "/Robot/_robotContainer/_swerve/Chassis Speeds"
           ]
         },
         "tabs": {
-          "selected": 1,
+          "selected": 3,
           "tabs": [
             {
               "type": 0,
@@ -53,8 +56,8 @@
                     "logType": "SwerveModuleState[]",
                     "visible": true,
                     "options": {
-                      "color": "#00ff00",
-                      "arrangement": "0,1,2,3"
+                      "color": "#ff0000",
+                      "arrangement": "0,1,3,2"
                     }
                   },
                   {
@@ -63,8 +66,8 @@
                     "logType": "SwerveModuleState[]",
                     "visible": true,
                     "options": {
-                      "color": "#ff8c00",
-                      "arrangement": "0,1,2,3"
+                      "color": "#0000ff",
+                      "arrangement": "0,1,3,2"
                     }
                   },
                   {
@@ -75,9 +78,9 @@
                     "options": {}
                   }
                 ],
-                "maxSpeed": 5,
-                "sizeX": 0.65,
-                "sizeY": 0.65,
+                "maxSpeed": 4.98,
+                "sizeX": 0.584,
+                "sizeY": 0.584,
                 "orientation": 1
               },
               "controllerUUID": "5kmohy1ltkyj1c32vd0ge63zwslwegsa",
@@ -101,7 +104,7 @@
                 "bumpers": "auto",
                 "origin": "blue",
                 "orientation": 0,
-                "size": 30
+                "size": 24
               },
               "controllerUUID": "oanomeahmj5hf1marpbclafmch8yux8u",
               "renderer": null,
@@ -130,9 +133,9 @@
                 "cameraIndex": -2,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -1.8223495809758217,
-                  0.8257588140056312,
-                  -1.3501567315741125
+                  -1.8172954783778263,
+                  1.0860635128061285,
+                  -1.2664780705661067
                 ],
                 "cameraTarget": [
                   0,
@@ -141,6 +144,21 @@
                 ]
               },
               "controlsHeight": 200
+            },
+            {
+              "type": 8,
+              "title": "Joysticks",
+              "controller": [
+                "PS4 Controller",
+                "None",
+                "None",
+                "None",
+                "None",
+                "None"
+              ],
+              "controllerUUID": "s3vp7leemrb77mygfcjryppm5q6zvct5",
+              "renderer": null,
+              "controlsHeight": 85
             }
           ]
         }
