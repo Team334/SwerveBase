@@ -110,7 +110,7 @@ public class Swerve extends AdvancedSubsystem {
     SwerveConstants.MODULE_POSITIONS,
     new ModuleLimits(
       SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond),
-      SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond),
+      SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.divide(3).in(MetersPerSecondPerSecond),
       ModuleConstants.MAX_TURN_SPEED.in(RadiansPerSecond)
     )
   );
@@ -139,7 +139,7 @@ public class Swerve extends AdvancedSubsystem {
 
   // select sim module type
   @Log.NT.Once(key = "Use Perfect Modules")
-  private static boolean _usePerfectModules = false;
+  private static boolean _usePerfectModules = true;
   
   // choose the desired simulated module type
   private static ModuleIO getSimModule() {
