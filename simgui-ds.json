@@ -29,7 +29,7 @@
           "decayRate": 0.5,
           "incKey": 263,
           "keyRate": 0.5,
-          "maxAbsValue": 0.30000001192092896
+          "maxAbsValue": 0.800000011920929
         }
       ],
       "axisCount": 3,

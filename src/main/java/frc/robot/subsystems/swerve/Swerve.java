@@ -4,9 +4,9 @@
 
 package frc.robot.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
@@ -22,7 +22,6 @@ import org.photonvision.simulation.VisionSystemSim;
 import com.ctre.phoenix6.BaseStatusSignal;
 
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -44,6 +43,7 @@ import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.AdvancedSubsystem;
 import frc.robot.Robot;
 import frc.robot.Constants.FieldConstants;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
@@ -54,7 +54,10 @@ import frc.robot.subsystems.swerve.modules.NoModule;
 import frc.robot.subsystems.swerve.modules.PerfectModule;
 import frc.robot.subsystems.swerve.modules.RealModule;
 import frc.robot.subsystems.swerve.modules.SimModule;
+import frc.robot.util.SwerveSetpointGenerator;
 import frc.robot.util.VisionPoseEstimator;
+import frc.robot.util.SwerveSetpointGenerator.ModuleLimits;
+import frc.robot.util.SwerveSetpointGenerator.SwerveSetpoint;
 import frc.robot.util.VisionPoseEstimator.VisionPoseEstimate;
 import monologue.Annotations.Log;
 
@@ -97,15 +100,22 @@ public class Swerve extends AdvancedSubsystem {
   private double _lastestVisionTimestamp = 0;
 
   private ChassisSpeeds _inputChassisSpeeds = new ChassisSpeeds();
-  private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
 
   private final List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
   private final List<Pose3d> _detectedTargets = new ArrayList<>(); // the detected targets since the last cam retrieval
 
-  private final SlewRateLimiter _xAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond) * 0.5);
-  private final SlewRateLimiter _yAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond) * 0.5);
-  private final SlewRateLimiter _omegaAccelLimiter = new SlewRateLimiter(SwerveConstants.MAX_ANGULAR_ACCELERATION.in(RadiansPerSecond.per(Second)) * 0.5);
+  // use the swerve setpoint generator instead of slew rate limiters for accel (this limits accel of each module individually)
+  private SwerveSetpointGenerator _setpointGenerator = new SwerveSetpointGenerator(
+    SwerveConstants.MODULE_POSITIONS,
+    new ModuleLimits(
+      SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond),
+      SwerveConstants.MAX_TRANSLATIONAL_ACCELERATION.in(MetersPerSecondPerSecond),
+      ModuleConstants.MAX_TURN_SPEED.in(RadiansPerSecond)
+    )
+  );
+
+  private SwerveSetpoint _prevSetpoint;
 
   // drive motor characterization
   private final SysIdRoutine _driveCharacterization;
@@ -123,22 +133,14 @@ public class Swerve extends AdvancedSubsystem {
   @Log.NT(key = "Is Open Loop")
   public boolean isOpenLoop = true;
 
-  /** Whether to allow the modules in the drive to turn in place. */
-  @Log.NT(key = "Allow Turn In Place")
-  public boolean allowTurnInPlace = false;
-
   /** Whether the swerve is driven field oriented or not. */
   @Log.NT(key = "Is Field Oriented")
   public boolean isFieldOriented = false;
 
-  /** Whether the acceleration should be limited when using requesting to drive the chassis. */
-  @Log.NT(key = "Should Limit Accel")
-  public boolean shouldLimitAccel = false;
-
   // select sim module type
   @Log.NT.Once(key = "Use Perfect Modules")
   private static boolean _usePerfectModules = false;
-
+  
   // choose the desired simulated module type
   private static ModuleIO getSimModule() {
     if (_usePerfectModules) {
@@ -253,7 +255,7 @@ public class Swerve extends AdvancedSubsystem {
       log("Module States", getModuleStates());
       log("Desired Module States", getDesiredModuleStates());
       log("Input Chassis Speeds", _inputChassisSpeeds);
-      log("Desired Chassis Speeds", _desiredChassisSpeeds);
+      log("Desired Chassis Speeds", _prevSetpoint.chassisSpeeds());
       log("Chassis Speeds", getChassisSpeeds());
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());
@@ -342,6 +344,8 @@ public class Swerve extends AdvancedSubsystem {
 
       _odomThread.start(); // use threading on rio only
     }
+
+    resetSetpointGenerator();
   }
 
   // wraps around drive sysid routines
@@ -408,8 +412,7 @@ public class Swerve extends AdvancedSubsystem {
       );
     }).beforeStarting(() -> {
       // reset the accel limiters since the command changed velocity
-      resetAccelLimiters();
-      allowTurnInPlace = false;
+      resetSetpointGenerator();
     }).withName("Drive");
   }
 
@@ -427,7 +430,6 @@ public class Swerve extends AdvancedSubsystem {
       });
     }).beforeStarting(() -> {
       _inputChassisSpeeds = new ChassisSpeeds();
-      allowTurnInPlace = true;
     }).withName("Brake");
   }
 
@@ -447,7 +449,7 @@ public class Swerve extends AdvancedSubsystem {
    * @param velOmega The rotational velocity in radians per second.
    */
   public void drive(double velX, double velY, double velOmega) {
-    // input speeds as a chassis object
+    // input speeds as a chassis speeds object
     _inputChassisSpeeds = new ChassisSpeeds(
       velX,
       velY,
@@ -455,10 +457,7 @@ public class Swerve extends AdvancedSubsystem {
     );
 
     // final desired speeds
-    ChassisSpeeds desiredChassisSpeeds;
-
-    // limit acceleration on input speeds if desired
-    desiredChassisSpeeds = (shouldLimitAccel) ? limitAccel(_inputChassisSpeeds) : _inputChassisSpeeds;
+    ChassisSpeeds desiredChassisSpeeds = _inputChassisSpeeds;
 
     if (isFieldOriented) {
       // turn desired speeds into robot-relative if needed
@@ -476,37 +475,20 @@ public class Swerve extends AdvancedSubsystem {
     SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED);
     desiredChassisSpeeds = _kinematics.toChassisSpeeds(moduleStates);
 
-    // discretize chassis speeds
-    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, Robot.kDefaultPeriod);
-    moduleStates = _kinematics.toSwerveModuleStates(desiredChassisSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED);
+    // use the setpoint generator to limit accel on the new setpoint
+    _prevSetpoint = _setpointGenerator.generateSetpoint(_prevSetpoint, desiredChassisSpeeds);
 
-    _desiredChassisSpeeds = _kinematics.toChassisSpeeds(moduleStates);
-
-    setModuleStates(moduleStates);
+    setModuleStates(_prevSetpoint.moduleStates());
   }
-
-  // limit the acceleration on the given chassis speeds
-  private ChassisSpeeds limitAccel(ChassisSpeeds speeds) {
-    return new ChassisSpeeds(
-      _xAccelLimiter.calculate(speeds.vxMetersPerSecond),
-      _yAccelLimiter.calculate(speeds.vyMetersPerSecond),
-      _omegaAccelLimiter.calculate(speeds.omegaRadiansPerSecond)
+  
+  private void resetSetpointGenerator() {
+    _prevSetpoint = new SwerveSetpoint(
+      getChassisSpeeds(),
+      getModuleStates(),
+      new double[4]
     );
   }
 
-  private void resetAccelLimiters() {
-    ChassisSpeeds resetSpeeds = getChassisSpeeds();
-
-    if (isFieldOriented) {
-      resetSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeeds(), getHeading());
-    }
-
-    _xAccelLimiter.reset(resetSpeeds.vxMetersPerSecond);
-    _yAccelLimiter.reset(resetSpeeds.vyMetersPerSecond);
-    _omegaAccelLimiter.reset(resetSpeeds.omegaRadiansPerSecond);
-  }
-  
   // updates all cached data (should only be called in odom thread)
   private void updateCached() {
     updateCachedRawHeading();
@@ -558,7 +540,7 @@ public class Swerve extends AdvancedSubsystem {
   /** Set all the module states (must be in correct order). */
   public void setModuleStates(SwerveModuleState[] states) {
     for (int i = 0; i < _modules.size(); i++) {
-      _modules.get(i).setModuleState(states[i], isOpenLoop, allowTurnInPlace);
+      _modules.get(i).setModuleState(states[i], isOpenLoop);
     }
   }
 

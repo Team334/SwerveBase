@@ -120,6 +120,8 @@ public final class Constants {
 
     public static final double DRIVE_GEARING = 6.75;
 
+    public static final Measure<Velocity<Angle>> MAX_TURN_SPEED = DegreesPerSecond.of(1833);
+
     public static final Measure<Distance> DRIVE_WHEEL_CIRCUMFERENCE = Meters.of(0.05 * 2 * Math.PI); 
   
     // turn feedforward is only needed for sim

@@ -73,16 +73,13 @@ public class SwerveModule implements SelfChecked {
    * 
    * @param state The target state.
    * @param isOpenLoop Whether the velocity of the state is met in an open loop (FF only) or closed loop manner (FF + PID).
-   * @param allowTurnInPlace If this is true, all rotation states will be ignored for velocities of 0.
    */
-  public void setModuleState(SwerveModuleState state, boolean isOpenLoop, boolean allowTurnInPlace) {
-    _desiredState = SwerveModuleState.optimize(state, _io.getAngle());
+  public void setModuleState(SwerveModuleState state, boolean isOpenLoop) {
+    // angle optimization handled by swerve setpoint generator
+    _desiredState = state;
+    
     // _desiredState.speedMetersPerSecond *= _desiredState.angle.minus(_io.getAngle()).getCos();
 
-    if (_desiredState.speedMetersPerSecond == 0 && !allowTurnInPlace) {
-      _desiredState.angle = getModuleState().angle;
-    }
-    
     _isOpenLoop = isOpenLoop;
   }
 
