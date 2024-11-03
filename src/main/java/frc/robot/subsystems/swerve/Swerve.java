@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems.swerve;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Second;
@@ -98,6 +97,7 @@ public class Swerve extends AdvancedSubsystem {
   private double _lastestVisionTimestamp = 0;
 
   private ChassisSpeeds _inputChassisSpeeds = new ChassisSpeeds();
+  private ChassisSpeeds _desiredChassisSpeeds = new ChassisSpeeds();
 
   private final List<VisionPoseEstimate> _acceptedEstimates = new ArrayList<VisionPoseEstimate>(); // the accepted estimates (max 2) since the last cam retrieval
   private final List<VisionPoseEstimate> _rejectedEstimates = new ArrayList<VisionPoseEstimate>(); // the rejected estimates (max 2) since the last cam retrieval
@@ -252,6 +252,7 @@ public class Swerve extends AdvancedSubsystem {
       log("Module States", getModuleStates());
       log("Desired Module States", getDesiredModuleStates());
       log("Input Chassis Speeds", _inputChassisSpeeds);
+      log("Desired Chassis Speeds", _desiredChassisSpeeds);
       log("Chassis Speeds", getChassisSpeeds());
       log("Module Positions", getModulePositions());
       log("Raw Heading", getRawHeading());
@@ -466,15 +467,22 @@ public class Swerve extends AdvancedSubsystem {
       );
     }
 
-    // modify desired chassis speeds to make them achievable based on each module's max speed
-    SwerveModuleState[] moduleStates = _kinematics.toSwerveModuleStates(desiredChassisSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
+    // desired module states
+    SwerveModuleState[] moduleStates;
+
+    // modify desired chassis speeds to make them achievable based on the module max drive speed
+    moduleStates = _kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED);
     desiredChassisSpeeds = _kinematics.toChassisSpeeds(moduleStates);
 
     // discretize chassis speeds
     desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, Robot.kDefaultPeriod);
+    moduleStates = _kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED);
 
-    setModuleStates(_kinematics.toSwerveModuleStates(desiredChassisSpeeds));
+    _desiredChassisSpeeds = _kinematics.toChassisSpeeds(moduleStates);
+
+    setModuleStates(moduleStates);
   }
 
   // limit the acceleration on the given chassis speeds
