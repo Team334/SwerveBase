@@ -113,13 +113,6 @@ public class Swerve extends AdvancedSubsystem {
   // turn motor characterization
   private final SysIdRoutine _turnCharacterization;
 
-  /**
-   * TODO: this doesn't really make sense, since in sim the average timestep is above 20ms, and decreasing 
-   * the discretize timestep helped fix the problem which is doesn't make sense (the opposite should've helped),
-   * so this might actually be a band-aid fix for something else and I should def test in real life with a timestep of 20ms
-   */
-  private final double DISCRETIZE_TIMESTEP = RobotBase.isReal() ? Robot.kDefaultPeriod : 0.014;
-
   // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
   // TODO: an odom demo thing
 
@@ -473,7 +466,13 @@ public class Swerve extends AdvancedSubsystem {
       );
     }
 
-    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, DISCRETIZE_TIMESTEP);
+    // modify desired chassis speeds to make them achievable based on each module's max speed
+    SwerveModuleState[] moduleStates = _kinematics.toSwerveModuleStates(desiredChassisSpeeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
+    desiredChassisSpeeds = _kinematics.toChassisSpeeds(moduleStates);
+
+    // discretize chassis speeds
+    desiredChassisSpeeds = ChassisSpeeds.discretize(desiredChassisSpeeds, Robot.kDefaultPeriod);
 
     setModuleStates(_kinematics.toSwerveModuleStates(desiredChassisSpeeds));
   }
@@ -549,8 +548,6 @@ public class Swerve extends AdvancedSubsystem {
 
   /** Set all the module states (must be in correct order). */
   public void setModuleStates(SwerveModuleState[] states) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(states, SwerveConstants.MAX_TRANSLATIONAL_SPEED.in(MetersPerSecond));
-
     for (int i = 0; i < _modules.size(); i++) {
       _modules.get(i).setModuleState(states[i], isOpenLoop, allowTurnInPlace);
     }

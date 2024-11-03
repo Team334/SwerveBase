@@ -36,7 +36,7 @@ import edu.wpi.first.math.numbers.N3;
  */
 public final class Constants {
   // TODO: tune all these values according to robot
-  public static final String SIM_SYSID_LOG_PREFIX = "SimSysId/";
+  public static final String SIM_SYSID_LOG_PREFIX = "Sim SysId/";
 
   public static class Ports {
     public static final int DRIVER_CONTROLLER = 0;
@@ -126,7 +126,7 @@ public final class Constants {
     public static final Measure<Per<Voltage, Velocity<Angle>>> TURN_KV = Volts.per(DegreesPerSecond).of(0.0065447);
     public static final Measure<Per<Voltage, Velocity<Velocity<Angle>>>> TURN_KA = Volts.per(DegreesPerSecond.per(Second)).of(0.0000020168);
 
-    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.2);
+    public static final Measure<Per<Voltage, Angle>> TURN_KP = Volts.per(Degrees).of(0.3);
 
     public static final double TURN_GEARING = 150/7;
   }
