@@ -75,19 +75,19 @@ public class RealModule implements ModuleIO {
 
   // device configurations
   private void configureDriveMotor() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
+    var config = new TalonFXConfiguration();
 
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, config);
   }
 
   private void configureTurnMotor() {
-    TalonFXConfiguration config = new TalonFXConfiguration();
+    var config = new TalonFXConfiguration();
 
     _turnMotorConfigError = CTREUtil.configure(_turnMotor, config);
   }
 
   private void configureTurnEncoder() {
-    CANcoderConfiguration config = new CANcoderConfiguration();
+    var config = new CANcoderConfiguration();
 
     _turnEncoderConfigError = CTREUtil.configure(_turnEncoder, config);
   }
