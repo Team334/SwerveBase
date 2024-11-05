@@ -14,6 +14,9 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import org.photonvision.PhotonCamera;
+
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 // (from team 1155 but slightly modified)
@@ -142,6 +145,36 @@ public final class FaultLogger {
    * @param talonFX The TalonFX.
    */
   public static void register(TalonFX talonFX) {
-    // TODO: add all necessary faults to check here
+    String name = CTREUtil.getName(talonFX);
+
+    register(() -> talonFX.getFault_Hardware().getValue(), name + ": Hardware Fault.", FaultType.ERROR);
+    register(() -> talonFX.getFault_BootDuringEnable().getValue(), name + ": Boot While Enabling.", FaultType.WARNING);
+    register(() -> talonFX.getFault_DeviceTemp().getValue(), name + ": Device Temperature Too High.", FaultType.WARNING);
+    register(() -> talonFX.getFault_ProcTemp().getValue(), name + ": Processor Temp Too High.", FaultType.WARNING);
+    register(() -> talonFX.getFault_Undervoltage().getValue(), name + ": Voltage Too Low, Check For Brownouts.", FaultType.WARNING);
+  }
+
+  /**
+   * Registers a new CANcoder.
+   * 
+   * @param cancoder The CANcoder.
+   */
+  public static void register(CANcoder cancoder) {
+    String name = CTREUtil.getName(cancoder);
+
+    register(() -> cancoder.getFault_Hardware().getValue(), name + ": Hardware Fault.", FaultType.ERROR);
+    register(() -> cancoder.getFault_BadMagnet().getValue(), name + ": Bad Magnet Signal.", FaultType.ERROR);
+    register(() -> cancoder.getFault_BootDuringEnable().getValue(), name + ": Boot While Enabling.", FaultType.WARNING);
+    register(() -> cancoder.getFault_Undervoltage().getValue(), name + ": Voltage Too Low, Check For Brownouts.", FaultType.WARNING);
+  }
+
+  /**
+   * Registers a new PhotonCamera. Detailed PhotonVision logs are located on the web UI, so this is just for very basic
+   * telemetry to have in a dashboard when testing.
+   * 
+   * @param photonCamera The PhotonCamera.
+   */
+  public static void register(PhotonCamera photonCamera) {
+    register(() -> !photonCamera.isConnected(), photonCamera + ": Disconnected.", FaultType.ERROR);
   }
 }

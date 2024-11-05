@@ -9,15 +9,25 @@
         "sidebar": {
           "width": 353,
           "expanded": [
-            "/Robot/_robotContainer",
             "/Robot/_robotContainer/_swerve",
             "/Robot",
-            "/Robot/_robotContainer/_swerve/Desired Chassis Speeds",
-            "/Robot/_robotContainer/_swerve/Chassis Speeds"
+            "/NT",
+            "/NT/Robot",
+            "/NT/Robot/_robotContainer",
+            "/NT/Robot/_robotContainer/_swerve",
+            "/NT/Robot/_robotContainer/_swerve/Desired Module States/0",
+            "/NT/Robot/_robotContainer/_swerve/Module States/0",
+            "/Robot/_robotContainer/_swerve/Module States/0",
+            "/Robot/_robotContainer/_swerve/Desired Module States/0",
+            "/NT/Robot/_robotContainer/_swerve/Robot Pose/translation",
+            "/Robot/_robotContainer/_swerve/Robot Pose/translation",
+            "/NT/Robot/_robotContainer/_swerve/Module States",
+            "/Robot/_robotContainer",
+            "/Robot/_robotContainer/_swerve/Robot Pose"
           ]
         },
         "tabs": {
-          "selected": 3,
+          "selected": 1,
           "tabs": [
             {
               "type": 0,
@@ -98,6 +108,36 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {}
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/_robotContainer/_swerve/Module States",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,3,2"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/_robotContainer/_swerve/Desired Module States",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,3,2"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "NT:/Robot/_robotContainer/_swerve/Detected Targets",
+                    "logType": "Pose3d[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
                   }
                 ],
                 "game": "2024 Field",
@@ -123,6 +163,26 @@
                     "options": {
                       "model": "Crab Bot"
                     }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/_robotContainer/_swerve/Module States",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,3,2"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "NT:/Robot/_robotContainer/_swerve/Desired Module States",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,3,2"
+                    }
                   }
                 ],
                 "game": "2024 Field",
@@ -130,12 +190,12 @@
               },
               "controllerUUID": "uwiiw3c8u3e2jy7ko7s25z6o1001w9x3",
               "renderer": {
-                "cameraIndex": -2,
+                "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -1.8172954783778263,
-                  1.0860635128061285,
-                  -1.2664780705661067
+                  9.55289619634752,
+                  5.522981178195961,
+                  -2.7010261993083953
                 ],
                 "cameraTarget": [
                   0,

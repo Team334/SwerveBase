@@ -8,6 +8,8 @@ import java.util.function.BooleanSupplier;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
@@ -40,7 +42,7 @@ public class RealModule implements ModuleIO {
 
   private boolean _driveMotorConfigError;
   private boolean _turnMotorConfigError;
-  
+  private boolean _turnEncoderConfigError;
 
   private double _oldVelocity = 0;
 
@@ -58,16 +60,38 @@ public class RealModule implements ModuleIO {
     _drivePosition = _driveMotor.getPosition();
     _drivePosition.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
-    // TODO: Add all motor configs here
-    _driveMotorConfigError = CTREUtil.configure(_driveMotor, null);
-    _turnMotorConfigError = CTREUtil.configure(_turnMotor, null);
+    // configure all devices
+    configureDriveMotor();
+    configureTurnMotor();
+    configureTurnEncoder();
 
     _driveVelocitySetter.withSlot(0);
     _turnPositionSetter.withSlot(0);
 
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);
+    FaultLogger.register(_turnEncoder);
   }
+
+  // device configurations
+  private void configureDriveMotor() {
+    TalonFXConfiguration config = new TalonFXConfiguration();
+
+    _driveMotorConfigError = CTREUtil.configure(_driveMotor, config);
+  }
+
+  private void configureTurnMotor() {
+    TalonFXConfiguration config = new TalonFXConfiguration();
+
+    _turnMotorConfigError = CTREUtil.configure(_turnMotor, config);
+  }
+
+  private void configureTurnEncoder() {
+    CANcoderConfiguration config = new CANcoderConfiguration();
+
+    _turnEncoderConfigError = CTREUtil.configure(_turnEncoder, config);
+  }
+
 
   @Override
   public void setName(String moduleName) {
@@ -137,20 +161,21 @@ public class RealModule implements ModuleIO {
         // check all crucial drive motor faults
         if (_driveMotorConfigError) faultAdder.accept(_name + ": Drive motor failed config, check total faults.", FaultType.ERROR);
         if (_driveMotor.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Drive motor hardware fault, switch device.", FaultType.ERROR);
-        if (_driveMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Drive motor boot during enable, check robot wiring.", FaultType.ERROR);
+        if (_driveMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Drive motor boot during enable, check robot wiring.", FaultType.WARNING);
       }),
 
       runOnce(() -> {
         // check all crucial turn motor faults
         if (_turnMotorConfigError) faultAdder.accept(_name + ": Turn motor failed config, check total faults.", FaultType.ERROR);
         if (_turnMotor.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Turn motor hardware fault, switch device.", FaultType.ERROR);
-        if (_turnMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn motor boot during enable, check robot wiring.", FaultType.ERROR);
+        if (_turnMotor.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn motor boot during enable, check robot wiring.", FaultType.WARNING);
       }),
 
       runOnce(() -> {
         // check all crucial turn encoder faults
+        if (_turnEncoderConfigError) faultAdder.accept(_name + ": Turn encoder failed config, check total faults.", FaultType.ERROR);
         if (_turnEncoder.getFault_Hardware().getValue()) faultAdder.accept(_name + ": Turn encoder hardware fault, switch device.", FaultType.ERROR);
-        if (_turnEncoder.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn encoder boot during enable, check robot wiring.", FaultType.ERROR);
+        if (_turnEncoder.getFault_BootDuringEnable().getValue()) faultAdder.accept(_name + ": Turn encoder boot during enable, check robot wiring.", FaultType.WARNING);
         if (_turnEncoder.getFault_BadMagnet().getValue()) faultAdder.accept(_name + ": Turn encoder bad magnet.", FaultType.ERROR);
       })
     );

@@ -21,6 +21,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.lib.FaultLogger;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
@@ -131,6 +132,8 @@ public class VisionPoseEstimator implements Logged {
     } else {
       _simCamera = null;
     }
+
+    FaultLogger.register(_camera);
   }
 
   /**
