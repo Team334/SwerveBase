@@ -2,9 +2,12 @@ package frc.robot.subsystems.swerve.modules;
 
 import static edu.wpi.first.units.Units.Degree;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerMeterPerSecondSquared;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 import static frc.robot.Constants.SIM_SYSID_LOG_PREFIX;
 
 import com.ctre.phoenix6.BaseStatusSignal;
@@ -13,6 +16,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -26,29 +30,29 @@ public class SimModule implements ModuleIO {
   private final String _sysIdLogPrefix = SIM_SYSID_LOG_PREFIX + "Swerve/";
   
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
+    LinearSystemId.createDCMotorSystem(
       // convert meters ff to radians ff
-    //   ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-    //     ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-    //   )).magnitude(),
+      ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
+      )).magnitude(),
 
-    //   ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-    //     ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-    //   )).magnitude()
-    // ),
+      ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
+        ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
+      )).magnitude()
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.DRIVE_GEARING,
-    0.025
+    ModuleConstants.DRIVE_GEARING
+    // 0.025
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
-    //   ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-    //   ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
-    // ),
+    LinearSystemId.createDCMotorSystem(
+      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
+      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.TURN_GEARING,
-    0.004
+    ModuleConstants.TURN_GEARING
+    // 0.004
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
@@ -95,7 +99,12 @@ public class SimModule implements ModuleIO {
     double outVolts;
 
     if (isOpenLoop) {
-      outVolts = _driveFF.calculate(velocity);
+      // NOTE!!!: In sim, the falcon 500 has a pretty low kT and therefore has trouble tracking velocities
+      // with just velocity feedforward, and needs the additional voltage coming from accel feedforward to increase acceleration
+      // and therefore improving velocity tracking, this may not be the case IRL.
+      outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
+
+      // outVolts = _driveFF.calculate(velocity); // poor tracking
     } else {  
       outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
       outVolts += _drivePID.calculate(getVelocity(), velocity);
@@ -109,7 +118,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getVelocity() {
-    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters);
+    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters);
   }
 
 
@@ -128,7 +137,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getPosition() {
-    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_WHEEL_CIRCUMFERENCE.in(Meters);
+    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters);
   }
 
   @Override

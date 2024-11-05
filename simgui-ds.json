@@ -26,9 +26,9 @@
         },
         {
           "decKey": 262,
-          "decayRate": 0.5,
+          "decayRate": 1.0,
           "incKey": 263,
-          "keyRate": 0.5
+          "keyRate": 1.0
         }
       ],
       "axisCount": 3,
