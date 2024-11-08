@@ -16,6 +16,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
@@ -44,7 +45,7 @@ public class RealModule implements ModuleIO {
   private boolean _turnMotorConfigError;
   private boolean _turnEncoderConfigError;
 
-  private double _oldVelocity = 0;
+  private double _oldRps = 0;
 
   public RealModule(int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
@@ -100,38 +101,42 @@ public class RealModule implements ModuleIO {
 
   @Override
   public void setVelocity(double velocity, boolean isOpenLoop) {
-    _driveVelocitySetter.withVelocity(velocity).withSlot(0);
+    // convert to rotations/second (this won't be needed in 2025)
+    double rps = Units.radiansToRotations(velocity);
 
-    if (!isOpenLoop) {
-      _driveVelocitySetter.withAcceleration((velocity - _oldVelocity) / Robot.kDefaultPeriod).withSlot(1);
+    if (isOpenLoop) {
+      _driveVelocitySetter.withVelocity(rps).withSlot(0);
+    } else {
+      // Note that this is incorrect due to a changing MOI, gonna use pathplanner 2025 torque-current instead
+      _driveVelocitySetter.withVelocity(rps).withAcceleration((rps - _oldRps) / Robot.kDefaultPeriod).withSlot(1);
     }
 
     _driveMotor.setControl(_driveVelocitySetter);
 
-    _oldVelocity = velocity;
+    _oldRps = rps;
   }
 
   @Override
   public double getVelocity() {
     // refreshed by odom thread
-    return _driveVelocity.getValue();
+    return Units.rotationsToRadians(_driveVelocity.getValue());
   }
 
   @Override
   public void setAngle(Rotation2d angle) {
-    _turnMotor.setControl(_turnPositionSetter.withPosition(angle.getDegrees()));
+    _turnMotor.setControl(_turnPositionSetter.withPosition(angle.getRotations()));
   }
 
   @Override
   public Rotation2d getAngle() {
     // refreshed by odom thread
-    return Rotation2d.fromDegrees(_turnAngle.getValue());
+    return Rotation2d.fromRotations(_turnAngle.getValue());
   }
 
   @Override
   public double getPosition() {
     // refreshed by odom thread
-    return _drivePosition.getValue();
+    return Units.rotationsToRadians(_drivePosition.getValue());
   }
 
   @Override
