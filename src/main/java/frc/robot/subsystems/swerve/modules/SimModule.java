@@ -1,11 +1,7 @@
 package frc.robot.subsystems.swerve.modules;
 
-import static edu.wpi.first.units.Units.Degree;
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.Radian;
 import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.VoltsPerMeterPerSecond;
-import static edu.wpi.first.units.Units.VoltsPerMeterPerSecondSquared;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
 import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 import static frc.robot.Constants.SIM_SYSID_LOG_PREFIX;
@@ -30,39 +26,33 @@ public class SimModule implements ModuleIO {
   private final String _sysIdLogPrefix = SIM_SYSID_LOG_PREFIX + "Swerve/";
   
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(
-      // convert meters ff to radians ff
-      ModuleConstants.DRIVE_KV.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-      )).magnitude(),
-
-      ModuleConstants.DRIVE_KA.times(Meters.per(Radians).of(
-        ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters) / (2 * Math.PI)
-      )).magnitude()
-    ),
+    // LinearSystemId.createDCMotorSystem(
+    //   ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond),
+    //   ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared)
+    // ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.DRIVE_GEARING
-    // 0.025
+    ModuleConstants.DRIVE_GEARING,
+    0.025
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    LinearSystemId.createDCMotorSystem(
-      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
-    ),
+    // LinearSystemId.createDCMotorSystem(
+    //   ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
+    //   ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+    // ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.TURN_GEARING
-    // 0.004
+    ModuleConstants.TURN_GEARING,
+    0.004
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
     0,
-    ModuleConstants.DRIVE_KV.in(VoltsPerMeterPerSecond),
-    ModuleConstants.DRIVE_KA.in(VoltsPerMeterPerSecondSquared)
+    ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond),
+    ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared)
   );
 
-  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerMeterPerSecond), 0, 0);
-  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Degree)), 0, 0);
+  private final PIDController _drivePID = new PIDController(ModuleConstants.DRIVE_KP.in(VoltsPerRadianPerSecond), 0, 0);
+  private final PIDController _turnPID = new PIDController(ModuleConstants.TURN_KP.in(Volts.per(Radian)), 0, 0);
 
   // only used when testing sysid out in sim
   private DoubleLogEntry _driveMotorVoltage;
@@ -118,13 +108,13 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getVelocity() {
-    return _driveMotor.getAngularVelocityRPM() / 60 * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters);
+    return _driveMotor.getAngularVelocityRadPerSec();
   }
 
 
   @Override
   public void setAngle(Rotation2d angle) {
-    double outVolts = _turnPID.calculate(getAngle().getDegrees(), angle.getDegrees());
+    double outVolts = _turnPID.calculate(getAngle().getRadians(), angle.getRadians());
 
     _turnMotor.setInputVoltage(outVolts);
     _turnMotor.update(Robot.kDefaultPeriod);
@@ -137,7 +127,7 @@ public class SimModule implements ModuleIO {
 
   @Override
   public double getPosition() {
-    return _driveMotor.getAngularPositionRotations() * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters);
+    return _driveMotor.getAngularPositionRad();
   }
 
   @Override
@@ -163,7 +153,7 @@ public class SimModule implements ModuleIO {
     _turnMotor.update(Robot.kDefaultPeriod);
 
     _turnMotorVoltage.append(volts);
-    _turnMotorVelocity.append(Math.toDegrees(_turnMotor.getAngularVelocityRadPerSec()));
-    _turnMotorPosition.append(getAngle().getDegrees());
+    _turnMotorVelocity.append(_turnMotor.getAngularVelocityRadPerSec());
+    _turnMotorPosition.append(getAngle().getRadians());
   }
 }

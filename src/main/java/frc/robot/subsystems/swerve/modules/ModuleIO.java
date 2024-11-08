@@ -9,13 +9,13 @@ public interface ModuleIO extends SelfChecked {
   /** Give the distinct module name to the IO. */
   public void setName(String moduleName);
 
-  /** Returns the velocity of the drive wheel in m/s. */
+  /** Returns the velocity of the drive wheel in rad/s. */
   public double getVelocity();
 
   /**
    * Sets the targets of the drive motor.
    * 
-   * @param velocity The target velocity in m/s.
+   * @param velocity The target velocity in rad/s.
    * @param isOpenLoop Whether the target velocity is to be meet through open loop control or not.
    */
   public void setVelocity(double velocity, boolean isOpenLoop);
@@ -27,7 +27,7 @@ public interface ModuleIO extends SelfChecked {
   public void setAngle(Rotation2d angle);
 
   /**
-   * Returns the drive motor position (distance traveled).
+   * Returns the drive motor position (radians turned).
   */
   public double getPosition();
 

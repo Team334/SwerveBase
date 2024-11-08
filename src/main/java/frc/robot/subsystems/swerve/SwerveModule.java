@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
 import java.util.function.BiConsumer;
@@ -10,9 +11,11 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.FaultsTable.FaultType;
 import frc.lib.subsystem.SelfChecked;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.subsystems.swerve.modules.ModuleIO;
 
 public class SwerveModule implements SelfChecked {
@@ -56,7 +59,10 @@ public class SwerveModule implements SelfChecked {
 
   /** Get the measured state of this module. */
   public SwerveModuleState getModuleState() {
-    return new SwerveModuleState(_io.getVelocity(), _io.getAngle());
+    return new SwerveModuleState(
+      Units.radiansToRotations(_io.getVelocity()) * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters), 
+      _io.getAngle()
+    );
   }
 
   /**
@@ -65,7 +71,10 @@ public class SwerveModule implements SelfChecked {
    * or enclosed in a lock shared by the odom thread.
    */
   public SwerveModulePosition getModulePosition() {
-    return new SwerveModulePosition(_io.getPosition(), _io.getAngle());
+    return new SwerveModulePosition(
+      Units.radiansToRotations(_io.getPosition()) * ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters), 
+      _io.getAngle()
+    );
   }
 
   /** 
@@ -89,9 +98,12 @@ public class SwerveModule implements SelfChecked {
     setAngle(_desiredState.angle);
   }
 
-  /** Set the target velocity and acceleration for this module. */
+  /** Set the target velocity and acceleration for this module in m/s. */
   public void setDrive(double velocity) {
-    _io.setVelocity(velocity, _isOpenLoop);
+    _io.setVelocity(
+      Units.rotationsToRadians(velocity / ModuleConstants.DRIVE_CIRCUMFERENCE.in(Meters)),
+      _isOpenLoop
+    );
   }
 
   /** Set the target angle for this module. */ 
