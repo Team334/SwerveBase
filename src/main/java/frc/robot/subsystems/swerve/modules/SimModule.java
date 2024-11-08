@@ -26,23 +26,23 @@ public class SimModule implements ModuleIO {
   private final String _sysIdLogPrefix = SIM_SYSID_LOG_PREFIX + "Swerve/";
   
   private final DCMotorSim _driveMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
-    //   ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond),
-    //   ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared)
-    // ),
+    LinearSystemId.createDCMotorSystem(
+      ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond),
+      ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared)
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.DRIVE_GEARING,
-    0.025
+    ModuleConstants.DRIVE_GEARING
+    // 0.025
   );
 
   private final DCMotorSim _turnMotor = new DCMotorSim(
-    // LinearSystemId.createDCMotorSystem(
-    //   ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
-    //   ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
-    // ),
+    LinearSystemId.createDCMotorSystem(
+      ModuleConstants.TURN_KV.in(VoltsPerRadianPerSecond),
+      ModuleConstants.TURN_KA.in(VoltsPerRadianPerSecondSquared)
+    ),
     DCMotor.getFalcon500(1),
-    ModuleConstants.TURN_GEARING,
-    0.004
+    ModuleConstants.TURN_GEARING
+    // 0.004
   );
 
   private final SimpleMotorFeedforward _driveFF = new SimpleMotorFeedforward(
@@ -66,7 +66,7 @@ public class SimModule implements ModuleIO {
   private double _oldVelocity = 0;
 
   public SimModule() {
-    _turnPID.enableContinuousInput(-180, 180);
+    _turnPID.enableContinuousInput(-Math.PI, Math.PI);
   }
 
   @Override
