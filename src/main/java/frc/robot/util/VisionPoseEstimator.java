@@ -99,6 +99,15 @@ public class VisionPoseEstimator implements Logged {
   }
 
   /**
+   * Builds an empty array of pose estimators. Use this if there are no cameras on the robot.
+   * 
+   * @return An empty array of pose estimators.
+   */
+  public static List<VisionPoseEstimator> noCameras() {
+    return new ArrayList<VisionPoseEstimator>();
+  }
+
+  /**
    * Creates a new VisionPoseEstimator (all params are members that are javadocced already).
    */
   public VisionPoseEstimator(

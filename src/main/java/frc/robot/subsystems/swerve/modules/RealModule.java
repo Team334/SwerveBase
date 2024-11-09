@@ -38,7 +38,6 @@ import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.lib.FaultsTable.FaultType;
 import frc.robot.Constants.ModuleConstants;
-import frc.robot.Constants.SwerveConstants;
 
 public class RealModule implements ModuleIO {
   private final TalonFX _driveMotor;
@@ -69,13 +68,8 @@ public class RealModule implements ModuleIO {
     _turnEncoder = new CANcoder(encoderId);
 
     _driveVelocity = _driveMotor.getVelocity();
-    _driveVelocity.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
-
     _turnAngle = _turnEncoder.getAbsolutePosition();
-    _turnAngle.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
-
     _drivePosition = _driveMotor.getPosition();
-    _drivePosition.setUpdateFrequency(SwerveConstants.ODOM_FREQUENCY);
 
     // configure all devices
     configureDriveMotor();

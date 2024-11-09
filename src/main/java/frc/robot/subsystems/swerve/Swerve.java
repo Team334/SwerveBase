@@ -387,16 +387,16 @@ public class Swerve extends AdvancedSubsystem {
     ));
 
     SmartDashboard.putData("Swerve Drive Motors Verify", buildRoutine(
-      run(() -> _modules.forEach(m -> m.setDriveVoltage(5))).withTimeout(5)
+      run(() -> _modules.forEach(m -> m.setDriveVoltage(3))).withTimeout(5)
     ));
 
     SmartDashboard.putData("Swerve Turn Motors Verify", buildRoutine(
-      run(() -> _modules.forEach(m -> m.setTurnVoltage(5))).withTimeout(5)
+      run(() -> _modules.forEach(m -> m.setTurnVoltage(3))).withTimeout(5)
     ));
   }
 
   /**
-   * Creates a new Command that drives the drive. The driving configuration is set with the {@link #shouldLimitAccel},
+   * Creates a new Command that drives the drive. The driving configuration is set with the
    * {@link #isFieldOriented}, {@link #isOpenLoop}, and {@link #allowTurnInPlace} members.
    * 
    * @param velX The x velocity in meters per second.
@@ -441,8 +441,8 @@ public class Swerve extends AdvancedSubsystem {
   }
 
   /** 
-   * Drives the swerve drive. The driving configuration is set with the {@link #shouldLimitAccel}, 
-   * {@link #isFieldOriented}, {@link #isOpenLoop}, and {@link #allowTurnInPlace} members.
+   * Drives the swerve drive. The driving configuration is set with the 
+   * {@link #isFieldOriented} and {@link #isOpenLoop} members.
    * 
    * @param velX The x velocity in meters per second. 
    * @param velY The y velocity in meters per second.
@@ -544,7 +544,6 @@ public class Swerve extends AdvancedSubsystem {
     }
   }
 
-
   // updates the pose estimator with potential vision estimates
   private void updateVisionPoseEstimates() {
     _acceptedEstimates.clear();
@@ -587,9 +586,11 @@ public class Swerve extends AdvancedSubsystem {
     if (_acceptedEstimates.size() == 0) return;
     _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
 
-    // _odomUpdateLock.lock();
-    // _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose().toPose2d(), e.timestamp(), e.stdDevs()));
-    // _odomUpdateLock.unlock();
+    if (RobotBase.isSimulation()) return;
+
+    _odomUpdateLock.lock();
+    _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose().toPose2d(), e.timestamp(), e.stdDevs()));
+    _odomUpdateLock.unlock();
   }
 
   @Override

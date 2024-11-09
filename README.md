@@ -34,7 +34,6 @@ Pose estimation is a combination of odometry and vision measurements. WPILib's `
 ## Todo
 (this is def not everything)
 ### Swerve Drive
-- Switch to built-in encoder on swerve drive modules, which is updated by abs encoder (this is needed to achieve 1kHz pid loop).
 - 6328 Wheel radius characterization.
 ### Vision
 - How to calibrate with mrcal/mrgringham by recording a video (check out team 1155 in their 2024 build thread).
