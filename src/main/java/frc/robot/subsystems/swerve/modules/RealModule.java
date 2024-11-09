@@ -1,8 +1,8 @@
 package frc.robot.subsystems.swerve.modules;
 
+import static edu.wpi.first.units.Units.RevolutionsPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
-import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
-import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
@@ -12,20 +12,26 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.lib.FaultsTable.FaultType;
-import frc.robot.Robot;
 import frc.robot.Constants.ModuleConstants;
 import frc.robot.Constants.SwerveConstants;
 
@@ -44,13 +50,13 @@ public class RealModule implements ModuleIO {
   private final VoltageOut _driveVoltageSetter = new VoltageOut(0);
   private final VoltageOut _turnVoltageSetter = new VoltageOut(0);
 
+  private final double _driveMotorResistance = DCMotor.getFalcon500(1).rOhms; 
+
   private String _name;
 
   private boolean _driveMotorConfigError;
   private boolean _turnMotorConfigError;
   private boolean _turnEncoderConfigError;
-
-  private double _oldRps = 0;
 
   public RealModule(int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
@@ -71,9 +77,6 @@ public class RealModule implements ModuleIO {
     configureTurnMotor();
     configureTurnEncoder();
 
-    _driveVelocitySetter.withSlot(0);
-    _turnPositionSetter.withSlot(0);
-
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);
     FaultLogger.register(_turnEncoder);
@@ -83,20 +86,62 @@ public class RealModule implements ModuleIO {
   private void configureDriveMotor() {
     var config = new TalonFXConfiguration();
 
+    // open-loop slot (0)
     var slot0Configs = new Slot0Configs();
-
     slot0Configs.kS = ModuleConstants.DRIVE_KS.in(Volts);
-    slot0Configs.kV = ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond);
-    slot0Configs.kA = ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared);
+    slot0Configs.kV = ModuleConstants.DRIVE_KV.in(Volts.per(RevolutionsPerSecond));
 
-    config.Slot0 = slot0Configs;
-    config.Feedback.SensorToMechanismRatio = 1 / ModuleConstants.DRIVE_GEARING;
+    // closed-loop slot (1)
+    var slot1Configs = new Slot1Configs();
+    slot1Configs.kS = ModuleConstants.DRIVE_KS.in(Volts);
+    slot1Configs.kV = ModuleConstants.DRIVE_KV.in(Volts.per(RevolutionsPerSecond));
+    slot1Configs.kP = ModuleConstants.DRIVE_KP.in(Volts.per(RevolutionsPerSecond));
+
+    var feedback = new FeedbackConfigs();
+    feedback.SensorToMechanismRatio = 1 / ModuleConstants.DRIVE_GEARING;
+
+    var motorOutput = new MotorOutputConfigs();
+    motorOutput.NeutralMode = NeutralModeValue.Coast;
+
+    // TODO
+    var currentLimits = new CurrentLimitsConfigs();
+    currentLimits.StatorCurrentLimit = 0;
+    currentLimits.SupplyCurrentLimit = 0;
+    currentLimits.StatorCurrentLimitEnable = true;
+    currentLimits.SupplyCurrentLimitEnable = true;
+
+    config.withSlot0(slot0Configs)
+          .withSlot1(slot1Configs)
+          .withFeedback(feedback)
+          .withMotorOutput(motorOutput)
+          .withCurrentLimits(currentLimits);
 
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, config);
   }
 
   private void configureTurnMotor() {
     var config = new TalonFXConfiguration();
+
+    // closed-loop slot (0)
+    var slot0Configs = new Slot0Configs();
+    slot0Configs.kP = ModuleConstants.TURN_KP.in(Volts.per(Rotations));
+
+    var feedback = new FeedbackConfigs();
+
+    var motorOutput = new MotorOutputConfigs();
+    motorOutput.NeutralMode = NeutralModeValue.Brake;
+
+    // TODO
+    var currentLimits = new CurrentLimitsConfigs();
+    currentLimits.StatorCurrentLimit = 0;
+    currentLimits.SupplyCurrentLimit = 0;
+    currentLimits.StatorCurrentLimitEnable = true;
+    currentLimits.SupplyCurrentLimitEnable = true;
+
+    config.withSlot0(slot0Configs)
+          .withFeedback(feedback)
+          .withMotorOutput(motorOutput)
+          .withCurrentLimits(currentLimits);
 
     _turnMotorConfigError = CTREUtil.configure(_turnMotor, config);
   }
@@ -121,13 +166,11 @@ public class RealModule implements ModuleIO {
     if (isOpenLoop) {
       _driveVelocitySetter.withVelocity(rps).withSlot(0);
     } else {
-      // Note that this is incorrect due to a changing MOI, gonna use pathplanner 2025 torque-current instead
-      _driveVelocitySetter.withVelocity(rps).withAcceleration((rps - _oldRps) / Robot.kDefaultPeriod).withSlot(1);
+      // gonna use pathplanner 2025 torque-current
+      _driveVelocitySetter.withVelocity(rps).withFeedForward(0 * _driveMotorResistance).withSlot(1);
     }
 
     _driveMotor.setControl(_driveVelocitySetter);
-
-    _oldRps = rps;
   }
 
   @Override
