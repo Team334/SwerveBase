@@ -222,7 +222,10 @@ public class RealModule implements ModuleIO {
   @Override
   public double getPosition() {
     // refreshed by odom thread
-    return Units.rotationsToRadians(_drivePosition.getValue());
+    return Units.rotationsToRadians(BaseStatusSignal.getLatencyCompensatedValue(
+      _drivePosition,
+      _driveVelocity
+    ));
   }
 
   @Override
