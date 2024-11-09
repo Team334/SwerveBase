@@ -1,5 +1,8 @@
 package frc.robot.subsystems.swerve.modules;
 
+import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 
@@ -9,6 +12,7 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -22,6 +26,7 @@ import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.lib.FaultsTable.FaultType;
 import frc.robot.Robot;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.Constants.SwerveConstants;
 
 public class RealModule implements ModuleIO {
@@ -77,6 +82,15 @@ public class RealModule implements ModuleIO {
   // device configurations
   private void configureDriveMotor() {
     var config = new TalonFXConfiguration();
+
+    var slot0Configs = new Slot0Configs();
+
+    slot0Configs.kS = ModuleConstants.DRIVE_KS.in(Volts);
+    slot0Configs.kV = ModuleConstants.DRIVE_KV.in(VoltsPerRadianPerSecond);
+    slot0Configs.kA = ModuleConstants.DRIVE_KA.in(VoltsPerRadianPerSecondSquared);
+
+    config.Slot0 = slot0Configs;
+    config.Feedback.SensorToMechanismRatio = 1 / ModuleConstants.DRIVE_GEARING;
 
     _driveMotorConfigError = CTREUtil.configure(_driveMotor, config);
   }
