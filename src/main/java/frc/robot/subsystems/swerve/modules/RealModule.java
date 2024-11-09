@@ -12,8 +12,10 @@ import java.util.function.BooleanSupplier;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.ClosedLoopGeneralConfigs;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.Slot1Configs;
@@ -23,7 +25,10 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -98,7 +103,8 @@ public class RealModule implements ModuleIO {
     slot1Configs.kP = ModuleConstants.DRIVE_KP.in(Volts.per(RevolutionsPerSecond));
 
     var feedback = new FeedbackConfigs();
-    feedback.SensorToMechanismRatio = 1 / ModuleConstants.DRIVE_GEARING;
+    feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RotorSensor;
+    feedback.SensorToMechanismRatio = ModuleConstants.DRIVE_GEARING;
 
     var motorOutput = new MotorOutputConfigs();
     motorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -127,27 +133,38 @@ public class RealModule implements ModuleIO {
     slot0Configs.kP = ModuleConstants.TURN_KP.in(Volts.per(Rotations));
 
     var feedback = new FeedbackConfigs();
+    feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+    feedback.FeedbackRemoteSensorID = _turnEncoder.getDeviceID();
+
+    var closedLoopGeneral = new ClosedLoopGeneralConfigs();
+    closedLoopGeneral.ContinuousWrap = true;
 
     var motorOutput = new MotorOutputConfigs();
     motorOutput.NeutralMode = NeutralModeValue.Brake;
 
     // TODO
     var currentLimits = new CurrentLimitsConfigs();
-    currentLimits.StatorCurrentLimit = 0;
     currentLimits.SupplyCurrentLimit = 0;
-    currentLimits.StatorCurrentLimitEnable = true;
     currentLimits.SupplyCurrentLimitEnable = true;
 
     config.withSlot0(slot0Configs)
           .withFeedback(feedback)
           .withMotorOutput(motorOutput)
-          .withCurrentLimits(currentLimits);
+          .withCurrentLimits(currentLimits)
+          .withClosedLoopGeneral(closedLoopGeneral);
 
     _turnMotorConfigError = CTREUtil.configure(_turnMotor, config);
   }
 
   private void configureTurnEncoder() {
     var config = new CANcoderConfiguration();
+
+    var magnetSensor = new MagnetSensorConfigs(); 
+    _turnEncoder.getConfigurator().refresh(magnetSensor); // refresh with enc offset that was set in tuner x
+    magnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+    magnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+
+    config.withMagnetSensor(magnetSensor);
 
     _turnEncoderConfigError = CTREUtil.configure(_turnEncoder, config);
   }
