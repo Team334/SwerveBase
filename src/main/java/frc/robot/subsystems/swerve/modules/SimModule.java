@@ -89,14 +89,16 @@ public class SimModule implements ModuleIO {
     double outVolts;
 
     if (isOpenLoop) {
-      // NOTE!!!: In sim, the falcon 500 has a pretty low kT and therefore has trouble tracking velocities
-      // with just velocity feedforward, and needs the additional voltage coming from accel feedforward to increase acceleration
-      // and therefore improving velocity tracking, this may not be the case IRL.
-      outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
+      // NOTE!!!: In sim, the falcon 500 input current -> output torque conversion is small so more voltage is necessary across
+      // the windings and that's why the acceleration feedforward is used.
+      // Also, acceleration cannot be calculated as just (vel-oldVel) / .02s, because acceleration isn't constant in the timestep 
+      // (it decreases as velocity increases), so this method of the simple motor feedforward will calculate the correct acceleration
+      // setpoint to reach vel in dt (this is similar to chassis speeds discretize)
+      outVolts = _driveFF.calculate(_oldVelocity, velocity, Robot.kDefaultPeriod);
 
       // outVolts = _driveFF.calculate(velocity); // poor tracking
     } else {  
-      outVolts = _driveFF.calculate(velocity, (velocity - _oldVelocity) / Robot.kDefaultPeriod);
+      outVolts = _driveFF.calculate(_oldVelocity, velocity, Robot.kDefaultPeriod);
       outVolts += _drivePID.calculate(getVelocity(), velocity);
     }
 
