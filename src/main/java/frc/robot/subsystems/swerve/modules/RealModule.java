@@ -1,5 +1,6 @@
 package frc.robot.subsystems.swerve.modules;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.RevolutionsPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
@@ -59,9 +60,9 @@ public class RealModule implements ModuleIO {
 
   private String _name;
 
-  private boolean _driveMotorConfigError;
-  private boolean _turnMotorConfigError;
-  private boolean _turnEncoderConfigError;
+  private boolean _driveMotorConfigError = false;
+  private boolean _turnMotorConfigError = false;
+  private boolean _turnEncoderConfigError = false;
 
   public RealModule(int driveMotorId, int turnMotorId, int encoderId) {
     _driveMotor = new TalonFX(driveMotorId);
@@ -85,6 +86,10 @@ public class RealModule implements ModuleIO {
     configureDriveMotor();
     configureTurnMotor();
     configureTurnEncoder();
+
+    _driveMotorConfigError |= CTREUtil.attempt(() -> _driveMotor.optimizeBusUtilization(), _driveMotor);
+    _turnMotorConfigError |= CTREUtil.attempt(() -> _turnMotor.optimizeBusUtilization(), _turnMotor);
+    _turnEncoderConfigError |= CTREUtil.attempt(() -> _turnEncoder.optimizeBusUtilization(), _turnEncoder);
 
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);
@@ -115,8 +120,8 @@ public class RealModule implements ModuleIO {
 
     // TODO
     var currentLimits = new CurrentLimitsConfigs();
-    currentLimits.StatorCurrentLimit = 0;
-    currentLimits.SupplyCurrentLimit = 0;
+    currentLimits.StatorCurrentLimit = ModuleConstants.DRIVE_STATOR_CURRENT_LIMIT.in(Amps);
+    currentLimits.SupplyCurrentLimit = ModuleConstants.SUPPLY_CURRENT_LIMIT.in(Amps);
     currentLimits.StatorCurrentLimitEnable = true;
     currentLimits.SupplyCurrentLimitEnable = true;
 
@@ -126,7 +131,7 @@ public class RealModule implements ModuleIO {
           .withMotorOutput(motorOutput)
           .withCurrentLimits(currentLimits);
 
-    _driveMotorConfigError = CTREUtil.attempt(() -> _driveMotor.getConfigurator().apply(config), _driveMotor);
+    _driveMotorConfigError |= CTREUtil.attempt(() -> _driveMotor.getConfigurator().apply(config), _driveMotor);
   }
 
   private void configureTurnMotor() {
@@ -157,7 +162,7 @@ public class RealModule implements ModuleIO {
           .withCurrentLimits(currentLimits)
           .withClosedLoopGeneral(closedLoopGeneral);
 
-    _turnMotorConfigError = CTREUtil.attempt(() -> _turnMotor.getConfigurator().apply(config), _turnMotor);
+    _turnMotorConfigError |= CTREUtil.attempt(() -> _turnMotor.getConfigurator().apply(config), _turnMotor);
   }
 
   private void configureTurnEncoder() {
@@ -166,14 +171,14 @@ public class RealModule implements ModuleIO {
     var magnetSensor = new MagnetSensorConfigs(); 
     
     // refresh with enc offset that was set in tuner x
-    _turnEncoderConfigError = CTREUtil.attempt(() -> _turnEncoder.getConfigurator().refresh(magnetSensor), _turnEncoder);
+    _turnEncoderConfigError |= CTREUtil.attempt(() -> _turnEncoder.getConfigurator().refresh(magnetSensor), _turnEncoder);
     
     magnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
     magnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
     config.withMagnetSensor(magnetSensor);
 
-    _turnEncoderConfigError = _turnEncoderConfigError || CTREUtil.attempt(() -> _turnEncoder.getConfigurator().apply(config), _turnEncoder);
+    _turnEncoderConfigError |= CTREUtil.attempt(() -> _turnEncoder.getConfigurator().apply(config), _turnEncoder);
   }
 
 

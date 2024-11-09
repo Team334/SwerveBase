@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.units.Angle;
+import edu.wpi.first.units.Current;
 import edu.wpi.first.units.Distance;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Per;
@@ -115,6 +116,9 @@ public final class Constants {
     public static final int BACK_LEFT_TURN_ID = 0;
     public static final int BACK_LEFT_ENCODER_ID = 0; 
 
+    public static final Measure<Current> DRIVE_STATOR_CURRENT_LIMIT = Amps.of(60);
+    public static final Measure<Current> SUPPLY_CURRENT_LIMIT = Amps.of(30);
+    
     // feedforward
     public static final Measure<Voltage> DRIVE_KS = Volts.of(0);
     public static final Measure<Per<Voltage, Velocity<Angle>>> DRIVE_KV = VoltsPerRadianPerSecond.of(0.12053);
