@@ -42,6 +42,10 @@ public final class Constants {
     public static final int DRIVER_CONTROLLER = 0;
   }
 
+  public static class CAN {
+    public static final boolean REDUCE_CONTROL_LATENCY = true;
+  }
+
   public static final class VisionConstants {
     public static final Vector<N3> SINGLE_TAG_BASE_STDDEVS = VecBuilder.fill(5, 5, 5);
     public static final Vector<N3> MULTI_TAG_BASE_STDDEVS = VecBuilder.fill(1, 1, 1);

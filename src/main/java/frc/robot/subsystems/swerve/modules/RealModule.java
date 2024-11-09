@@ -37,6 +37,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.CTREUtil;
 import frc.lib.FaultLogger;
 import frc.lib.FaultsTable.FaultType;
+import frc.robot.Constants.CAN;
 import frc.robot.Constants.ModuleConstants;
 
 public class RealModule implements ModuleIO {
@@ -70,6 +71,15 @@ public class RealModule implements ModuleIO {
     _driveVelocity = _driveMotor.getVelocity();
     _turnAngle = _turnEncoder.getAbsolutePosition();
     _drivePosition = _driveMotor.getPosition();
+
+    if (CAN.REDUCE_CONTROL_LATENCY) {
+      // stops the control requests from being sent periodically, this will reduce control request latency
+      // but it's risky because if the time between the last setControl call is >20ms the motors will disable
+      _driveVelocitySetter.withUpdateFreqHz(0);
+      _turnPositionSetter.withUpdateFreqHz(0);
+      _driveVoltageSetter.withUpdateFreqHz(0);
+      _turnVoltageSetter.withUpdateFreqHz(0);
+    }
 
     // configure all devices
     configureDriveMotor();
@@ -116,7 +126,7 @@ public class RealModule implements ModuleIO {
           .withMotorOutput(motorOutput)
           .withCurrentLimits(currentLimits);
 
-    _driveMotorConfigError = CTREUtil.configure(_driveMotor, config);
+    _driveMotorConfigError = CTREUtil.attempt(() -> _driveMotor.getConfigurator().apply(config), _driveMotor);
   }
 
   private void configureTurnMotor() {
@@ -147,20 +157,23 @@ public class RealModule implements ModuleIO {
           .withCurrentLimits(currentLimits)
           .withClosedLoopGeneral(closedLoopGeneral);
 
-    _turnMotorConfigError = CTREUtil.configure(_turnMotor, config);
+    _turnMotorConfigError = CTREUtil.attempt(() -> _turnMotor.getConfigurator().apply(config), _turnMotor);
   }
 
   private void configureTurnEncoder() {
     var config = new CANcoderConfiguration();
 
     var magnetSensor = new MagnetSensorConfigs(); 
-    _turnEncoder.getConfigurator().refresh(magnetSensor); // refresh with enc offset that was set in tuner x
+    
+    // refresh with enc offset that was set in tuner x
+    _turnEncoderConfigError = CTREUtil.attempt(() -> _turnEncoder.getConfigurator().refresh(magnetSensor), _turnEncoder);
+    
     magnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
     magnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
     config.withMagnetSensor(magnetSensor);
 
-    _turnEncoderConfigError = CTREUtil.configure(_turnEncoder, config);
+    _turnEncoderConfigError = _turnEncoderConfigError || CTREUtil.attempt(() -> _turnEncoder.getConfigurator().apply(config), _turnEncoder);
   }
 
 

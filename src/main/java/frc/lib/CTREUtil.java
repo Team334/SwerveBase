@@ -1,10 +1,8 @@
 package frc.lib;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.CANcoderConfigurator;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -15,74 +13,63 @@ import frc.lib.FaultsTable.FaultType;
  */
 public class CTREUtil {
   /**
-   * Attempts to configure a TalonFX. If config fails after multiple attempts, an error is reported to the fault logger.
+   * Attempts to perform an action on a generic CTRE device. If the action returns a status code that is not OK, the 
+   * action is re-attempted up to 5 times. If it fails after 5 attempts the status code is displayed in the fault logger.
    * 
-   * @param talonFX The TalonFX to configure.
-   * @param config The config to apply on the TalonFX.
+   * @param action The action to perform (returns a StatusCode).
+   * @param deviceName The name of the device for the fault logger.
    * 
-   * @return True if the configuration fails.
+   * @return True if the attempt failed, False otherwise.
    */
-  public static boolean configure(TalonFX talonFX, TalonFXConfiguration config) {
-    TalonFXConfigurator configurator = talonFX.getConfigurator();
-
+  public static boolean attempt(Supplier<StatusCode> action, String deviceName) {
     StatusCode statusCode = StatusCode.OK;
 
     for (int i = 0; i < 5; i++) {
-      // attempts to apply the config to the talonfx, waits up to 50ms until the config is applied
-      statusCode = configurator.apply(config);
+      // performs the action
+      statusCode = action.get();
 
       if (statusCode.isOK()) {
         break;
       }
     }
 
-    String name = getName(talonFX);
-
+    // successful attempt
     if (statusCode.isOK()) {
-      FaultLogger.report(name + ": Config Apply Successful.", FaultType.INFO);
+      FaultLogger.report(deviceName + ": Config Apply Successful.", FaultType.INFO);
       return false;
     } 
     
+    // failed attempt
     else {
-      FaultLogger.report(name + ": Config Apply Failed: " + statusCode.getDescription(), FaultType.ERROR);
+      FaultLogger.report(deviceName + ": Config Apply Failed: " + statusCode.getDescription(), FaultType.ERROR);
       return true;
     }
   }
 
+  /**
+   * Attempts to perform an action on a TalonFX. If the action returns a status code that is not OK, the 
+   * action is re-attempted up to 5 times. If it fails after 5 attempts the status code is displayed in the fault logger.
+   * 
+   * @param action The action to perform (returns a StatusCode).
+   * @param talonFX The TalonFX for the fault logger.
+   * 
+   * @return True if the attempt failed, False otherwise.
+   */
+  public static boolean attempt(Supplier<StatusCode> action, TalonFX talonFX) {
+    return attempt(action, getName(talonFX));
+  }
 
   /**
-   * Attempts to configure a CANcoder. If config fails after multiple attempts, an error is reported to the fault logger.
+   * Attempts to perform an action on a CANCoder. If the action returns a status code that is not OK, the 
+   * action is re-attempted up to 5 times. If it fails after 5 attempts the status code is displayed in the fault logger.
    * 
-   * @param cancoder The CANcoder to configure.
-   * @param config The config to apply on the CANcoder.
+   * @param action The action to perform (returns a StatusCode).
+   * @param cancoder The cancoder for the fault logger.
    * 
-   * @return True if the configuration fails.
+   * @return True if the attempt failed, False otherwise.
    */
-  public static boolean configure(CANcoder cancoder, CANcoderConfiguration config) {
-    CANcoderConfigurator configurator = cancoder.getConfigurator();
-
-    StatusCode statusCode = StatusCode.OK;
-
-    for (int i = 0; i < 5; i++) {
-      // attempts to apply the config to the cancoder, waits up to 50ms until the config is applied
-      statusCode = configurator.apply(config);
-
-      if (statusCode.isOK()) {
-        break;
-      }
-    }
-
-    String name = getName(cancoder);
-
-    if (statusCode.isOK()) {
-      FaultLogger.report(name + ": Config Apply Successful.", FaultType.INFO);
-      return false;
-    } 
-    
-    else {
-      FaultLogger.report(name + ": Config Apply Failed: " + statusCode.getDescription(), FaultType.ERROR);
-      return true;
-    }
+  public static boolean attempt(Supplier<StatusCode> action, CANcoder cancoder) {
+    return attempt(action, getName(cancoder));
   }
 
   /** 
