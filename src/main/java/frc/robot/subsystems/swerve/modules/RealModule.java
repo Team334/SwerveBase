@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
+import static frc.robot.Constants.SwerveConstants.ODOM_FREQUENCY;
 
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
@@ -87,9 +88,14 @@ public class RealModule implements ModuleIO {
     configureTurnMotor();
     configureTurnEncoder();
 
+    // configure bus util and status signal freq
     _driveMotorConfigError |= CTREUtil.attempt(() -> _driveMotor.optimizeBusUtilization(), _driveMotor);
     _turnMotorConfigError |= CTREUtil.attempt(() -> _turnMotor.optimizeBusUtilization(), _turnMotor);
     _turnEncoderConfigError |= CTREUtil.attempt(() -> _turnEncoder.optimizeBusUtilization(), _turnEncoder);
+
+    _driveMotorConfigError |= CTREUtil.attempt(() -> _driveVelocity.setUpdateFrequency(ODOM_FREQUENCY), _driveMotor);
+    _driveMotorConfigError |= CTREUtil.attempt(() -> _drivePosition.setUpdateFrequency(ODOM_FREQUENCY), _driveMotor); 
+    _turnEncoderConfigError |= CTREUtil.attempt(() -> _turnAngle.setUpdateFrequency(ODOM_FREQUENCY), _turnEncoder);
 
     FaultLogger.register(_driveMotor);
     FaultLogger.register(_turnMotor);

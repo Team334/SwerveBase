@@ -148,7 +148,7 @@ public class VisionPoseEstimator implements Logged {
   /**
    * Filters the raw estimate returned from photon vision.
    */
-  protected void filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp, Rotation2d gyroHeading) {
+  private void filterEstimate(EstimatedRobotPose estimate, double latestVisionTimestamp, Rotation2d gyroHeading) {
     // get all info from the estimate
     Pose3d estimatedPose = estimate.estimatedPose;
     double timestamp = estimate.timestampSeconds;
@@ -224,7 +224,7 @@ public class VisionPoseEstimator implements Logged {
   /**
    * Calculates the standard deviations for the given filtered estimate.
    */
-  protected void calculateStdDevs(VisionPoseEstimate estimate) {
+  private void calculateStdDevs(VisionPoseEstimate estimate) {
     Vector<N3> baseStdDevs = estimate.detectedTags.length == 1 ? 
       VisionConstants.SINGLE_TAG_BASE_STDDEVS :
       VisionConstants.MULTI_TAG_BASE_STDDEVS;

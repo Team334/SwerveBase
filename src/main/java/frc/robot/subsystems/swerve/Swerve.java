@@ -123,9 +123,6 @@ public class Swerve extends AdvancedSubsystem {
   // turn motor characterization
   private final SysIdRoutine _turnCharacterization;
 
-  // for demo usage only, shows how faster odom depicts the robot's movement better than slower (possibly set this up later)
-  // TODO: an odom demo thing
-
   @Log.NT(key = "Characterizing")
   private boolean _characterizing = false;
 
@@ -136,6 +133,9 @@ public class Swerve extends AdvancedSubsystem {
   /** Whether the swerve is driven field oriented or not. */
   @Log.NT(key = "Is Field Oriented")
   public boolean isFieldOriented = false;
+
+  @Log.NT.Once(key = "Using Pigeon Gyro")
+  private boolean _usingPigeon = false;
 
   // select sim module type
   @Log.NT.Once(key = "Use Perfect Modules")
@@ -201,7 +201,7 @@ public class Swerve extends AdvancedSubsystem {
       _frequency = frequency;
       _notifier.setName("Odometry Thread");
 
-      // implies dummy module is being used or sim module is being used
+      // implies that dummy module is being used or sim module is being used
       _noSignals = _modules.get(0).getOdomSignals().length == 0;
 
       if (_noSignals) return;
@@ -214,7 +214,7 @@ public class Swerve extends AdvancedSubsystem {
         _signals[(i*3) + 2] = moduleSignals[2];
       }
 
-      BaseStatusSignal.setUpdateFrequencyForAll(_frequency, _signals);
+      // signal frequency set inside modules
     }
 
     /** Refreshes all the odom status signals, returning true if the action failed. */

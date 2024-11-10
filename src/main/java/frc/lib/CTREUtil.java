@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import frc.lib.FaultsTable.FaultType;
@@ -64,12 +65,25 @@ public class CTREUtil {
    * action is re-attempted up to 5 times. If it fails after 5 attempts the status code is displayed in the fault logger.
    * 
    * @param action The action to perform (returns a StatusCode).
-   * @param cancoder The cancoder for the fault logger.
+   * @param cancoder The CANCoder for the fault logger.
    * 
    * @return True if the attempt failed, False otherwise.
    */
   public static boolean attempt(Supplier<StatusCode> action, CANcoder cancoder) {
     return attempt(action, getName(cancoder));
+  }
+
+  /**
+   * Attempts to perform an action on a Pigeon2. If the action returns a status code that is not OK, the 
+   * action is re-attempted up to 5 times. If it fails after 5 attempts the status code is displayed in the fault logger.
+   * 
+   * @param action The action to perform (returns a StatusCode).
+   * @param pigeon The Pigeon for the fault logger.
+   * 
+   * @return True if the attempt failed, False otherwise.
+   */
+  public static boolean attempt(Supplier<StatusCode> action, Pigeon2 pigeon) {
+    return attempt(action, getName(pigeon));
   }
 
   /** 
@@ -84,5 +98,12 @@ public class CTREUtil {
    */
   public static String getName(CANcoder cancoder) {
     return "CANcoder (" + cancoder.getDeviceID() + ")";
+  }
+
+  /**
+   * Retunrs the name to use when displaying info about a Pigeon.
+   */
+  public static String getName(Pigeon2 pigeon) {
+    return "Pigeon (" + pigeon.getDeviceID() + ")";
   }
 }
