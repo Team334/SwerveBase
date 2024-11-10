@@ -2,7 +2,7 @@
 A base project for future robots that has code for swerve drive and PhotonVision AprilTag processing.
 
 ## Features
-- Abstract IO for modules / gyros allowing for easy switching between real life and sim.
+- Abstract IO for modules / gyros allowing for easy switching between real life, sim, and non-existing.
 - Device logging and data logging using SignalLogger, URCL, and Monologue.
 - High frequency odometry thread for more accuracy.
 - Automated pre-match self-check.
