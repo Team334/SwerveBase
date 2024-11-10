@@ -153,7 +153,7 @@ public class RealModule implements ModuleIO {
 
     // TODO
     var currentLimits = new CurrentLimitsConfigs();
-    currentLimits.SupplyCurrentLimit = 0;
+    currentLimits.SupplyCurrentLimit = ModuleConstants.SUPPLY_CURRENT_LIMIT.in(Amps);
     currentLimits.SupplyCurrentLimitEnable = true;
 
     config.withSlot0(slot0Configs)
