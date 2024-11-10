@@ -12,6 +12,7 @@ A base project for future robots that has code for swerve drive and PhotonVision
 - A custom class for PhotonVision AprilTag processing featuring filtering methods and standard deviation calculation.
 - Wheel radius characterization (todo).
 - Torque-current to voltage feedforward control for auton using Pathplanner/Choreo (todo).
+- 2025 WPILib beta and other beta libraries (BIG todo)
 
 ## Inspiration
 - [Team 1155 2024 Build Thread](https://www.chiefdelphi.com/t/frc-1155-the-sciborgs-2024-build-thread-open-alliance/441531)
