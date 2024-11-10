@@ -9,7 +9,9 @@ A base project for future robots that has code for swerve drive and PhotonVision
 - Device configuration re-attempting.
 - Device fault logging as telemetry for at-home testing.
 - 254's Swerve Setpoint generator to prevent wheel slip.
+- SysID routines for module turn motors and translation drive motors.
 - A custom class for PhotonVision AprilTag processing featuring filtering methods and standard deviation calculation.
+- Single-tag gyro-based disambiguation is part of the tag filtering.
 - Wheel radius characterization (todo).
 - Torque-current to voltage feedforward control for auton using Pathplanner/Choreo (todo).
 - 2025 WPILib beta and other beta libraries (BIG todo)
