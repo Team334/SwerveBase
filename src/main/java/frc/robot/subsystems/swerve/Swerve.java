@@ -592,7 +592,7 @@ public class Swerve extends AdvancedSubsystem {
     if (_acceptedEstimates.size() == 0) return;
     _lastestVisionTimestamp = _acceptedEstimates.get(_acceptedEstimates.size() - 1).timestamp();
 
-    if (RobotBase.isSimulation()) return;
+    if (RobotBase.isSimulation()) return; // idk about this
 
     _odomUpdateLock.lock();
     _acceptedEstimates.forEach(e -> _poseEstimator.addVisionMeasurement(e.pose().toPose2d(), e.timestamp(), e.stdDevs()));
