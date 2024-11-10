@@ -24,4 +24,4 @@ A base project for future robots that has code for swerve drive and PhotonVision
 - [Team 5104 Vision SlideShow](https://docs.google.com/presentation/d/1ThMRapRsx5xbsswi_BTG8JsSiyXnA3HB3lH4m8eyqG4/edit?usp=sharing)
 
 
-*(additional notes located in notes.md)*
+*(additional random notes for myself located in notes.md)*
