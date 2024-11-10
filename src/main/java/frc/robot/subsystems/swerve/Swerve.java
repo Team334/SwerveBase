@@ -194,11 +194,17 @@ public class Swerve extends AdvancedSubsystem {
 
     private final BaseStatusSignal[] _signals = new BaseStatusSignal[3 * 4]; // three status signals per module
 
+    // using dummy modules or in sim
+    private boolean _noSignals = false;
+
     public OdometryThread(double frequency) {
       _frequency = frequency;
       _notifier.setName("Odometry Thread");
 
-      if (RobotBase.isSimulation()) return;
+      // implies dummy module is being used or sim module is being used
+      _noSignals = _modules.get(0).getOdomSignals().length == 0;
+
+      if (_noSignals) return;
 
       for (int i = 0; i < _modules.size(); i++) {
         BaseStatusSignal[] moduleSignals = _modules.get(i).getOdomSignals();
@@ -213,7 +219,7 @@ public class Swerve extends AdvancedSubsystem {
 
     /** Refreshes all the odom status signals, returning true if the action failed. */
     private boolean refreshStatusSignals() {
-      if (RobotBase.isReal()) {
+      if (!_noSignals) {
         return BaseStatusSignal.refreshAll(_signals).isError();
       }
 
