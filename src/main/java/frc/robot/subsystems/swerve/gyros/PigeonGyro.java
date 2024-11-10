@@ -11,6 +11,7 @@ import static frc.robot.Constants.SwerveConstants.ODOM_FREQUENCY;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.hardware.Pigeon2;
 
@@ -40,6 +41,11 @@ public class PigeonGyro implements GyroIO {
   public Rotation2d getYaw() {
     // refreshed by odom thread
     return Rotation2d.fromDegrees(_yaw.getValueAsDouble());
+  }
+
+  @Override
+  public BaseStatusSignal getOdomSignal() {
+    return _yaw;
   }
 
   @Override

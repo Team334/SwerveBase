@@ -73,6 +73,8 @@ public final class Constants {
   public static class SwerveConstants {
     public static final double ODOM_FREQUENCY = 100;
 
+    public static final int PIGEON_ID = 0;
+
     public static final Measure<Distance> DRIVE_WIDTH = Meters.of(0.584);
     public static final Measure<Distance> DRIVE_LENGTH = Meters.of(0.584);
 

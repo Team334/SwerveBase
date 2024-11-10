@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.lib.subsystem.SelfChecked.sequentialUntil;
 import static frc.robot.Constants.ModuleConstants.*; // for neatness on can ids
+import static frc.robot.Constants.SwerveConstants.PIGEON_ID;
 import static edu.wpi.first.wpilibj2.command.Commands.*; 
 
 import java.util.ArrayList;
@@ -49,6 +50,7 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.swerve.gyros.GyroIO;
 import frc.robot.subsystems.swerve.gyros.NavXGyro;
 import frc.robot.subsystems.swerve.gyros.NoGyro;
+import frc.robot.subsystems.swerve.gyros.PigeonGyro;
 import frc.robot.subsystems.swerve.modules.ModuleIO;
 import frc.robot.subsystems.swerve.modules.NoModule;
 import frc.robot.subsystems.swerve.modules.PerfectModule;
@@ -135,7 +137,7 @@ public class Swerve extends AdvancedSubsystem {
   public boolean isFieldOriented = false;
 
   @Log.NT.Once(key = "Using Pigeon Gyro")
-  private boolean _usingPigeon = false;
+  private static boolean _usingPigeon = false;
 
   // select sim module type
   @Log.NT.Once(key = "Use Perfect Modules")
@@ -158,7 +160,7 @@ public class Swerve extends AdvancedSubsystem {
         new RealModule(FRONT_RIGHT_DRIVE_ID, FRONT_RIGHT_TURN_ID, FRONT_RIGHT_ENCODER_ID),
         new RealModule(BACK_RIGHT_DRIVE_ID, BACK_RIGHT_TURN_ID, BACK_RIGHT_ENCODER_ID),
         new RealModule(BACK_LEFT_DRIVE_ID, BACK_LEFT_TURN_ID, BACK_LEFT_ENCODER_ID),
-        new NavXGyro()
+        _usingPigeon ? new PigeonGyro(PIGEON_ID) : new NavXGyro()
       );
     } else {
       return new Swerve(
@@ -192,7 +194,7 @@ public class Swerve extends AdvancedSubsystem {
     private Notifier _notifier = new Notifier(this::update);
     private final double _frequency;
 
-    private final BaseStatusSignal[] _signals = new BaseStatusSignal[3 * 4]; // three status signals per module
+    private BaseStatusSignal[] _signals = new BaseStatusSignal[0];
 
     // using dummy modules or in sim
     private boolean _noSignals = false;
@@ -206,6 +208,8 @@ public class Swerve extends AdvancedSubsystem {
 
       if (_noSignals) return;
 
+      _signals = new BaseStatusSignal[3 * 4 + (_usingPigeon ? 1 : 0)]; // 3 signals per module + possible pigeon yaw signal
+
       for (int i = 0; i < _modules.size(); i++) {
         BaseStatusSignal[] moduleSignals = _modules.get(i).getOdomSignals();
         
@@ -214,7 +218,9 @@ public class Swerve extends AdvancedSubsystem {
         _signals[(i*3) + 2] = moduleSignals[2];
       }
 
-      // signal frequency set inside modules
+      if (_usingPigeon) _signals[_signals.length - 1] = _gyro.getOdomSignal();
+
+      // signal frequency set inside modules / gyro
     }
 
     /** Refreshes all the odom status signals, returning true if the action failed. */
