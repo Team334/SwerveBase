@@ -4,10 +4,17 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.lib.FaultLogger;
 
 /** NavX Gyro Implementation. */
 public class NavXGyro implements GyroIO {
-  private final AHRS _ahrs = new AHRS();
+  private final AHRS _ahrs;
+
+  public NavXGyro() {
+    _ahrs = new AHRS();
+
+    FaultLogger.register(_ahrs);
+  }
 
   @Override
   public Rotation2d getYaw() {

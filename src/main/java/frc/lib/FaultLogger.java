@@ -17,7 +17,9 @@ import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.kauailabs.navx.frc.AHRS;
 
 // (from team 1155 but slightly modified)
 
@@ -169,12 +171,34 @@ public final class FaultLogger {
   }
 
   /**
+   * Registers a new Pigeon.
+   * 
+   * @param pigeon The Pigeon.
+   */
+  public static void register(Pigeon2 pigeon) {
+    String name = CTREUtil.getName(pigeon);
+
+    register(() -> pigeon.getFault_Hardware().getValue(), name + ": Hardware Fault.", FaultType.ERROR);
+    register(() -> pigeon.getFault_BootDuringEnable().getValue(), name + ": Boot While Enabling.", FaultType.WARNING);
+    register(() -> pigeon.getFault_Undervoltage().getValue(), name + ": Voltage Too Low, Check For Brownouts.", FaultType.WARNING);
+  }
+
+  /**
+   * Registers a new NavX.
+   * 
+   * @param navx The NavX.
+   */
+  public static void register(AHRS navx) {
+    register(() -> !navx.isConnected(), "NavX: Disconnected", FaultType.ERROR);
+  }
+
+  /**
    * Registers a new PhotonCamera. Detailed PhotonVision logs are located on the web UI, so this is just for very basic
    * telemetry to have in a dashboard when testing.
    * 
    * @param photonCamera The PhotonCamera.
    */
   public static void register(PhotonCamera photonCamera) {
-    register(() -> !photonCamera.isConnected(), photonCamera + ": Disconnected.", FaultType.ERROR);
+    register(() -> !photonCamera.isConnected(), photonCamera.getName() + ": Disconnected.", FaultType.ERROR);
   }
 }
