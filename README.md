@@ -2,16 +2,19 @@
 A base project for future robots that has code for swerve drive and PhotonVision AprilTag processing.
 
 ## Features
-- Abstract IO for modules / gyros allowing for easy switching between real life and sim.
+- Abstract IO for modules / gyros allowing for easy switching between real life, sim, and non-existing.
 - Device logging and data logging using SignalLogger, URCL, and Monologue.
 - High frequency odometry thread for more accuracy.
 - Automated pre-match self-check.
 - Device configuration re-attempting.
 - Device fault logging as telemetry for at-home testing.
 - 254's Swerve Setpoint generator to prevent wheel slip.
+- SysID routines for module turn motors and translation drive motors.
 - A custom class for PhotonVision AprilTag processing featuring filtering methods and standard deviation calculation.
+- Single-tag gyro-based disambiguation is part of the tag filtering.
 - Wheel radius characterization (todo).
 - Torque-current to voltage feedforward control for auton using Pathplanner/Choreo (todo).
+- 2025 WPILib beta and other beta libraries (BIG todo)
 
 ## Inspiration
 - [Team 1155 2024 Build Thread](https://www.chiefdelphi.com/t/frc-1155-the-sciborgs-2024-build-thread-open-alliance/441531)
@@ -24,4 +27,4 @@ A base project for future robots that has code for swerve drive and PhotonVision
 - [Team 5104 Vision SlideShow](https://docs.google.com/presentation/d/1ThMRapRsx5xbsswi_BTG8JsSiyXnA3HB3lH4m8eyqG4/edit?usp=sharing)
 
 
-*(additional notes located in notes.md)*
+*(additional random notes for myself located in notes.md)*
