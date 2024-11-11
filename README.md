@@ -3,6 +3,7 @@ A base project for future robots that has code for swerve drive and PhotonVision
 
 ## Features
 - Abstract IO for modules / gyros allowing for easy switching between real life, sim, and non-existing.
+- Switching between NavX and Pigeon2.
 - Device logging and data logging using SignalLogger, URCL, and Monologue.
 - High frequency odometry thread for more accuracy.
 - Automated pre-match self-check.

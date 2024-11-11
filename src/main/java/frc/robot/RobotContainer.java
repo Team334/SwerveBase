@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandPS5Controller;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.lib.InputStream;
 import frc.lib.PrintAndLog;
 import frc.robot.Constants.Ports;
@@ -29,7 +29,7 @@ import monologue.Logged;
 public class RobotContainer implements Logged {
   private final Swerve _swerve = Swerve.create();
 
-  private final CommandPS5Controller _driverController = new CommandPS5Controller(Ports.DRIVER_CONTROLLER);
+  private final CommandXboxController _driverController = new CommandXboxController(Ports.DRIVER_CONTROLLER);
   
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -61,8 +61,8 @@ public class RobotContainer implements Logged {
   }
 
   private void configureBindings() {
-    _driverController.cross().whileTrue(_swerve.brake());
-    _driverController.circle().onTrue(_swerve.toggleOriented());
+    _driverController.x().whileTrue(_swerve.brake());
+    _driverController.y().onTrue(_swerve.toggleOriented());
   }
 
   /**
