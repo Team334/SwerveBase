@@ -44,6 +44,11 @@ public class PigeonGyro implements GyroIO {
   }
 
   @Override
+  public boolean isConnected() {
+    return true;
+  }
+
+  @Override
   public BaseStatusSignal getOdomSignal() {
     return _yaw;
   }

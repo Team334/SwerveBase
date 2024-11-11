@@ -16,6 +16,11 @@ public class NoGyro implements GyroIO {
   }
 
   @Override
+  public boolean isConnected() {
+    return true;
+  }
+
+  @Override
   public BaseStatusSignal getOdomSignal() {
     return null;
   }

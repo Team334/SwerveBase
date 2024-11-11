@@ -254,7 +254,7 @@ public class Swerve extends AdvancedSubsystem {
 
       // in the case of a navx, a different refresh and success check is used
       if (_gyro instanceof NavXGyro) {
-        willOdomUpdateFail = false; // TODO: figure this out
+        willOdomUpdateFail |= !_gyro.isConnected();
       }
 
       // updated all cached device data
