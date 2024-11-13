@@ -1,6 +1,8 @@
 # SwerveBase
 A base project for future robots that has code for swerve drive and PhotonVision AprilTag processing.
 
+(NOTE: This project is in development, the working swerve base is made with the CTRE project generator and exists here: SwerveBase-CTRE).
+
 ## Features
 - Abstract IO for modules / gyros allowing for easy switching between real life, sim, and non-existing.
 - Switching between NavX and Pigeon2.
