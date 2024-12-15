@@ -15,6 +15,7 @@ import static frc.robot.Constants.SwerveConstants.PIGEON_ID;
 import static edu.wpi.first.wpilibj2.command.Commands.*; 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
@@ -540,6 +541,11 @@ public class Swerve extends AdvancedSubsystem {
   /** Get all the module states since the last odom update (in correct order). */
   public SwerveModuleState[] getModuleStates() {
     return _cachedModuleStates;
+  }
+
+  /** Get the position of all the modules (in radians). */
+  public double[] getWheelRadiusCharacterizationPosition(){
+    return _modules.stream().mapToDouble(SwerveModule::getModulePositionRadians).toArray();
   }
 
   /** 

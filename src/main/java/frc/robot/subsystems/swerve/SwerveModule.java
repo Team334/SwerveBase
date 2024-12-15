@@ -77,6 +77,13 @@ public class SwerveModule implements SelfChecked {
     );
   }
 
+  /**
+   * Returns the position of the module in radians.
+   */
+  public double getModulePositionRadians() {
+    return _io.getPosition();
+  }
+
   /** 
    * Set the desired target state for this module.
    * 
